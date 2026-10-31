@@ -2,77 +2,100 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RD AUDIO LAB — Live Auto FIR</title>
+<meta name="theme-color" content="#101827">
+<title>RD AUDIO LAB — 2 HP</title>
 <style>
-:root{color-scheme:dark;--bg:#080d15;--panel:#121d2b;--line:#2b3b50;--cyan:#32d6e8;--green:#7ee0a3;--muted:#9fb0c4}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#edf5ff;font:14px system-ui,Arial}
-header{padding:17px;border-bottom:1px solid var(--line);background:#0c1522}h1{margin:0;font-size:21px}header p{margin:5px 0 0;color:var(--muted)}
-main{max-width:1050px;margin:auto;padding:14px;display:grid;gap:12px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
-.row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}button,select,input{background:#19283b;color:#eef7ff;border:1px solid #40536d;border-radius:8px;padding:10px;font:inherit}button{font-weight:700;cursor:pointer}button.primary{background:#087e91;border-color:#22b7c9}button:disabled{opacity:.45;cursor:not-allowed}
-.status{color:var(--green);font-weight:700}.muted{color:var(--muted)}.warn{color:#ffc77b;line-height:1.5}
-canvas{width:100%;height:235px;background:#080e17;border:1px solid #27374b;border-radius:8px;display:block}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px}.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}.field input,.field select{width:100%}
-progress{width:100%;height:10px;accent-color:var(--cyan)}li{margin:7px 0}
-</style></head>
-<body>
-<header><h1>RD <span style="color:#32d6e8">AUDIO LAB</span> / LIVE AUTO FIR</h1><p>Live microphone RTA • Capture response • FIR estimate • Export</p></header>
-<main>
-<section class="panel">
- <div class="row"><button id="start" class="primary">▶ START MIC LIVE</button><button id="stop" disabled>■ STOP</button><span id="status" class="status">Mikrofon belum aktif</span></div>
- <p class="muted">Jalankan melalui HTTPS di Chrome Android, lalu izinkan akses mikrofon.</p>
- <canvas id="live" width="1000" height="260"></canvas>
- <div class="row"><span id="peak" class="muted">Peak: —</span><span class="muted">Live spectrum / dBFS relatif</span></div>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#141f30;--line:#29384d;--text:#eef4ff;--muted:#9fb0c7;--cyan:#55d6e8;--green:#70dfa2;--amber:#ffc66d}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#0b1220,#111d2e);color:var(--text);font:15px system-ui,Arial}
+main{max-width:900px;margin:auto;padding:20px 14px 44px}.brand{font-size:12px;letter-spacing:3px;color:var(--cyan);font-weight:800}
+h1{font-size:27px;margin:6px 0 4px}.sub{color:var(--muted);margin:0 0 18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
+h2{font-size:18px;margin:0 0 12px}.tabs{display:flex;gap:8px;flex-wrap:wrap}
+button,select{background:#203149;color:var(--text);border:1px solid #3a506b;border-radius:10px;padding:12px 14px;font-weight:700}
+button.primary{background:#087f91;border-color:#087f91}button.stop{background:#713b3b;border-color:#965151}
+button:disabled{opacity:.45}label{display:block;color:var(--muted);font-size:13px;margin:10px 0 5px}
+input[type=range]{width:100%}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.row>*{flex:1}
+.status{padding:10px 12px;border-radius:10px;background:#0d1725;color:var(--green);margin-top:10px}
+.warn{color:#ffe0a6;background:#382c18;border:1px solid #68502a;padding:12px;border-radius:12px;line-height:1.5}
+canvas{width:100%;height:230px;background:#08111d;border:1px solid var(--line);border-radius:10px}
+.small{font-size:12px;color:var(--muted);line-height:1.5}.metric{font-size:24px;font-weight:800}.hidden{display:none}
+.pill{font-size:11px;border:1px solid #426178;border-radius:20px;padding:4px 8px;color:var(--cyan)}
+</style>
+</head>
+<body><main>
+<div class="brand">RD AUDIO LAB</div><h1>DUAL PHONE MEASUREMENT</h1>
+<p class="sub">HP 1 sebagai pemutar sweep • HP 2 sebagai mikrofon pengukur</p>
+<div class="warn"><b>Batas pengukuran:</b> Versi dua HP dengan mikrofon bawaan dapat membaca spektrum suara yang diterima dan membantu koreksi EQ perkiraan. Karena kedua HP tidak berbagi clock dan referensi audio terkalibrasi, versi ini <b>belum dapat mengukur fase/impulse response secara akurat atau membuat FIR profesional</b>.</div>
+<div class="card">
+<h2>1. Pilih fungsi HP ini</h2>
+<div class="tabs">
+<button id="sourceTab" class="primary">HP 1 — PEMUTAR SWEEP</button>
+<button id="micTab">HP 2 — PENGUKUR</button>
+</div>
+<p class="small">Buka halaman ini di kedua HP. Pilih HP 1 pada ponsel sumber dan HP 2 pada ponsel yang diletakkan di posisi ukur.</p>
+</div>
+<section id="source" class="card">
+<h2>HP 1 — Generator Sweep <span class="pill">SOURCE</span></h2>
+<div class="row">
+<div><label>Frekuensi awal</label><select id="start"><option>20</option><option>30</option><option>50</option><option>100</option></select></div>
+<div><label>Frekuensi akhir</label><select id="end"><option>20000</option><option>16000</option><option>12000</option></select></div>
+<div><label>Durasi sweep</label><select id="duration"><option value="10">10 detik</option><option value="20" selected>20 detik</option><option value="30">30 detik</option></select></div>
+</div>
+<label>Level output: <b id="levelText">20%</b></label><input id="level" type="range" min="1" max="50" value="20">
+<div class="row"><button id="play" class="primary">▶ PUTAR SWEEP</button><button id="stop" class="stop" disabled>■ BERHENTI</button></div>
+<div id="sourceStatus" class="status">Siap. Hubungkan HP 1 ke input sistem audio dengan level aman.</div>
+<p class="small">Gunakan output headphone/line HP 1 menuju input mixer/DLMS. Mulai dari volume rendah. Jangan sambungkan output speaker power amplifier langsung ke HP.</p>
 </section>
-<section class="panel">
- <h3>1. Pengukuran langsung</h3>
- <div class="grid">
-  <div class="field"><label>FFT size</label><select id="fft"><option>2048</option><option>4096</option><option selected>8192</option><option>16384</option></select></div>
-  <div class="field"><label>Durasi capture</label><select id="duration"><option value="5">5 detik</option><option value="10" selected>10 detik</option><option value="15">15 detik</option></select></div>
-  <div class="field"><label>Jumlah FIR taps</label><select id="taps"><option>256</option><option>512</option><option selected>1024</option><option>2048</option></select></div>
-  <div class="field"><label>Rentang frekuensi</label><select id="range"><option value="40,12000" selected>40 Hz – 12 kHz</option><option value="60,8000">60 Hz – 8 kHz</option><option value="80,6000">80 Hz – 6 kHz</option></select></div>
- </div>
- <div class="row" style="margin-top:12px"><button id="capture" disabled>● CAPTURE RESPONSE</button><button id="generate" class="primary" disabled>⚙ GENERATE AUTO FIR</button><span id="capstatus" class="muted">Belum ada capture</span></div>
- <progress id="progress" value="0" max="100"></progress>
- <p class="warn">Putar pink noise melalui speaker MID pada volume sedang. Letakkan HP di posisi dengar dan jangan ubah volume/posisi selama capture.</p>
+<section id="measure" class="card hidden">
+<h2>HP 2 — Pengukur Mikrofon <span class="pill">MIC</span></h2>
+<div class="row"><button id="micStart" class="primary">Aktifkan Mikrofon</button><button id="micStop" class="stop" disabled>Matikan Mikrofon</button></div>
+<div id="micStatus" class="status">Tekan Aktifkan Mikrofon, izinkan akses mikrofon, lalu putar sweep dari HP 1.</div>
+<label>Spektrum suara yang diterima</label><canvas id="spectrum" width="900" height="300"></canvas>
+<div class="row"><div><div class="small">Level masukan</div><div class="metric" id="db">— dB</div></div><div><div class="small">Puncak spektrum terdeteksi</div><div class="metric" id="peak">— Hz</div></div></div>
+<div class="row"><button id="saveCsv">Ekspor spektrum CSV</button><button id="snapshot">Simpan cuplikan</button></div>
+<p class="small">Letakkan HP 2 di posisi ukur, mikrofon menghadap area speaker. Matikan notifikasi dan jangan pegang HP saat pengukuran. Hindari clipping.</p>
 </section>
-<section class="panel">
- <h3>2. Parameter koreksi</h3>
- <div class="grid">
-  <div class="field"><label>Batas boost (dB)</label><input id="boost" type="number" min="0" max="6" step=".5" value="3"></div>
-  <div class="field"><label>Batas cut (dB)</label><input id="cut" type="number" min="0" max="12" step=".5" value="6"></div>
-  <div class="field"><label>Target tilt (dB)</label><input id="tilt" type="number" min="-6" max="3" step=".5" value="-1.5"></div>
-  <div class="field"><label>Smoothing</label><select id="smooth"><option value="3">1/3 octave</option><option value="6" selected>1/6 octave</option><option value="12">1/12 octave</option></select></div>
- </div>
- <canvas id="correction" width="1000" height="230" style="margin-top:12px"></canvas>
- <div class="row" style="margin-top:12px"><button id="csv" disabled>↓ EXPORT CSV</button><button id="wav" disabled>↓ EXPORT WAV</button><button id="reset">RESET</button></div>
- <p id="result" class="muted">Belum ada koefisien FIR.</p>
+<section class="card">
+<h2>2. Alur pengukuran</h2>
+<ol class="small">
+<li>Buka halaman yang sama pada kedua HP.</li><li>Di HP 1 pilih “Pemutar Sweep”; hubungkan ke input sistem audio.</li>
+<li>Di HP 2 pilih “Pengukur”; izinkan akses mikrofon.</li><li>Jalankan sweep dari HP 1 dan rekam grafik pada HP 2.</li><li>Ulangi 3 kali pada posisi yang sama untuk melihat konsistensi.</li>
+</ol>
 </section>
-<section class="panel">
- <h3>3. Urutan penggunaan</h3>
- <ol><li>Tekan START MIC LIVE dan izinkan mikrofon.</li><li>Putar pink noise pada jalur MID.</li><li>Tekan CAPTURE RESPONSE sampai selesai.</li><li>Tekan GENERATE AUTO FIR, lalu ekspor CSV/WAV.</li><li>Gunakan koefisien hanya pada DSP yang mendukung FIR.</li></ol>
- <p class="warn"><b>Batasan:</b> mikrofon HP bukan mikrofon ukur terkalibrasi. Ini estimasi koreksi magnitude satu kanal, bukan pengukuran transfer function, fase, impulse response, atau delay. Respons HP dan pemrosesan Android dapat memengaruhi hasil. Jangan boost null/lubang tajam.</p>
+<section class="card">
+<h2>3. Status fitur</h2>
+<p>✓ Generator sweep • ✓ Analisis spektrum mikrofon • ✓ Ekspor CSV</p>
+<p>△ Rekomendasi EQ: perlu pembandingan hasil ukur dengan target dan kalibrasi mikrofon.</p>
+<p>✕ Koreksi fase, impulse response terkalibrasi, dan ekspor FIR: belum didukung oleh metode dua HP ini.</p>
 </section>
+<p class="small">RD AUDIO LAB • Prototipe pengukuran akustik. Hasil dipengaruhi karakter speaker HP, AGC/noise suppression mikrofon, posisi, ruangan, dan respons sistem audio.</p>
 </main>
 <script>
-(()=> {
 const $=id=>document.getElementById(id);
-let ac=null,stream=null,an=null,src=null,live=false,raf=0,captured=null,coeff=null;
-const lc=$('live'),lctx=lc.getContext('2d'),cc=$('correction'),cctx=cc.getContext('2d');
-function grid(c,w,h){c.clearRect(0,0,w,h);c.strokeStyle='#26384d';c.fillStyle='#9fb0c4';c.font='12px system-ui';for(let i=0;i<=5;i++){let y=12+i*(h-35)/5;c.beginPath();c.moveTo(45,y);c.lineTo(w-8,y);c.stroke();c.fillText((0-i*12)+' dB',5,y+4)}}
-function xfreq(f,w,min,max){return 45+Math.log(f/min)/Math.log(max/min)*(w-55)}
-function drawSpectrum(c,data,w,h,min,max,color){grid(c,w,h);if(!data)return;c.beginPath();c.strokeStyle=color;c.lineWidth=2;let begun=false,fs=ac?ac.sampleRate:48000,fft=an?an.fftSize:8192;for(let i=1;i<data.length;i++){let f=i*fs/fft;if(f<min||f>max)continue;let v=Math.max(-90,Math.min(0,data[i])),x=xfreq(f,w,min,max),y=12+(0-v)/90*(h-35);if(!begun){c.moveTo(x,y);begun=true}else c.lineTo(x,y)}c.stroke();[50,100,200,500,1000,2000,5000,10000].forEach(f=>{if(f>=min&&f<=max)c.fillText(f>=1000?(f/1000)+'k':f,xfreq(f,w,min,max)-8,h-7)})}
-function tick(){if(!live)return;let a=new Float32Array(an.frequencyBinCount);an.getFloatFrequencyData(a);let peak=Math.max(...a.filter(Number.isFinite));$('peak').textContent='Peak: '+peak.toFixed(1)+' dBFS';let [mn,mx]=$('range').value.split(',').map(Number);drawSpectrum(lctx,a,lc.width,lc.height,mn,mx,'#32d6e8');raf=requestAnimationFrame(tick)}
-$('start').onclick=async()=>{try{if(!navigator.mediaDevices?.getUserMedia)throw Error('Browser tidak mendukung akses mikrofon');ac=new(window.AudioContext||window.webkitAudioContext)();stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});await ac.resume();an=ac.createAnalyser();an.fftSize=Number($('fft').value);an.smoothingTimeConstant=.6;src=ac.createMediaStreamSource(stream);src.connect(an);live=true;$('start').disabled=true;$('stop').disabled=false;$('capture').disabled=false;$('status').textContent='MIKROFON AKTIF';tick()}catch(e){$('status').textContent='MIKROFON GAGAL';alert('Tidak bisa membuka mikrofon: '+e.message+'\\nPastikan HTTPS dan izin mikrofon Chrome aktif.')}};
-$('stop').onclick=()=>{live=false;cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());if(ac)ac.close();ac=stream=an=src=null;$('start').disabled=false;$('stop').disabled=true;$('capture').disabled=true;$('status').textContent='Mikrofon berhenti'};
-$('fft').onchange=()=>{if(an)an.fftSize=Number($('fft').value)};
-function smoothAverage(arr,fs,fft,min,max,oct){let out=[],ratio=Math.pow(2,1/(oct*2));for(let f=min;f<=max;f*=Math.pow(2,1/(oct*3))){let lo=Math.max(1,Math.floor(f/ratio/(fs/fft))),hi=Math.min(arr.length-1,Math.ceil(f*ratio/(fs/fft))),sum=0,n=0;for(let i=lo;i<=hi;i++)if(Number.isFinite(arr[i])){sum+=arr[i];n++}out.push({f,db:n?sum/n:-90})}return out}
-$('capture').onclick=async()=>{if(!live||!an)return;let sec=Number($('duration').value),n=an.frequencyBinCount,sum=new Float64Array(n),frames=0,start=performance.now();$('capture').disabled=true;$('generate').disabled=true;$('capstatus').textContent='Sedang capture...';$('progress').value=0;await new Promise(resolve=>{function take(){if(!live){resolve();return}let a=new Float32Array(n);an.getFloatFrequencyData(a);for(let i=0;i<n;i++)if(Number.isFinite(a[i]))sum[i]+=a[i];frames++;let elapsed=(performance.now()-start)/1000;$('progress').value=Math.min(100,elapsed/sec*100);if(elapsed<sec)requestAnimationFrame(take);else resolve()}take()});if(frames&&ac&&an){let avg=Array.from(sum,v=>v/frames),[mn,mx]=$('range').value.split(',').map(Number);captured=smoothAverage(avg,ac.sampleRate,an.fftSize,mn,mx,Number($('smooth').value));$('capstatus').textContent='Capture selesai ('+frames+' frame)';$('generate').disabled=false}$('capture').disabled=!live};
-function interp(p,f){if(f<=p[0].f)return p[0].db;if(f>=p[p.length-1].f)return p[p.length-1].db;let i=1;while(p[i].f<f)i++;let a=p[i-1],b=p[i],t=Math.log(f/a.f)/Math.log(b.f/a.f);return a.db+(b.db-a.db)*t}
-function fft(re,im,inverse){let n=re.length,j=0;for(let i=0;i<n;i++){if(i<j){[re[i],re[j]]=[re[j],re[i]];[im[i],im[j]]=[im[j],im[i]]}let m=n>>1;while(m&&j>=m){j-=m;m>>=1}j+=m}for(let len=2;len<=n;len*=2){let ang=(inverse?2:-2)*Math.PI/len,wr0=Math.cos(ang),wi0=Math.sin(ang);for(let i=0;i<n;i+=len){let wr=1,wi=0;for(let k=0;k<len/2;k++){let u=i+k,v=u+len/2,tr=wr*re[v]-wi*im[v],ti=wr*im[v]+wi*re[v];re[v]=re[u]-tr;im[v]=im[u]-ti;re[u]+=tr;im[u]+=ti;let nw=wr*wr0-wi*wi0;wi=wr*wi0+wi*wr0;wr=nw}}}if(inverse)for(let i=0;i<n;i++){re[i]/=n;im[i]/=n}}
-$('generate').onclick=()=>{if(!captured)return;let [min,max]=$('range').value.split(',').map(Number),taps=Number($('taps').value),N=8192;while(N<taps*8)N*=2;let re=new Float64Array(N),im=new Float64Array(N),boost=Number($('boost').value),cut=Number($('cut').value),tilt=Number($('tilt').value),curve=[];let sm=captured,fs=ac?ac.sampleRate:48000;for(let k=0;k<=N/2;k++){let f=k*fs/N,corr=0;if(f>=min&&f<=max){let measured=interp(sm,f),target=interp(sm,min)+tilt*Math.log2(f/min)/Math.log2(max/min);corr=Math.max(-cut,Math.min(boost,target-measured))}let mag=Math.pow(10,corr/20);re[k]=mag;if(k>0&&k<N/2)re[N-k]=mag;curve.push({f,db:corr})}fft(re,im,true);let impulse=new Float64Array(taps),center=Math.floor(taps/2);for(let i=0;i<taps;i++){let idx=(i-center+N)%N,win=.5-.5*Math.cos(2*Math.PI*i/(taps-1));impulse[i]=re[idx]*win}let dc=impulse.reduce((a,b)=>a+b,0);if(Math.abs(dc)>1e-9)for(let i=0;i<taps;i++)impulse[i]/=dc;coeff=Array.from(impulse);grid(cctx,cc.width,cc.height);cctx.beginPath();cctx.strokeStyle='#7ee0a3';cctx.lineWidth=2;let begun=false;for(let p of curve){if(p.f<min||p.f>max)continue;let x=xfreq(p.f,cc.width,min,max),y=12+(6-Math.max(-12,Math.min(6,p.db)))/18*(cc.height-35);if(!begun){cctx.moveTo(x,y);begun=true}else cctx.lineTo(x,y)}cctx.stroke();$('csv').disabled=false;$('wav').disabled=false;$('result').textContent='Berhasil membuat '+taps+' tap FIR estimate. Batas koreksi +'+boost+' / -'+cut+' dB.'};
-function download(name,blob){let a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1500)}
-$('csv').onclick=()=>{if(coeff)download('RD_AUDIO_LAB_FIR.csv',new Blob(['tap,coefficient\\n'+coeff.map((v,i)=>i+','+v.toPrecision(12)).join('\\n')],{type:'text/csv'}))};
-$('wav').onclick=()=>{if(!coeff)return;let b=new ArrayBuffer(44+coeff.length*4),v=new DataView(b),put=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))};put(0,'RIFF');v.setUint32(4,36+coeff.length*4,true);put(8,'WAVE');put(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,3,true);v.setUint16(22,1,true);v.setUint32(24,48000,true);v.setUint32(28,192000,true);v.setUint16(32,4,true);v.setUint16(34,32,true);put(36,'data');v.setUint32(40,coeff.length*4,true);coeff.forEach((x,i)=>v.setFloat32(44+i*4,x,true));download('RD_AUDIO_LAB_FIR_48k_float.wav',new Blob([b],{type:'audio/wav'}))};
-$('reset').onclick=()=>{captured=coeff=null;$('generate').disabled=true;$('csv').disabled=true;$('wav').disabled=true;$('capstatus').textContent='Belum ada capture';$('result').textContent='Belum ada koefisien FIR';$('progress').value=0;cctx.clearRect(0,0,cc.width,cc.height)};
-})();
+let ctx=null,osc=null,gain=null,sourceTimer=null,stream=null,analyser=null,raf=null,lastBins=[],lastDb=0,lastPeak=0;
+function mode(m){$('source').classList.toggle('hidden',m!=='source');$('measure').classList.toggle('hidden',m!=='mic');$('sourceTab').classList.toggle('primary',m==='source');$('micTab').classList.toggle('primary',m==='mic')}
+$('sourceTab').onclick=()=>mode('source');$('micTab').onclick=()=>mode('mic');
+$('level').oninput=e=>$('levelText').textContent=e.target.value+'%';
+$('play').onclick=async()=>{
+ try{
+  if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();
+  await ctx.resume();const sr=+$('start').value,er=+$('end').value,d=+$('duration').value,amp=+$('level').value/100;
+  const n=Math.floor(ctx.sampleRate*d),buf=ctx.createBuffer(1,n,ctx.sampleRate),a=buf.getChannelData(0),k=Math.log(er/sr)/d;
+  for(let i=0;i<n;i++){let t=i/ctx.sampleRate;let fade=Math.min(1,t/.08,(d-t)/.08);a[i]=Math.sin(2*Math.PI*sr*(Math.exp(k*t)-1)/k)*amp*Math.max(0,fade)}
+  const node=ctx.createBufferSource();gain=ctx.createGain();gain.gain.value=1;node.buffer=buf;node.connect(gain).connect(ctx.destination);osc=node;node.onended=()=>{$('sourceStatus').textContent='Sweep selesai.';$('play').disabled=false;$('stop').disabled=true};node.start();$('play').disabled=true;$('stop').disabled=false;$('sourceStatus').textContent='Sweep sedang diputar…';
+ }catch(e){$('sourceStatus').textContent='Gagal memutar audio: '+e.message}
+};
+$('stop').onclick=()=>{try{osc&&osc.stop()}catch(e){}};
+$('micStart').onclick=async()=>{
+ try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();await ctx.resume();let src=ctx.createMediaStreamSource(stream);analyser=ctx.createAnalyser();analyser.fftSize=8192;analyser.smoothingTimeConstant=.65;src.connect(analyser);$('micStatus').textContent='Mikrofon aktif. Jalankan sweep dari HP 1.';$('micStart').disabled=true;$('micStop').disabled=false;draw()}catch(e){$('micStatus').textContent='Tidak dapat mengakses mikrofon. Buka melalui HTTPS dan izinkan akses. '+e.message}
+};
+$('micStop').onclick=()=>{if(stream)stream.getTracks().forEach(t=>t.stop());cancelAnimationFrame(raf);stream=null;analyser=null;$('micStart').disabled=false;$('micStop').disabled=true;$('micStatus').textContent='Mikrofon dimatikan.'};
+function draw(){
+ if(!analyser)return;let a=new Uint8Array(analyser.frequencyBinCount);analyser.getByteFrequencyData(a);lastBins=Array.from(a);let sum=0,max=0,idx=0;for(let i=0;i<a.length;i++){sum+=a[i]*a[i];if(a[i]>max){max=a[i];idx=i}}
+ lastDb=20*Math.log10(Math.max(1,Math.sqrt(sum/a.length))/255);lastPeak=idx*ctx.sampleRate/analyser.fftSize;$('db').textContent=lastDb.toFixed(1)+' dBFS';$('peak').textContent=lastPeak>=1000?(lastPeak/1000).toFixed(2)+' kHz':Math.round(lastPeak)+' Hz';
+ const c=$('spectrum'),g=c.getContext('2d'),w=c.width,h=c.height;g.clearRect(0,0,w,h);g.strokeStyle='#26384d';g.fillStyle='#91a6bf';g.font='14px system-ui';for(let j=0;j<5;j++){let y=j*h/4;g.beginPath();g.moveTo(42,y);g.lineTo(w-8,y);g.stroke();g.fillText((j*25)+'%',5,y+5)}
+ g.strokeStyle='#55d6e8';g.lineWidth=2;g.beginPath();let count=a.length;for(let x=0;x<w-50;x++){let f=x/(w-50)*(ctx.sampleRate/2);let bin=Math.min(count-1,Math.max(1,Math.round(f/(ctx.sampleRate/analyser.fftSize))));let db=a[bin]/255;let y=h-10-db*(h-25);if(x===0)g.moveTo(42+x,y);else g.lineTo(42+x,y)}g.stroke();raf=requestAnimationFrame(draw)
+}
+function csv(){if(!lastBins.length){alert('Aktifkan mikrofon dan ukur dulu.');return}let lines=['frequency_hz,relative_level'];lastBins.forEach((v,i)=>lines.push(`${(i*ctx.sampleRate/analyser.fftSize).toFixed(2)},${v}`));let blob=new Blob([lines.join('\n')],{type:'text/csv'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='RD_AUDIO_LAB_spectrum.csv';a.click();URL.revokeObjectURL(url)}
+$('saveCsv').onclick=csv;$('snapshot').onclick=()=>{if(!lastBins.length){alert('Belum ada data.');return}csv()};
 </script></body></html>
