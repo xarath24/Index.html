@@ -1,72 +1,88 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RTA FIX - Pasti Jalan</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>SMART RTA LIVE</title>
 <style>
-body{background:#000;color:#fff;font-family:Arial;padding:8px;margin:0}
-button{width:100%;padding:16px;font-size:16px;font-weight:bold;border:none;border-radius:10px;margin:5px 0;cursor:pointer}
-#log{background:#111;border:1px solid #f00;color:#0f0;padding:10px;font-size:12px;min-height:50px;border-radius:8px;white-space:pre-wrap}
-canvas{width:100%;height:260px;background:#000;border:1px solid #333;display:block}
-#spec{height:170px}
-</style>
-</head>
+:root{color-scheme:dark;--bg:#050608;--panel:#101319;--grid:#333943;--txt:#e8eaf0;--muted:#9ca4b1;--cyan:#55d9ed;--gold:#ffd16a;--pink:#e76a91}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:14px system-ui,Arial}
+header{padding:12px 14px;background:#101319;border-bottom:1px solid #303640;display:flex;align-items:center;justify-content:space-between;gap:8px}
+h1{font-size:17px;margin:0;letter-spacing:.5px}.sub{font-size:11px;color:var(--muted);margin-top:3px}
+main{padding:10px;max-width:1100px;margin:auto}.toolbar,.panel{background:var(--panel);border:1px solid #303640;border-radius:10px;padding:10px;margin-bottom:10px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button,select{background:#222b37;color:var(--txt);border:1px solid #566171;border-radius:7px;padding:9px 11px;font-size:13px}
+button.go{background:#087e91;border-color:#13b5c9}button:disabled{opacity:.45}
+label{font-size:11px;color:var(--muted)}canvas{display:block;width:100%;background:#030507;border-radius:5px}
+#spectrum{height:260px}#waterfall{height:160px}
+.title{font-size:13px;color:#cbd3df;margin:0 0 7px;display:flex;justify-content:space-between}
+.info{font-size:11px;color:var(--muted);line-height:1.45;margin-top:7px}
+.stats{display:flex;gap:8px;flex-wrap:wrap}.stat{background:#090d12;border-radius:7px;padding:7px 10px;min-width:105px;flex:1}.stat small{display:block;color:var(--muted);font-size:10px}.stat strong{font-size:15px}
+.status{font-size:12px;color:#7ee0ad;margin-left:auto}
+@media(max-width:520px){#spectrum{height:235px}#waterfall{height:145px}header{align-items:flex-start}}
+</style></head>
 <body>
-
-<h2 style="text-align:center;color:#00e5ff">RTA FIX v2 - TES DULU</h2>
-<div id="log">LOG: Belum dipencet apa-apa...
-Buka di CHROME ya mas, bukan di WA.</div>
-
-<button onclick="tesDemo()" style="background:#ffea00">1. TES DEMO DULU - TANPA MIC, GRAFIK HARUS GERAK</button>
-<button onclick="startMic()" style="background:#00e5ff">2. START MIC BENERAN</button>
-<button onclick="playNoise()" style="background:#ff9100">3. PLAY PINK NOISE</button>
-<button onclick="stopAll()" style="background:#ff1744;color:#fff">STOP</button>
-
-<p>Peak: <b id="peak" style="color:#ffea00">--</b> | Level: <b id="lvl">--</b></p>
-<canvas id="mag" width="700" height="260"></canvas>
-<canvas id="spec" width="700" height="170"></canvas>
-<p style="font-size:12px;color:#aaa">Kuning = Live, Merah = Peak. Bawah = Spectrogram ungu-oranye.</p>
-
+<header><div><h1>SMART RTA LIVE</h1><div class="sub">REAL-TIME SPECTRUM • WATERFALL • AUDIO ANALYZER</div></div><div id="status" class="status">STANDBY</div></header>
+<main>
+<section class="toolbar">
+<button class="go" id="start">▶ START LIVE</button><button id="stop" disabled>■ STOP</button>
+<label>FFT<br><select id="fft"><option value="2048">2048</option><option value="4096" selected>4096</option><option value="8192">8192</option></select></label>
+<label>AVERAGE<br><select id="average"><option value="1">1x</option><option value="4" selected>4x</option><option value="8">8x</option><option value="16">16x</option></select></label>
+<label>RANGE<br><select id="range"><option value="60">60 dB</option><option value="90" selected>90 dB</option><option value="120">120 dB</option></select></label>
+<label>SMOOTH<br><select id="smooth"><option value="0">OFF</option><option value=".55">LOW</option><option value=".8" selected>MED</option><option value=".93">HIGH</option></select></label>
+</section>
+<section class="panel"><div class="title"><b>MAGNITUDE / FREQUENCY RESPONSE</b><span>20 Hz — 20 kHz</span></div><canvas id="spectrum" width="1200" height="520"></canvas><div class="info">Garis cyan = level real-time • Garis kuning = peak hold. Sumbu frekuensi logaritmik seperti spectrum analyzer.</div></section>
+<section class="panel"><div class="title"><b>LIVE SPECTROGRAM / WATERFALL</b><span>Waktu berjalan ↓</span></div><canvas id="waterfall" width="1200" height="300"></canvas><div class="info">Warna terang menunjukkan energi frekuensi lebih kuat. Waterfall bergerak saat mikrofon menerima suara.</div></section>
+<section class="panel"><div class="stats">
+<div class="stat"><small>PEAK LEVEL</small><strong id="peakdb">— dBFS</strong></div>
+<div class="stat"><small>PEAK FREQUENCY</small><strong id="peakfreq">— Hz</strong></div>
+<div class="stat"><small>SAMPLE RATE</small><strong id="samplerate">— Hz</strong></div>
+<div class="stat"><small>INPUT</small><strong id="inputstate">OFF</strong></div>
+</div><div class="info">Catatan: pembacaan level adalah dBFS relatif, bukan dB SPL terkalibrasi. Untuk hasil ukur sistem PA, gunakan measurement microphone dan soundcard/interface yang baik. Matikan AGC, noise suppression, dan echo cancellation bila perangkat mengizinkan.</div></section>
+</main>
 <script>
-let logEl=document.getElementById('log');
-function log(t){ logEl.textContent="LOG: "+t+"\n"+logEl.textContent; console.log(t); }
-let demoOn=false, micOn=false, analyser=null, ctxA=null, stream=null, noiseSrc=null;
-let N=120, peakHold=new Array(N).fill(-120), specHist=[];
-let demoT=0;
-
-function logX(f,W){ return (Math.log10(f/20)/Math.log10(1000))*W; }
-
-function fft(re,im){
-  let n=re.length;
-  for(let i=1,j=0;i<n;i++){ let bit=n>>1; for(;j&bit;bit>>=1) j^=bit; j^=bit;
-    if(i<j){ let t=re[i];re[i]=re[j];re[j]=t; t=im[i];im[i]=im[j];im[j]=t; } }
-  for(let len=2;len<=n;len<<=1){
-    let ang=-2*Math.PI/len, wr=Math.cos(ang), wi=Math.sin(ang);
-    for(let i=0;i<n;i+=len){ let cwr=1,cwi=0;
-      for(let j=0;j<len/2;j++){
-        let ur=re[i+j],ui=im[i+j];
-        let vr=re[i+j+len/2]*cwr-im[i+j+len/2]*cwi, vi=re[i+j+len/2]*cwi+im[i+j+len/2]*cwr;
-        re[i+j]=ur+vr; im[i+j]=ui+vi; re[i+j+len/2]=ur-vr; im[i+j+len/2]=ui-vi;
-        let t=cwr*wr-cwi*wi; cwi=cwr*wi+cwi*wr; cwr=t;
-      }
-    }
-  }
+const $=id=>document.getElementById(id);
+const spec=$('spectrum'),sc=spec.getContext('2d'),water=$('waterfall'),wc=water.getContext('2d');
+let audio=null,stream=null,an=null,src=null,raf=0,sm=[],hold=[],frame=0,fft=4096,avgCount=4;
+const minF=20,maxF=20000;
+function xfreq(f,w){return Math.log(f/minF)/Math.log(maxF/minF)*w}
+function grid(){
+ const w=spec.width,h=spec.height,plotH=h-36;sc.clearRect(0,0,w,h);sc.fillStyle='#030507';sc.fillRect(0,0,w,h);
+ sc.strokeStyle='#303640';sc.lineWidth=1;sc.fillStyle='#aab2bf';sc.font='17px Arial';
+ [20,30,50,100,200,300,500,1000,2000,3000,5000,10000,20000].forEach(f=>{let x=xfreq(f,w);sc.beginPath();sc.moveTo(x,0);sc.lineTo(x,plotH);sc.stroke();sc.fillText(f>=1000?(f/1000)+'k':f,x+3,h-10)});
+ let range=+$('range').value;for(let d=0;d<=range;d+=10){let y=d/range*plotH;sc.beginPath();sc.moveTo(0,y);sc.lineTo(w,y);sc.stroke();sc.fillText(-d+' dB',5,Math.max(13,y-3))}
 }
-
-function tesDemo(){
-  demoOn=true; micOn=false;
-  log("DEMO JALAN! Grafik harus gerak sekarang. Kalo ini aja diem, screenshot kirim ke saya.");
-  alert("DEMO JALAN MAS! Liat grafik kuning, harus naik turun sendiri kayak musik.");
-  requestAnimationFrame(demoLoop);
+function colorFor(v){let t=Math.max(0,Math.min(1,(v+95)/75));let stops=[[20,16,48],[67,47,118],[170,76,137],[239,139,143],[255,218,142]];let p=t*4,i=Math.min(3,Math.floor(p)),a=p-i;let c=stops[i].map((n,k)=>Math.round(n*(1-a)+stops[i+1][k]*a));return `rgb(${c[0]},${c[1]},${c[2]})`}
+function draw(){
+ if(!an)return;
+ let n=an.frequencyBinCount,raw=new Float32Array(n);an.getFloatFrequencyData(raw);
+ let vals=[],peak=-Infinity,peakBin=1,range=+$('range').value;
+ for(let i=1;i<n;i++){let f=i*audio.sampleRate/fft;if(f<minF||f>maxF)continue;let v=Number.isFinite(raw[i])?raw[i]:-120;vals.push({f,v,i});if(v>peak){peak=v;peakBin=i}}
+ let smoothing=+$('smooth').value;
+ if(sm.length!==vals.length){sm=vals.map(o=>o.v);hold=vals.map(o=>o.v)}
+ else vals.forEach((o,i)=>{sm[i]=smoothing*sm[i]+(1-smoothing)*o.v;hold[i]=Math.max(o.v,hold[i]-.12)});
+ grid();let w=spec.width,h=spec.height,ph=h-36;
+ function y(v){return Math.max(0,Math.min(range, -v))/range*ph}
+ sc.beginPath();sc.strokeStyle='#55d9ed';sc.lineWidth=2.2;
+ vals.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(sm[i]);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});sc.stroke();
+ sc.beginPath();sc.strokeStyle='#ffd16a';sc.lineWidth=1.2;
+ vals.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(hold[i]);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});sc.stroke();
+ // Scroll waterfall upwards, paint a new spectral row at the bottom.
+ let image=wc.getImageData(0,0,water.width,water.height-1);wc.putImageData(image,0,0);
+ let row=wc.createImageData(water.width,1);
+ for(let x=0;x<water.width;x++){let f=minF*Math.pow(maxF/minF,x/(water.width-1));let bin=Math.max(1,Math.min(n-1,Math.round(f*fft/audio.sampleRate)));let v=raw[bin];let col=colorFor(v);let m=col.match(/\d+/g).map(Number);let p=x*4;row.data[p]=m[0];row.data[p+1]=m[1];row.data[p+2]=m[2];row.data[p+3]=255}
+ wc.putImageData(row,0,water.height-1);
+ $('peakdb').textContent=peak.toFixed(1)+' dBFS';$('peakfreq').textContent=(peakBin*audio.sampleRate/fft).toFixed(0)+' Hz';raf=requestAnimationFrame(draw);
 }
-function demoLoop(){
-  if(!demoOn) return;
-  requestAnimationFrame(demoLoop);
-  demoT+=0.08;
-  let mags=[];
-  for(let k=0;k<N;k++){
-    let f=20*Math.pow(500,k/(N-1));
-    // bikin puncak di 62Hz + 1000Hz + 2500Hz, goyang kayak musik beneran
-    let m=-80 + 35*Math.exp(-Math.pow(Math.log10(f/62),2)*8)*(0.7+0.3*Math.sin(demoT*2))
-            + 25*Math.exp(-Math.pow(Math.log10(f/1000),2)*6)*(0.7+0.3*Math.sin(demo
+$('start').onclick=async()=>{
+ try{
+  if(!navigator.mediaDevices?.getUserMedia)throw Error('Browser tidak mendukung akses mikrofon. Buka file melalui HTTPS.');
+  stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+  audio=new(window.AudioContext||window.webkitAudioContext)();await audio.resume();src=audio.createMediaStreamSource(stream);an=audio.createAnalyser();fft=+$('fft').value;avgCount=+$('average').value;an.fftSize=fft;an.smoothingTimeConstant=0;src.connect(an);
+  sm=[];hold=[];wc.clearRect(0,0,water.width,water.height);$('status').textContent='LIVE';$('inputstate').textContent='MIC ON';$('samplerate').textContent=audio.sampleRate+' Hz';$('start').disabled=true;$('stop').disabled=false;draw();
+ }catch(e){$('status').textContent='MIC ERROR';alert('Tidak bisa membuka mikrofon: '+e.message+'. Izinkan akses mikrofon dan gunakan browser yang mendukung HTTPS.')}
+};
+$('stop').onclick=()=>{cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());if(audio)audio.close();audio=null;stream=null;an=null;$('status').textContent='STANDBY';$('inputstate').textContent='OFF';$('start').disabled=false;$('stop').disabled=true};
+$('fft').onchange=()=>{if(an){fft=+$('fft').value;an.fftSize=fft;sm=[];hold=[]}};
+$('range').onchange=()=>{if(an){cancelAnimationFrame(raf);draw()}else grid()};
+grid();
+</script></body></html>
