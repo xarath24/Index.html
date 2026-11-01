@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>SMART LIVE — TANPA PANEL REFERENCE</title>
+<title>SMART LIVE — RESPONSIF</title>
 <style>
 :root{--bg:#0a0c10;--panel:#14181f;--panel2:#1a1f28;--line:#2b323e;--txt:#e8eaf0;--mut:#8b95a5;--cyan:#3fd4ec;--gold:#ffd16a;--red:#ff6b6b;--purple:#b58cff;--green:#5fd68a}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:12px system-ui,Arial}
@@ -45,7 +45,7 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
 </style></head>
 <body>
 <div class="topbar">
-<div class="logo"><b>SMART</b> LIVE <span>MIC SAJA • PANEL REFERENCE DIHAPUS</span></div>
+<div class="logo"><b>SMART</b> LIVE <span>MIC SAJA • RESPONSIF • TANPA REFERENCE</span></div>
 <div class="topbtns"><button id="start" class="go">▶ START</button><button id="stop" disabled>■ STOP</button><button id="landscape">↔ FULLSCREEN</button><b id="liveind">● STANDBY</b></div>
 </div>
 <div class="layout">
@@ -57,7 +57,7 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
 <div class="meas"><span class="sw" style="background:var(--green)"></span><b>Trace C<small id="capCinfo">Empty</small></b><input type="checkbox" id="showC" checked></div>
 <button class="go" id="capture" style="width:100%;padding:10px">📸 CAPTURE LIVE → SLOT</button>
 <select id="targetslot" style="width:100%;margin-top:6px"><option value="0">Slot A</option><option value="1">Slot B</option><option value="2">Slot C</option></select>
-<div style="font-size:11px;color:var(--mut);line-height:1.5;margin-top:8px">Sumber suara dari luar: pink / musik dari laptop / speaker lain. HP ini cuma ngukur, ga bunyiin apa-apa lagi.</div>
+<div style="font-size:11px;color:var(--mut);line-height:1.5;margin-top:8px">Sumber suara dari luar. HP ini cuma ngukur.</div>
 </div>
 <div class="panel" style="margin-top:8px"><h3>⚡ POLARITY — TES KLIK</h3>
 <div class="polbadge unknown" id="polbadge"><b id="poltitle">? UNKNOWN</b><span id="poldetail">Pencet TES KLIK di bawah. Ini klik pendek, bukan pink noise.</span></div>
@@ -70,13 +70,14 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
 <main>
 <div class="panel">
 <div class="ctl">
-<label>FFT<select id="fft"><option value="512">512</option><option value="1024">1024</option><option value="2048">2048</option><option value="4096">4096</option><option value="8192">8192</option><option value="16384" selected>16384</option><option value="32768">32768</option></select></label>
-<label>AVERAGE<select id="average"><option value="1">1</option><option value="4">4</option><option value="8">8</option><option value="16" selected>16</option><option value="32">32</option></select></label>
+<button id="modefast" class="go">⚡ CEPAT — RESPONSIF</button><button id="modesmooth">🌊 HALUS — BACA PELAN</button>
+<label>FFT<select id="fft"><option value="512">512 — 10ms</option><option value="1024">1024 — 21ms</option><option value="2048" selected>2048 — 42ms</option><option value="4096">4096 — 85ms</option><option value="8192">8192 — 170ms</option><option value="16384">16384 — 341ms</option><option value="32768">32768 — 682ms</option></select></label>
+<label>AVERAGE<select id="average"><option value="1">1</option><option value="2">2</option><option value="4" selected>4</option><option value="8">8</option><option value="16">16</option></select></label>
 <label>SMOOTHING<select id="detail"><option value="0">RAW</option><option value="12">1/12 OKT</option><option value="6" selected>1/6 OKT</option><option value="3">1/3 OKT</option></select></label>
-<label>SMOOTH<select id="smooth"><option value="0">OFF</option><option value=".55">LOW</option><option value=".8" selected>MED</option><option value=".93">HIGH</option></select></label>
+<label>SMOOTH<select id="smooth"><option value="0">OFF — PALING CEPET</option><option value=".35">LOW</option><option value=".55" selected>LOW+</option><option value=".8">MED</option><option value=".93">HIGH — LAMBAT</option></select></label>
 <label>RANGE<select id="range"><option value="60">60</option><option value="90" selected>90</option><option value="120">120</option></select></label>
 </div>
-<div class="graphtitle"><b>RTA — dBFS MENTAH DARI MIC</b><span>20 Hz — 20 kHz • tanpa koreksi pink</span></div>
+<div class="graphtitle"><b>RTA — dBFS MENTAH • <span id="lagtxt" style="color:var(--gold)">Lag ~42ms</span></b><span>20 Hz — 20 kHz</span></div>
 <canvas id="mag" width="1200" height="300"></canvas>
 <div class="graphtitle"><b>GELOMBANG KLIK — NAIK (+) = NORMAL, TURUN (-) = TERBALIK</b><span></span></div>
 <canvas id="phase" width="1200" height="190"></canvas>
@@ -96,26 +97,26 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
 <div class="kv"><span>Polarity</span><b id="polmini">—</b></div>
 <div class="kv"><span>Sample Rate</span><b id="samplerate">—</b></div>
 <div class="kv"><span>Bin Width</span><b id="binwidth">— Hz</b></div>
+<div class="kv"><span>FPS</span><b id="fpstxt">—</b></div>
 <div class="kv"><span>Cursor</span><b id="cursorfreq">—</b></div>
 </div>
-<div class="panel" style="margin-top:8px"><h3>CARA PAKAI</h3>
+<div class="panel" style="margin-top:8px"><h3>BIAR RESPONSIF</h3>
 <div style="font-size:11px;color:var(--mut);line-height:1.6">
-1. Bunyiin suara dari laptop / speaker luar<br>
-2. START di HP ini, taruh HP di meja<br>
-3. Tunggu 8 detik, CAPTURE, STOP<br>
-4. Geser cursor, baca dBFS nya<br>
-5. Suara mati, TES 3x polarity
+1. Pake <b>CEPAT</b>, FFT 1024 / 2048<br>
+2. AVERAGE 2-4, SMOOTH OFF / LOW<br>
+3. Kalo mau baca detail, STOP dulu, baru pindah ke HALUS / FFT gede<br>
+4. Jangan pake FFT 16384 + AVG 16 pas live, itu yang bikin 2-3 detik ketinggalan
 </div></div>
 </aside>
 </div>
-<div class="statusbar"><span>● <b id="status">STANDBY</b></span><span>Mode: <b>MIC SAJA • TANPA REFERENCE</b></span><span>FFT: <b id="fftstat">16384</b></span><span>Polarity: <b id="polstat">—</b></span></div>
+<div class="statusbar"><span>● <b id="status">STANDBY</b></span><span>Mode: <b>MIC SAJA • RESPONSIF</b></span><span>FFT: <b id="fftstat">2048</b></span><span>Polarity: <b id="polstat">—</b></span></div>
 <script>
 const $=id=>document.getElementById(id);
 const mag=$('mag'),mg=mag.getContext('2d'),phc=$('phase'),pg=phc.getContext('2d'),sp=$('spec'),sg=sp.getContext('2d');
-let ctx=null,stream=null,an=null,tfAn=null,src=null,raf=0,fft=16384,running=false;
-let smP=[],holdP=[],avgFramesP=[],currentVals=[],holdVals=[];
+let ctx=null,stream=null,an=null,tfAn=null,src=null,raf=0,fft=2048,running=false;
+let smP=null,holdP=null,currentVals=[],holdVals=[];
 let captures=[null,null,null],selectedSlot=0,cursorFreq=4720;
-let clickWave=null,clickResult=null;
+let clickWave=null,clickResult=null,lastFrameT=0,fpsCnt=0,fpsT=0;
 const minF=20,maxF=20000,PLOTB=34,BIG_N=32768;
 const SEGS=[[20,1000,.26],[1000,3000,.14],[3000,7000,.16],[7000,10000,.10],[10000,15000,.08],[15000,20000,.26]];
 const db2p=v=>Math.pow(10,Math.max(-120,v)/10), p2db=p=>10*Math.log10(Math.max(1e-12,p));
@@ -124,6 +125,19 @@ function xfreq(f,w){f=Math.max(minF,Math.min(maxF,f));let s=0;for(const[a,b,pw]o
 function freqAtX(x,w){const r=Math.max(0,Math.min(1,x/w));let s=0;for(const[a,b,pw]of SEGS){if(r<=s+pw||a===15000)return a*Math.exp(((r-s)/pw)*Math.log(b/a));s+=pw}return maxF}
 function fmtF(f){return f>=1000?(f/1000).toFixed(2)+' kHz':Math.round(f)+' Hz'}
 function sliderForFreq(f){let lo=0,hi=mag.width;for(let i=0;i<24;i++){const m=(lo+hi)/2;if(freqAtX(m,mag.width)<f)lo=m;else hi=m}return Math.round(lo/mag.width*1000)}
+function updateLagTxt(){if(!ctx)return;const ms=Math.round(fft/ctx.sampleRate*1000);$('lagtxt').textContent='Lag ~'+ms+'ms • Bin '+(ctx.sampleRate/fft).toFixed(1)+'Hz'}
+function setFast(){
+  $('fft').value='1024';$('average').value='2';$('smooth').value='0.35';
+  if(an&&ctx){fft=1024;an.fftSize=fft;smP=null;holdP=null;$('fftstat').textContent=fft;$('binwidth').textContent=(ctx.sampleRate/fft).toFixed(1)+' Hz';updateLagTxt()}
+  $('modefast').classList.add('go');$('modesmooth').classList.remove('go');
+}
+function setSmoothMode(){
+  $('fft').value='8192';$('average').value='8';$('smooth').value='0.8';
+  if(an&&ctx){fft=8192;an.fftSize=fft;smP=null;holdP=null;$('fftstat').textContent=fft;$('binwidth').textContent=(ctx.sampleRate/fft).toFixed(1)+' Hz';updateLagTxt()}
+  $('modesmooth').classList.add('go');$('modefast').classList.remove('go');
+}
+$('modefast').onclick=setFast;
+$('modesmooth').onclick=setSmoothMode;
 function setPolBadge(state,detail,first){
   const b=$('polbadge');b.className='polbadge '+state;
   $('poltitle').textContent=state==='normal'?'✓ NORMAL':state==='inverted'?'✕ TERBALIK':'? UNKNOWN';
@@ -167,23 +181,36 @@ async function runClickTests(times){
 }
 $('clickpol').onclick=()=>runClickTests(1);
 $('clickpol3').onclick=()=>runClickTests(3);
-function powerAtLog(freqs,pArr,f){
-  if(!freqs.length)return null;if(f<=freqs[0].f)return pArr[0];if(f>=freqs[freqs.length-1].f)return pArr[pArr.length-1];
-  let lo=0,hi=freqs.length-1;while(hi-lo>1){const m=(lo+hi)>>1;if(freqs[m].f<=f)lo=m;else hi=m}
-  const a=freqs[lo],b=freqs[hi],t=(Math.log(f)-Math.log(a.f))/(Math.log(b.f)-Math.log(a.f));return pArr[lo]+(pArr[hi]-pArr[lo])*t;
-}
-function densifyPower(freqs,pArr){
-  const out=[],W=mag.width;
-  for(let x=0;x<=W;x+=6){const f=freqAtX(x,W),p=powerAtLog(freqs,pArr,f);if(p!==null)out.push({f,v:p2db(p),x})}
-  const perOct=+$('detail').value||0;if(!perOct)return out;
-  const half=1/(2*perOct);
-  return out.map(o=>{const lo=o.f*Math.pow(2,-half),hi=o.f*Math.pow(2,half);let s=0,c=0;for(const d of out){if(d.f>=lo&&d.f<=hi){s+=db2p(d.v);c++}}return{f:o.f,v:p2db(c?s/c:db2p(o.v)),x:o.x}});
+// Densify cepat: prefix-sum di domain log, O(n) bukan O(n^2)
+function densifyFast(freqs,pArr){
+  const W=mag.width, N=201, out=new Array(N);
+  const logF=new Float64Array(freqs.length), pref=new Float64Array(freqs.length+1);
+  for(let i=0;i<freqs.length;i++){logF[i]=Math.log(freqs[i].f);pref[i+1]=pref[i]+pArr[i]}
+  const perOct=+$('detail').value||0, half=perOct?1/(2*perOct):0;
+  const loIdx=(targetLog)=>{let lo=0,hi=logF.length;while(lo<hi){const m=(lo+hi)>>1;if(logF[m]<targetLog)lo=m+1;else hi=m}return lo};
+  for(let k=0;k<N;k++){
+    const x=k/(N-1)*W, f=freqAtX(x,W), lf=Math.log(f);
+    let v;
+    if(!perOct){
+      // interpolasi log-linear 1 titik
+      const idx=loIdx(lf);
+      if(idx<=0)v=pArr[0];else if(idx>=freqs.length)v=pArr[freqs.length-1];
+      else{const a=freqs[idx-1],b=freqs[idx],t=(lf-logF[idx-1])/(logF[idx]-logF[idx-1]||1);v=pArr[idx-1]+(pArr[idx]-pArr[idx-1])*t}
+    }else{
+      const lo=loIdx(lf-half*Math.LN2), hi=loIdx(lf+half*Math.LN2);
+      const cnt=Math.max(1,hi-lo);
+      v=(pref[hi]-pref[lo])/cnt;
+    }
+    out[k]={f,v:p2db(v),x};
+  }
+  return out;
 }
 function pointOnLine(data,f){
-  if(!data.length)return null;const cx=xfreq(f,mag.width),pts=data.map(o=>({f:o.f,v:o.v,x:o.x??xfreq(o.f,mag.width)}));
+  if(!data.length)return null;const cx=xfreq(f,mag.width),pts=data;
   if(cx<=pts[0].x)return pts[0];if(cx>=pts[pts.length-1].x)return pts[pts.length-1];
-  for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1];if(cx>=a.x&&cx<=b.x){const t=b.x===a.x?0:(cx-a.x)/(b.x-a.x);return{f,v:a.v+(b.v-a.v)*t,x:cx}}}
-  return pts[0];
+  // binary search, bukan loop semua
+  let lo=0,hi=pts.length-1;while(hi-lo>1){const m=(lo+hi)>>1;if(pts[m].x<=cx)lo=m;else hi=m}
+  const a=pts[lo],b=pts[hi],t=b.x===a.x?0:(cx-a.x)/(b.x-a.x);return{f,v:a.v+(b.v-a.v)*t,x:cx};
 }
 function bandValAt(vals,t){if(!vals.length)return null;let best=vals[0],bd=1e9;for(const o of vals){const d=Math.abs(Math.log(o.f/t));if(d<bd){bd=d;best=o}}return best}
 function gridMag(c,w,h,plotH,range){
@@ -191,7 +218,7 @@ function gridMag(c,w,h,plotH,range){
   [20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000].forEach(f=>{const x=xfreq(f,w);c.beginPath();c.moveTo(x,0);c.lineTo(x,plotH);c.stroke();c.textAlign=f===20000?'right':f===20?'left':'center';c.fillText(f===20?'20 Hz':f===20000?'20 kHz':f>=1000?(f/1000)+'k':''+f,f===20000?w-3:f===20?3:x,h-8)});
   c.textAlign='left';for(let d=0;d<=range;d+=10){const y=d/range*plotH;c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();c.fillText((d===0?'0':'-'+d)+' dB',4,Math.max(11,y+11))}
 }
-function drawTrace(c,data,w,plotH,range,color,lw){if(!data||!data.length)return;c.beginPath();c.strokeStyle=color;c.lineWidth=lw;data.forEach((o,i)=>{const X=o.x??xfreq(o.f,w),Y=Math.max(0,Math.min(range,-o.v))/range*plotH;if(i===0)c.moveTo(X,Y);else c.lineTo(X,Y)});c.stroke()}
+function drawTrace(c,data,w,plotH,range,color,lw){if(!data||!data.length)return;c.beginPath();c.strokeStyle=color;c.lineWidth=lw;for(let i=0;i<data.length;i++){const o=data[i],X=o.x,Y=Math.max(0,Math.min(range,-o.v))/range*plotH;if(i===0)c.moveTo(X,Y);else c.lineTo(X,Y)}c.stroke()}
 function drawAll(){
   const w=mag.width,h=mag.height,plotH=h-PLOTB,range=+$('range').value;
   gridMag(mg,w,h,plotH,range);
@@ -227,23 +254,24 @@ function colorFor(v){let t=Math.max(0,Math.min(1,(v+90)/60));const st=[[20,16,48
 function drawSpec(raw,n){
   const W=sp.width,H=sp.height,S=3;try{const o=sg.getImageData(0,0,W,H-S);sg.putImageData(o,0,S)}catch(e){}
   const row=sg.createImageData(W,S);
-  for(let x=0;x<W;x++){const f=freqAtX(x,W),bin=Math.max(1,Math.min(n-1,Math.round(f*fft/ctx.sampleRate))),m=colorFor(raw[bin]||-120);for(let y=0;y<S;y++){const p=(y*W+x)*4;row.data[p]=m[0];row.data[p+1]=m[1];row.data[p+2]=m[2];row.data[p+3]=255}}
+  for(let x=0;x<W;x+=2){const f=freqAtX(x,W),bin=Math.max(1,Math.min(n-1,Math.round(f*fft/ctx.sampleRate))),m=colorFor(raw[bin]||-120);for(let y=0;y<S;y++){for(let dx=0;dx<2&&x+dx<W;dx++){const p=(y*W+x+dx)*4;row.data[p]=m[0];row.data[p+1]=m[1];row.data[p+2]=m[2];row.data[p+3]=255}}}
   sg.putImageData(row,0,0);
 }
 function draw(){
   if(!running||!an||!ctx)return;
+  const now=performance.now();fpsCnt++;if(now-fpsT>1000){$('fpstxt').textContent=fpsCnt+' fps';fpsCnt=0;fpsT=now}
   const n=an.frequencyBinCount,raw=new Float32Array(n);an.getFloatFrequencyData(raw);
-  const vals=[];let peak=-Infinity,peakBin=1,sumP=0,cntP=0;
-  for(let i=1;i<n;i++){const f=i*ctx.sampleRate/fft;if(f<minF||f>maxF)continue;const v=Number.isFinite(raw[i])?raw[i]:-120;vals.push({f,v});if(v>peak){peak=v;peakBin=i}sumP+=db2p(v);cntP++}
-  if(!vals.length){raf=requestAnimationFrame(draw);return}
+  const freqs=[],pArr=[];let peak=-Infinity,peakBin=1,sumP=0,cntP=0;
+  for(let i=1;i<n;i++){const f=i*ctx.sampleRate/fft;if(f<minF||f>maxF)continue;const v=Number.isFinite(raw[i])?raw[i]:-120;freqs.push({f});pArr.push(db2p(v));if(v>peak){peak=v;peakBin=i}sumP+=db2p(v);cntP++}
+  if(!freqs.length){raf=requestAnimationFrame(draw);return}
   let peakFreq=peakBin*ctx.sampleRate/fft;
   if(peakBin>1&&peakBin<n-1){const a=raw[peakBin-1],b=raw[peakBin],c=raw[peakBin+1],d=a-2*b+c;if(d!==0)peakFreq=(peakBin+0.5*(a-c)/d)*ctx.sampleRate/fft}
-  const pFrame=vals.map(o=>db2p(o.v));avgFramesP.push(pFrame);const want=Math.max(1,+$('average').value);while(avgFramesP.length>want)avgFramesP.shift();
-  const avgP=pFrame.map((_,i)=>avgFramesP.reduce((s,fr)=>s+fr[i],0)/avgFramesP.length);
-  const sm=+$('smooth').value;
-  if(smP.length!==vals.length){smP=avgP.slice();holdP=avgP.slice()}else vals.forEach((o,i)=>{smP[i]=sm*smP[i]+(1-sm)*avgP[i];holdP[i]=Math.max(avgP[i],holdP[i]*0.985)});
-  currentVals=densifyPower(vals,smP);
-  holdVals=densifyPower(vals,holdP);
+  // Exponential average di power: 1 baris, ga nyimpen 16 frame
+  const alpha=1/Math.max(1,+$('average').value), sm=+$('smooth').value;
+  if(!smP||smP.length!==pArr.length){smP=Float64Array.from(pArr);holdP=Float64Array.from(pArr)}
+  else{for(let i=0;i<pArr.length;i++){const avg=smP[i]*(1-alpha)+pArr[i]*alpha;smP[i]=sm*smP[i]+(1-sm)*avg;holdP[i]=Math.max(avg,holdP[i]*0.94)}}
+  currentVals=densifyFast(freqs,Array.from(smP));
+  holdVals=densifyFast(freqs,Array.from(holdP));
   drawAll();
   const pct=Math.max(0,Math.min(100,(peak+90)/90*100));$('splbar').style.height=pct+'%';$('spldb').textContent=peak.toFixed(1);
   $('peakfreq').textContent=Math.round(peakFreq)+' Hz';$('rmsdb').textContent=p2db(cntP?sumP/cntP:1e-12).toFixed(1)+' dBFS';
@@ -258,10 +286,10 @@ $('start').onclick=async()=>{
     an=ctx.createAnalyser();fft=+$('fft').value;an.fftSize=fft;an.smoothingTimeConstant=0;an.minDecibels=-120;an.maxDecibels=0;
     tfAn=ctx.createAnalyser();tfAn.fftSize=BIG_N;tfAn.smoothingTimeConstant=0;
     src.connect(an);src.connect(tfAn);
-    smP=[];holdP=[];avgFramesP=[];running=true;
+    smP=null;holdP=null;running=true;fpsT=performance.now();fpsCnt=0;
     sg.fillStyle='#141030';sg.fillRect(0,0,sp.width,sp.height);
     $('start').disabled=true;$('stop').disabled=false;$('status').textContent='LIVE';$('liveind').textContent='● LIVE';
-    $('samplerate').textContent=ctx.sampleRate+' Hz';$('binwidth').textContent=(ctx.sampleRate/fft).toFixed(1)+' Hz';$('fftstat').textContent=fft;
+    $('samplerate').textContent=ctx.sampleRate+' Hz';$('binwidth').textContent=(ctx.sampleRate/fft).toFixed(1)+' Hz';$('fftstat').textContent=fft;updateLagTxt();
     draw();
   }catch(e){if(stream)stream.getTracks().forEach(t=>t.stop());$('status').textContent='MIC ERROR';alert('Mic ga bisa dibuka: '+e.message)}
 };
@@ -270,8 +298,8 @@ $('stop').onclick=()=>{
   if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;an=null;tfAn=null;
   $('start').disabled=false;$('stop').disabled=true;$('status').textContent='STOPPED • FROZEN';$('liveind').textContent='● STANDBY';drawAll();
 };
-$('fft').onchange=()=>{if(an&&ctx){fft=+$('fft').value;an.fftSize=fft;smP=[];holdP=[];avgFramesP=[];$('binwidth').textContent=(ctx.sampleRate/fft).toFixed(1)+' Hz';$('fftstat').textContent=fft}};
-$('average').onchange=()=>{avgFramesP=[]};
+$('fft').onchange=()=>{if(an&&ctx){fft=+$('fft').value;an.fftSize=fft;smP=null;holdP=null;$('binwidth').textContent=(ctx.sampleRate/fft).toFixed(1)+' Hz';$('fftstat').textContent=fft;updateLagTxt()}};
+$('average').onchange=()=>{};
 $('detail').onchange=drawAll;
 function moveCursor(ev){const r=mag.getBoundingClientRect();const px=Math.max(0,Math.min(mag.width,(ev.clientX-r.left)/r.width*mag.width));cursorFreq=freqAtX(px,mag.width);drawAll()}
 let drag=false;
