@@ -8,28 +8,28 @@
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:14px system-ui,Arial}
 header{padding:12px 14px;background:#101319;border-bottom:1px solid #303640;display:flex;align-items:center;justify-content:space-between;gap:8px}
 h1{font-size:17px;margin:0;letter-spacing:.5px}.sub{font-size:11px;color:var(--muted);margin-top:3px}
-main{padding:10px;max-width:1100px;margin:auto}.toolbar,.panel{background:var(--panel);border:1px solid #303640;border-radius:10px;padding:10px;margin-bottom:10px}
+main{padding:10px;max-width:1100px;margin:auto;overflow-x:hidden}.toolbar,.panel{background:var(--panel);border:1px solid #303640;border-radius:10px;padding:10px;margin-bottom:10px;overflow:hidden}
 .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 button,select{background:#222b37;color:var(--txt);border:1px solid #566171;border-radius:7px;padding:9px 11px;font-size:13px}
 button.go{background:#087e91;border-color:#13b5c9}button:disabled{opacity:.45}
-label{font-size:11px;color:var(--muted)}canvas{display:block;width:100%;background:#030507;border-radius:5px}
-#spectrum{height:430px}#waterfall{height:220px}
+label{font-size:11px;color:var(--muted)}
+canvas{display:block;width:100%;height:auto;background:#030507;border-radius:5px;max-width:100%}
+#spectrum{aspect-ratio:1200/760}
+#waterfall{aspect-ratio:1200/300;height:auto}
 .capturebar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
 .capturebar button{padding:10px 14px}
 .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}
-@media(max-width:520px){#spectrum{height:360px}#waterfall{height:190px}}
 .title{font-size:13px;color:#cbd3df;margin:0 0 7px;display:flex;justify-content:space-between}
 .info{font-size:11px;color:var(--muted);line-height:1.45;margin-top:7px}
-.stats{display:flex;gap:8px;flex-wrap:wrap}.stat{background:#090d12;border-radius:7px;padding:7px 10px;min-width:105px;flex:1}.stat small{display:block;color:var(--muted);font-size:10px}.stat strong{font-size:15px}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.stat{background:#090d12;border-radius:7px;padding:8px 10px;min-width:105px;flex:1;overflow:hidden}.stat small{display:block;color:var(--muted);font-size:10px;white-space:nowrap}.stat strong{font-size:15px;white-space:nowrap}
 .status{font-size:12px;color:#7ee0ad;margin-left:auto}
 @media(max-width:520px){header{align-items:flex-start}}
 body.landscape-mode main{max-width:none;padding:8px}
-body.landscape-mode #spectrum{height:min(68vh,560px)}
-body.landscape-mode #waterfall{height:min(30vh,240px)}
+body.landscape-mode #spectrum{aspect-ratio:1200/560}
+body.landscape-mode #waterfall{aspect-ratio:1200/240}
 body.landscape-mode .toolbar{position:sticky;top:0;z-index:5}
 body.landscape-mode header h1{font-size:15px}
-@media(orientation:landscape){#spectrum{height:min(68vh,560px)}#waterfall{height:min(30vh,240px)}}
 </style></head>
 <body>
 <header><div><h1>SMART RTA LIVE</h1><div class="sub">REAL-TIME SPECTRUM • WATERFALL • AUDIO ANALYZER</div></div><div style="display:flex;align-items:center;gap:8px"><button id="landscape">↔ LANDSCAPE</button><div id="status" class="status">STANDBY</div></div></header>
@@ -42,7 +42,7 @@ body.landscape-mode header h1{font-size:15px}
 <label>SMOOTH<br><select id="smooth"><option value="0">OFF</option><option value=".55">LOW</option><option value=".8" selected>MED</option><option value=".93">HIGH</option></select></label>
 </section>
 <section class="panel"><div class="title"><b>MAGNITUDE / FREQUENCY RESPONSE</b><span>20 Hz — 20 kHz</span></div><canvas id="spectrum" width="1200" height="760"></canvas>
-<div class="stats" style="margin-top:9px">
+<div class="stats">
  <div class="stat"><small>CURSOR FREQUENCY</small><strong id="cursorfreq">Geser garis pada grafik</strong></div>
  <div class="stat"><small>LEVEL DI TITIK</small><strong id="cursorlevel">— dBFS</strong></div>
 </div>
@@ -79,6 +79,7 @@ const captureColors=['#ff6b6b','#b58cff','#67d69b','#56cfe1','#f4a261','#a8dadc'
 let currentVals=[];let avgFrames=[];
 let cursorFreq=1000,cursorActive=false;
 const minF=20,maxF=20000;
+const PLOT_BOTTOM=48;
 function xfreq(f,w){
  f=Math.max(minF,Math.min(maxF,f));
  const a=Math.log(1000/minF), b=Math.log(10), c=Math.log(maxF/10000);
@@ -94,15 +95,15 @@ function freqAtX(x,w){
  return 10000*Math.exp(((r-p1-p2)/(1-p1-p2))*Math.log(2));
 }
 function grid(){
- const w=spec.width,h=spec.height,plotH=h-36;sc.clearRect(0,0,w,h);sc.fillStyle='#030507';sc.fillRect(0,0,w,h);
+ const w=spec.width,h=spec.height,plotH=h-PLOT_BOTTOM;sc.clearRect(0,0,w,h);sc.fillStyle='#030507';sc.fillRect(0,0,w,h);
  sc.strokeStyle='#303640';sc.lineWidth=1;sc.fillStyle='#aab2bf';sc.font='17px Arial';
- [20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000].forEach(f=>{let x=xfreq(f,w);sc.beginPath();sc.moveTo(x,0);sc.lineTo(x,plotH);sc.stroke();let label=f===20?'20 Hz':(f===20000?'20 kHz':(f>=1000?(f/1000)+'k':String(f)));sc.textAlign=f===20000?'right':(f===20?'left':'center');let tx=f===20000?w-4:(f===20?4:x);sc.fillText(label,tx,h-10)});sc.textAlign='left';
- let range=+$('range').value;for(let d=0;d<=range;d+=10){let y=d/range*plotH;sc.beginPath();sc.moveTo(0,y);sc.lineTo(w,y);sc.stroke();sc.fillText(-d+' dB',5,Math.max(13,y-3))}
+ [20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000].forEach(f=>{let x=xfreq(f,w);sc.beginPath();sc.moveTo(x,0);sc.lineTo(x,plotH);sc.stroke();let label=f===20?'20 Hz':(f===20000?'20 kHz':(f>=1000?(f/1000)+'k':String(f)));sc.textAlign=f===20000?'right':(f===20?'left':'center');let tx=f===20000?w-4:(f===20?4:x);sc.fillText(label,tx,h-14)});sc.textAlign='left';
+ let range=+$('range').value;for(let d=0;d<=range;d+=10){let y=d/range*plotH;sc.beginPath();sc.moveTo(0,y);sc.lineTo(w,y);sc.stroke();sc.fillText(-d+' dB',5,Math.max(14,y+14))}
 }
 function colorFor(v){let t=Math.max(0,Math.min(1,(v+95)/75));let stops=[[20,16,48],[67,47,118],[170,76,137],[239,139,143],[255,218,142]];let p=t*4,i=Math.min(3,Math.floor(p)),a=p-i;let c=stops[i].map((n,k)=>Math.round(n*(1-a)+stops[i+1][k]*a));return `rgb(${c[0]},${c[1]},${c[2]})`}
 function drawFrozen(){
  grid();
- const w=spec.width,h=spec.height,ph=h-36,range=+$('range').value;
+ const w=spec.width,h=spec.height,ph=h-PLOT_BOTTOM,range=+$('range').value;
  const y=v=>Math.max(0,Math.min(range,-v))/range*ph;
  captures.forEach((cap,ci)=>{
   if(!cap||!visibleSlots[ci])return;
@@ -111,10 +112,10 @@ function drawFrozen(){
   sc.stroke();
  });
  if(cursorActive){
-  const cx=xfreq(cursorFreq,w);
-  sc.save();sc.setLineDash([]);sc.strokeStyle='rgba(255,255,255,.22)';sc.lineWidth=14;
+  const cx=Math.max(6,Math.min(w-6,xfreq(cursorFreq,w)));
+  sc.save();sc.strokeStyle='rgba(255,255,255,.22)';sc.lineWidth=10;
   sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();
-  sc.strokeStyle='#fff';sc.lineWidth=4;sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();sc.restore();
+  sc.strokeStyle='#fff';sc.lineWidth=3;sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();sc.restore();
   const available=captures.map((cap,i)=>({cap,i})).filter(x=>x.cap&&visibleSlots[x.i]);
   const chosen=available.find(x=>x.i===selectedSlot)||available[available.length-1];
   const data=chosen?chosen.cap.data:[];
@@ -137,7 +138,7 @@ function draw(){
  const averaged=target.map((_,i)=>avgFrames.reduce((sum,frame)=>sum+frame[i],0)/avgFrames.length);
  if(sm.length!==vals.length){sm=averaged.slice();hold=averaged.slice()}
  else vals.forEach((o,i)=>{sm[i]=smoothing*sm[i]+(1-smoothing)*averaged[i];hold[i]=Math.max(averaged[i],hold[i]-.12)});
- grid();let w=spec.width,h=spec.height,ph=h-36;
+ grid();let w=spec.width,h=spec.height,ph=h-PLOT_BOTTOM;
  function y(v){return Math.max(0,Math.min(range, -v))/range*ph}
  sc.beginPath();sc.strokeStyle='#55d9ed';sc.lineWidth=2.2;
  vals.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(sm[i]);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});sc.stroke();
@@ -151,12 +152,11 @@ function draw(){
   sc.stroke();
  });
  if(cursorActive){
-  const cx=xfreq(cursorFreq,w);
+  const cx=Math.max(6,Math.min(w-6,xfreq(cursorFreq,w)));
   sc.save();
-  sc.setLineDash([]);
-  sc.strokeStyle='rgba(255,255,255,.22)';sc.lineWidth=14;
+  sc.strokeStyle='rgba(255,255,255,.22)';sc.lineWidth=10;
   sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();
-  sc.strokeStyle='#ffffff';sc.lineWidth=4;
+  sc.strokeStyle='#ffffff';sc.lineWidth=3;
   sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();
   sc.restore();
   let nearest=vals.reduce((best,o)=>Math.abs(o.f-cursorFreq)<Math.abs(best.f-cursorFreq)?o:best,vals[0]);
