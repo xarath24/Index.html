@@ -45,7 +45,6 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
 .polbadge.inverted{border-color:#ef4444;background:#450a0a}.polbadge.inverted b{color:#f87171}
 .polbadge.unknown{border-color:#eab308;background:#292524}.polbadge.unknown b{color:#facc15}
 .warnbox{font-size:11px;color:#ffd16a;line-height:1.5;margin-top:6px;display:none}
-.debug{background:#000;border:1px solid #eab308;border-radius:6px;padding:7px;font-family:monospace;font-size:11px;line-height:1.6;color:#fde68a;white-space:pre-wrap;word-break:break-word;margin-top:7px}
 @media(max-width:900px){.layout{grid-template-columns:1fr}.spl{height:110px}}
 body.landscape-mode .layout{max-width:none}
 </style></head>
@@ -105,8 +104,6 @@ body.landscape-mode .layout{max-width:none}
 <canvas id="phase" width="1200" height="190"></canvas>
 <div class="cursorctl"><button id="curleft">◀</button><input type="range" id="cursorslider" min="0" max="1000" value="660"><button id="curright">▶</button><b id="cursorread" style="white-space:nowrap">4.72 kHz • — dB • —°</b></div>
 <div class="legend"><span><i style="background:var(--cyan)"></i>LIVE / TF</span><span><i style="background:var(--gold)"></i>PEAK HOLD</span><span><i style="background:var(--green)"></i>COHERENCE</span><span><i style="background:var(--red)"></i>TRACE A</span><span><i style="background:var(--purple)"></i>TRACE B</span></div>
-<div class="debug" id="debugbox">DEBUG: belum LIVE. START dulu, terus PINK, tunggu 5 detik.</div>
-<button id="loopback" style="width:100%;margin-top:7px">🧪 TES LOOPBACK KODE TF — tanpa speaker/mic, harus Coh 0.99</button>
 </div>
 <div class="panel" style="margin-top:8px"><div class="graphtitle"><b>LIVE SPECTROGRAPH</b><span>Terbaru di atas • jalan ke bawah</span></div>
 <canvas id="spec" width="1200" height="150"></canvas></div>
@@ -142,7 +139,7 @@ let ctx=null,audio=null,stream=null,an=null,tfAn=null,refAn=null,src=null,raf=0,
 let smP=[],holdP=[],avgFramesP=[],currentVals=[];
 let captures=[null,null,null],selectedSlot=0;
 let cursorFreq=4720, invertPhase=false, checkingPol=false, polResult=null;
-let dbg={refRMS:0,micRMS:0,cohLow:0,cohMid:0,cohHigh:0,corr:0,tfCount:0,bestLag:0,bestCorr:0,loopCoh:null};
+let dbg={refRMS:0,micRMS:0,cohLow:0,cohMid:0,cohHigh:0,corr:0,tfCount:0,bestLag:0,bestCorr:0};
 const minF=20,maxF=20000,PLOTB=34, TF_N=8192, BIG_N=32768, MAX_DELAY_MS=300;
 const SEGS=[[20,1000,.26],[1000,3000,.14],[3000,7000,.16],[7000,10000,.10],[10000,15000,.08],[15000,20000,.26]];
 const db2p=v=>Math.pow(10,Math.max(-120,v)/10), p2db=p=>10*Math.log10(Math.max(1e-12,p));
@@ -150,7 +147,6 @@ async function ensureCtx(){ if(!ctx){ ctx=new(window.AudioContext||window.webkit
 function xfreq(f,w){f=Math.max(minF,Math.min(maxF,f));let s=0;for(let i=0;i<SEGS.length;i++){let[a,b,pw]=SEGS[i];if(f<=b||i===SEGS.length-1)return(s+Math.log(f/a)/Math.log(b/a)*pw)*w;s+=pw}return w}
 function freqAtX(x,w){const r=Math.max(0,Math.min(1,x/w));let s=0;for(let i=0;i<SEGS.length;i++){let[a,b,pw]=SEGS[i];if(r<=s+pw||i===SEGS.length-1)return a*Math.exp(((r-s)/pw)*Math.log(b/a));s+=pw}return maxF}
 function fmtF(f){return f>=1000?(f/1000).toFixed(2)+' kHz':f.toFixed(0)+' Hz'}
-// FIX CURSOR: slider <-> frekuensi harus 1 arah, dicari x nya dari frekuensi
 function sliderForFreq(f){let lo=0,hi=mag.width;for(let i=0;i<24;i++){const mid=(lo+hi)/2;if(freqAtX(mid,mag.width)<f)lo=mid;else hi=mid}return Math.round(lo/mag.width*1000)}
 function syncCursorUI(){ $('cursorslider').value=sliderForFreq(cursorFreq); $('cursorfreq').textContent=fmtF(cursorFreq); }
 function fftCalc(re,im){const n=re.length;for(let i=1,j=0;i<n;i++){let bit=n>>1;for(;j&bit;bit>>=1)j^=bit;j^=bit;if(i<j){let t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t}}for(let len=2;len<=n;len<<=1){const ang=-2*Math.PI/len,wr=Math.cos(ang),wi=Math.sin(ang);for(let i=0;i<n;i+=len){let cwr=1,cwi=0;for(let j=0;j<len/2;j++){const ur=re[i+j],ui=im[i+j],vr=re[i+j+len/2]*cwr-im[i+j+len/2]*cwi,vi=re[i+j+len/2]*cwi+im[i+j+len/2]*cwr;re[i+j]=ur+vr;im[i+j]=ui+vi;re[i+j+len/2]=ur-vr;im[i+j+len/2]=ui-vi;const t=cwr*wr-cwi*wi;cwi=cwr*wi+cwi*wr;cwr=t}}}}
@@ -229,22 +225,6 @@ function findBestLag(){
  $('bestdelay').textContent=res.ms.toFixed(1)+' ms • corr '+res.corr.toFixed(2);
  return res;
 }
-$('loopback').onclick=()=>{
- if(!refAn||!audio){ alert('PINK dulu, mas. Tes ini butuh pink jalan.'); return; }
- const tdR=new Float32Array(BIG_N); refAn.getFloatTimeDomainData(tdR);
- const fakeDelay=6000, N=TF_N;
- let cohSum=0,cohCnt=0;
- for(let rep=0;rep<8;rep++){
-  const off=rep*1000;
-  const reM=new Float32Array(N),imM=new Float32Array(N),reR=new Float32Array(N),imR=new Float32Array(N);
-  for(let i=0;i<N;i++){const wnd=0.5*(1-Math.cos(2*Math.PI*i/(N-1)));const m=tdR[BIG_N-TF_N+i+off%2000]||0;const r=tdR[BIG_N-TF_N-fakeDelay+i+off%2000]||0;reM[i]=m*wnd;reR[i]=r*wnd}
-  fftCalc(reM,imM); fftCalc(reR,imR);
-  for(let k=1;k<N/2;k++){const f=k*audio.sampleRate/N; if(f<100||f>8000)continue;const xx=reR[k]*reR[k]+imR[k]*imR[k],yy=reM[k]*reM[k]+imM[k]*imM[k];const xr=reR[k]*reM[k]+imR[k]*imM[k],xi=reR[k]*imM[k]-imR[k]*reM[k];const coh=(xr*xr+xi*xi)/Math.max(1e-18,xx*yy);cohSum+=Math.min(1,coh);cohCnt++}
- }
- const avg=cohCnt?cohSum/cohCnt:0; dbg.loopCoh=avg;
- alert('TES LOOPBACK KODE TF\nCoherence = '+avg.toFixed(2)+'\n\nKalo 0.90+ : kode TF nya BENER.\nKalo masih 0.05 : kode nya masih bug.');
- updateDebug();
-};
 function corrSign(){
  if(!tfAn||!refAn||!audio) return null;
  const seg=alignedSegments(); if(!seg) return null;
@@ -302,20 +282,10 @@ function livePolarity(tf){
  if(!checkingPol) setPolBadge(res,corr);
  polResult=res;
 }
-function updateDebug(){
- const el=$('debugbox');
- if(!an){ el.textContent='DEBUG: belum LIVE. START dulu, terus PINK, tunggu 5 detik. Frozen trace tetap bisa di-cursor.'; return; }
- el.textContent=
-  'DEBUG  noise='+ (noiseType||'OFF') +'  vol='+$('noisevol').value+'%  delay='+$('delayms').value+'ms  TFcount='+dbg.tfCount+'\n'+
-  'RefRMS='+dbg.refRMS.toFixed(4)+'  MicRMS='+dbg.micRMS.toFixed(4)+'\n'+
-  'Coh 100-1k='+dbg.cohLow.toFixed(2)+'  Coh 1k-8k='+dbg.cohMid.toFixed(2)+'  Coh 8k-20k='+dbg.cohHigh.toFixed(2)+'\n'+
-  'BestLag='+dbg.bestLag.toFixed(1)+'ms  BestCorr='+dbg.bestCorr.toFixed(2)+'  Corr@delay='+(dbg.corr||0).toFixed(2)+(dbg.loopCoh!=null?'\nLoopbackKode='+dbg.loopCoh.toFixed(2)+' (harus 0.90+)':'');
-}
 function powerAtLog(freqs,pArr,f){if(!freqs.length)return null;if(f<=freqs[0].f)return pArr[0];if(f>=freqs[freqs.length-1].f)return pArr[pArr.length-1];let lo=0,hi=freqs.length-1;while(hi-lo>1){let m=(lo+hi)>>1;if(freqs[m].f<=f)lo=m;else hi=m}const a=freqs[lo],b=freqs[hi],t=(Math.log(f)-Math.log(a.f))/(Math.log(b.f)-Math.log(a.f));return pArr[lo]+(pArr[hi]-pArr[lo])*t}
 function octaveSmooth(dense,perOct){if(!perOct||!dense.length)return dense;const half=1/(2*perOct);return dense.map(o=>{const lo=o.f*Math.pow(2,-half),hi=o.f*Math.pow(2,half);let s=0,c=0;for(const d of dense){if(d.f>=lo&&d.f<=hi){s+=db2p(d.v);c++}}return{f:o.f,v:p2db(c?s/c:db2p(o.v)),x:o.x,phase:o.phase,coh:o.coh}})}
 function densifyPower(freqs,pArr){const out=[],W=mag.width;for(let x=0;x<=W;x+=6){const f=freqAtX(x,W);const p=powerAtLog(freqs,pArr,f);if(p===null)continue;out.push({f,v:p2db(p),x})}return octaveSmooth(out,+$('detail').value||0)}
 function pointOnLine(data,f){if(!data||!data.length)return null;const cx=xfreq(f,mag.width);const pts=data.map(o=>({f:o.f,v:o.v,x:o.x??xfreq(o.f,mag.width),phase:o.phase,coh:o.coh}));if(cx<=pts[0].x)return pts[0];if(cx>=pts[pts.length-1].x)return pts[pts.length-1];for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1];if(cx>=a.x&&cx<=b.x){const t=b.x===a.x?0:(cx-a.x)/(b.x-a.x);return{f,v:a.v+(b.v-a.v)*t,x:cx,phase:a.phase+(b.phase-a.phase)*t,coh:a.coh+(b.coh-a.coh)*t}}}return pts[0]}
-// FIX CURSOR: data buat cursor = LIVE dulu, kalo kosong ambil capture yang dicentang
 function cursorSourceData(liveData){
  if(liveData&&liveData.length) return liveData;
  if(currentVals.length) return currentVals;
@@ -398,7 +368,6 @@ function drawAll(){
  const tf=tfData(); const showTF=tf&&noiseType==='pink';
  const dataToShow=showTF?tf:currentVals;
  if(tf){mg.beginPath();mg.strokeStyle='#5fd68a';mg.lineWidth=1.6;tf.forEach((o,i)=>{const X=xfreq(o.f,w),Y=plotH-4-o.coh*18;if(i===0)mg.moveTo(X,Y);else mg.lineTo(X,Y)});mg.stroke();mg.fillStyle='#5fd68a';mg.font='11px Arial';mg.fillText('COHERENCE',6,plotH-24)}
- // Gambar LIVE / frozen dulu, baru capture di atasnya, biar cursor nempel ke yang keliatan
  if($('showlive').checked) drawTrace(mg,dataToShow,w,plotH,range,'#3fd4ec',2.5);
  captures.forEach((cap,i)=>{if(!cap||!$('show'+'ABC'[i]).checked)return;drawTrace(mg,cap.data,w,plotH,range,['#ff6b6b','#b58cff','#5fd68a'][i],2)});
  const cursorData=cursorSourceData(dataToShow);
@@ -422,7 +391,6 @@ function drawAll(){
   pg.fillStyle='#8b95a5';pg.font='bold 15px Arial';pg.textAlign='center';pg.fillText('NO REFERENCE — HIDUPKAN PINK NOISE UNTUK PHASE / POLARITY',pw/2,ph2/2);pg.textAlign='left';$('modetxt').textContent='MODE: RTA — HIDUPKAN PINK NOISE UNTUK TF + POLARITY';$('cohavg').textContent='—';$('cohwarn').textContent='';
   if(noiseType!=='pink'&&!checkingPol) setPolBadge(null,null);
  }
- updateDebug();
 }
 function colorFor(v){let t=Math.max(0,Math.min(1,(v+90)/60));const st=[[20,16,48],[67,47,118],[170,76,137],[239,139,143],[255,218,142]];let p=t*4,i=Math.min(3,Math.floor(p)),a=p-i;const c=st[i].map((n,k)=>Math.round(n*(1-a)+st[i+1][k]*a));return c}
 function drawSpec(raw,n){const W=sp.width,H=sp.height,S=3;try{const o=sg.getImageData(0,0,W,H-S);sg.putImageData(o,0,S)}catch(e){}const row=sg.createImageData(W,S);for(let x=0;x<W;x++){const f=freqAtX(x,W),bin=Math.max(1,Math.min(n-1,Math.round(f*fft/audio.sampleRate))),v=raw[bin]||-120,m=colorFor(v);for(let y=0;y<S;y++){const p=(y*W+x)*4;row.data[p]=m[0];row.data[p+1]=m[1];row.data[p+2]=m[2];row.data[p+3]=255}}sg.putImageData(row,0,0)}
@@ -474,7 +442,6 @@ $('start').onclick=async()=>{
   alert('Tidak bisa membuka mikrofon: '+e.message);
  }
 };
-// FIX STOP: jangan hapus currentVals, biar trace + cursor nya beku di frame terakhir
 $('stop').onclick=()=>{cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;src=null;an=null;tfAn=null;$('start').disabled=false;$('stop').disabled=true;$('status').textContent='STOPPED • FROZEN';$('liveind').textContent='● STANDBY';drawAll()};
 $('finddelay').onclick=()=>{
  const best=findBestLag(); if(!best){alert('START dulu + PINK NOISE dulu');return}
