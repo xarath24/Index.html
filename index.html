@@ -2,228 +2,303 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>RTA + AUTO EQ MID 15 BAND</title>
+<title>SMART RTA LIVE + AUTO EQ 15 BAND + PHASE</title>
 <style>
-:root{color-scheme:dark;--bg:#050608;--panel:#101319;--txt:#e8eaf0;--muted:#9ca4b1}
+:root{color-scheme:dark;--bg:#050608;--panel:#101319;--grid:#333943;--txt:#e8eaf0;--muted:#9ca4b1;--cyan:#55d9ed;--gold:#ffd16a}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:14px system-ui,Arial}
-header{padding:12px 14px;background:#101319;border-bottom:1px solid #303640;display:flex;justify-content:space-between}
-h1{font-size:17px;margin:0}.sub{font-size:11px;color:var(--muted)}
+header{padding:12px 14px;background:#101319;border-bottom:1px solid #303640;display:flex;align-items:center;justify-content:space-between;gap:8px}
+h1{font-size:17px;margin:0;letter-spacing:.5px}.sub{font-size:11px;color:var(--muted);margin-top:3px}
 main{padding:10px;max-width:1100px;margin:auto}.toolbar,.panel{background:var(--panel);border:1px solid #303640;border-radius:10px;padding:10px;margin-bottom:10px}
 .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 button,select{background:#222b37;color:var(--txt);border:1px solid #566171;border-radius:7px;padding:9px 11px;font-size:13px}
-button.go{background:#087e91}button.eqbtn{background:#7c3aed;border-color:#a78bfa}button:disabled{opacity:.45}
+button.go{background:#087e91;border-color:#13b5c9}button.eqbtn{background:#7c3aed;border-color:#a78bfa}button.phbtn{background:#92400e;border-color:#f59e0b}button:disabled{opacity:.45}
 label{font-size:11px;color:var(--muted)}canvas{display:block;width:100%;background:#030507;border-radius:5px}
-#spectrum{height:430px}#waterfall{height:170px}
-.title{font-size:13px;color:#cbd3df;margin:0 0 7px;display:flex;justify-content:space-between}
+#spectrum{height:430px}#waterfall{height:190px}#phaseCanvas{height:220px}
+.capturebar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}
+.title{font-size:13px;color:#cbd3df;margin:0 0 7px;display:flex;justify-content:space-between;gap:8px}
 .info{font-size:11px;color:var(--muted);line-height:1.45;margin-top:7px}
 .stats{display:flex;gap:8px;flex-wrap:wrap}.stat{background:#090d12;border-radius:7px;padding:7px 10px;min-width:105px;flex:1}.stat small{display:block;color:var(--muted);font-size:10px}.stat strong{font-size:15px}
-.status{font-size:12px;color:#7ee0ad}
+.status{font-size:12px;color:#7ee0ad;margin-left:auto}
 .eqtable{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}
 .eqtable th,.eqtable td{border:1px solid #303640;padding:7px 4px;text-align:center}
 .eqtable th{background:#1a2230}
-.cut{color:#ff6b6b}.boost{color:#67d69b}
-#eqResult{white-space:pre-wrap;background:#090d12;border:1px solid #303640;border-radius:7px;padding:10px;font-size:12px;line-height:1.6;margin-top:8px}
+.cut{color:#ff6b6b}.boost{color:#67d69b}.warnC{color:#f59e0b}
+#eqResult,#phaseResult{white-space:pre-wrap;background:#090d12;border:1px solid #303640;border-radius:7px;padding:10px;font-size:12px;line-height:1.6;margin-top:8px}
 #warnBox{display:none;background:#3a0a0a;border:2px solid #ff1744;color:#fff;padding:12px;border-radius:8px;font-size:13px;line-height:1.5;margin-top:8px}
 #okBox{display:none;background:#062e1a;border:2px solid #00c853;color:#fff;padding:12px;border-radius:8px;font-size:13px;line-height:1.5;margin-top:8px}
-.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px}
-.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}
-@media(max-width:520px){#spectrum{height:360px}}
-@media(orientation:landscape){#spectrum{height:min(62vh,520px)}}
+.wayBtn{flex:1;padding:12px;font-weight:bold}.wayBtn.on{outline:3px solid #ffea00;background:#3a2e00}
+@media(max-width:520px){#spectrum{height:360px}#waterfall{height:170px}}
+body.landscape-mode main{max-width:none;padding:8px}
+body.landscape-mode #spectrum{height:min(62vh,520px)}
+@media(orientation:landscape){#spectrum{height:min(62vh,520px)}#waterfall{height:160px}}
 </style></head>
 <body>
-<header><div><h1>RTA + AUTO EQ MID 15 BAND</h1><div class="sub">KHUSUS MID 125Hz - 3150Hz • OUTPUT 5-6 DLMS</div></div><div id="status" class="status">STANDBY</div></header>
+<header><div><h1>SMART RTA LIVE + AUTO EQ 15 BAND</h1><div class="sub">SUB • LOW • MID • FLAT • PHASE / POLARITY CHECK</div></div><div style="display:flex;align-items:center;gap:8px"><button id="landscape">↔ LANDSCAPE</button><div id="status" class="status">STANDBY</div></div></header>
 <main>
 
-<div class="panel" style="border:2px solid #ffea00;background:#1a1600">
-<b style="color:#ffea00">⚠️ WAJIB BACA SEBELUM UKUR MID:</b>
-<div class="info" style="color:#fff;font-size:12px;line-height:1.6">
-1. Di DLMS, <b>MUTE dulu Output Sub (1-2) sama High (7-8)</b>, tinggalin Mid (5-6) doang yang bunyi.<br>
-2. Puter Pink Noise dari mixer / speaker, <b>bukan dari HP yang ngukur</b>.<br>
-3. HP 1 meter depan speaker Mid, taruh di meja, jangan dipegang.<br>
-4. Peak harus <b>-35 s/d -15 dBFS</b>. Kemarin mas -42.6, itu kekecilan, makanya ngawur.<br>
-5. Kalo masih -42, gedein volume mixer, jangan gedein di HP.
-</div>
-</div>
+<div class="panel" style="border:2px solid #ffea00;background:#1a1600"><b style="color:#ffea00">⚠️ CARA UKUR YANG BENER, JANGAN LONCAT:</b><div class="info" style="color:#fff;font-size:12px;line-height:1.6">1. Pilih dulu mau ukur apa di bawah: SUB / LOW / MID / FLAT.<br>2. Di DLMS, <b>MUTE semua output kecuali yang mau diukur</b>. Ukur SUB = Sub doang bunyi. Ukur MID = Mid doang bunyi.<br>3. Pink Noise dari mixer / speaker, <b>bukan dari HP yang ngukur</b>. HP 1 meter, taruh meja, jangan dipegang.<br>4. Peak harus <b>-35 s/d -15 dBFS</b>. Kemarin mas -42.6, itu yang bikin ngawur. Kalo masih kecil, gedein mixer.<br>5. Capture, baru Auto EQ. Kalo keluar kotak merah GAGAL, jangan masukin angka nya.</div></div>
 
 <section class="toolbar">
 <button class="go" id="start">▶ START LIVE</button><button id="stop" disabled>■ STOP</button>
-<label>FFT<br><select id="fft"><option value="4096">4096</option><option value="8192" selected>8192</option></select></label>
-<label>AVERAGE<br><select id="average"><option value="8">8x</option><option value="16" selected>16x</option></select></label>
-<label>RANGE<br><select id="range"><option value="60">60 dB</option><option value="90" selected>90 dB</option></select></label>
-<label>SMOOTH<br><select id="smooth"><option value=".8">MED</option><option value=".93" selected>HIGH</option></select></label>
+<label>FFT<br><select id="fft"><option value="2048">2048</option><option value="4096">4096</option><option value="8192" selected>8192</option></select></label>
+<label>AVERAGE<br><select id="average"><option value="1">1x</option><option value="4">4x</option><option value="8">8x</option><option value="16" selected>16x</option></select></label>
+<label>RANGE<br><select id="range"><option value="60">60 dB</option><option value="90" selected>90 dB</option><option value="120">120 dB</option></select></label>
+<label>SMOOTH<br><select id="smooth"><option value="0">OFF</option><option value=".55">LOW</option><option value=".8">MED</option><option value=".93" selected>HIGH</option></select></label>
 </section>
 
-<section class="panel"><div class="title"><b>MAGNITUDE - FOKUS MID, LIAT 125Hz - 3150Hz AJA</b><span>20 Hz — 20 kHz</span></div><canvas id="spectrum" width="1200" height="760"></canvas>
+<section class="panel"><div class="title"><b>MAGNITUDE / FREQUENCY RESPONSE</b><span>20 Hz — 20 kHz</span></div><canvas id="spectrum" width="1200" height="760"></canvas>
 <div class="stats" style="margin-top:9px">
-<div class="stat"><small>PEAK LEVEL</small><strong id="peakdb">— dBFS</strong></div>
-<div class="stat"><small>PEAK FREQ</small><strong id="peakfreq">— Hz</strong></div>
-<div class="stat"><small>LEVEL UKUR MID</small><strong id="measureLevel">BELUM DIUKUR</strong></div>
-<div class="stat"><small>INPUT</small><strong id="inputstate">OFF</strong></div>
+<div class="stat"><small>CURSOR FREQUENCY</small><strong id="cursorfreq">Geser garis pada grafik</strong></div>
+<div class="stat"><small>LEVEL DI TITIK</small><strong id="cursorlevel">— dBFS</strong></div>
 </div>
-<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+<div class="info">Geser garis putih di grafik. Kotak kuning = daerah way yang lagi dipilih buat Auto EQ.</div>
+<div class="capturebar">
+<label style="width:100%">PILIH SLOT TUJUAN (capture baru hanya mengganti slot ini)</label>
 <select id="targetslot"></select>
-<button class="go" id="capture">📸 CAPTURE MID SLOT INI</button>
+<button class="go" id="capture">📸 SIMPAN / GANTI CAPTURE</button>
 <button id="clearcaptures">HAPUS SLOT</button>
+<button id="showall">TAMPILKAN SEMUA</button>
+<button id="hideall">SEMBUNYIKAN SEMUA</button>
+<div id="slotlist" class="slotlist" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;width:100%;margin-top:6px"></div>
+<span id="capturestatus" class="info">Pilih slot tujuan. Capture nyimpen magnitude + phase + peak nya.</span>
 </div>
-<div id="slotlist" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:6px"></div>
-<div id="capturestatus" class="info">Capture pas Pink Noise jalan, Mid doang yang bunyi.</div>
-<div class="legend"><span><i class="dot" style="background:#55d9ed"></i>LIVE</span><span><i class="dot" style="background:#ffd16a"></i>PEAK</span><span><i class="dot" style="background:#a78bfa"></i>TARGET MID</span><span><i class="dot" style="background:#fff"></i>SETELAH EQ MID</span></div>
+<div class="legend"><span><i class="dot" style="background:#55d9ed"></i>LIVE</span><span><i class="dot" style="background:#ffd16a"></i>PEAK HOLD</span><span><i class="dot" style="background:#a78bfa"></i>TARGET</span><span><i class="dot" style="background:#fff"></i>SETELAH EQ</span></div>
 </section>
 
+<!-- PHASE -->
+<section class="panel" style="border:2px solid #f59e0b">
+<div class="title"><b>〰️ PHASE - BUAT TAU POLARITY KEBALIK APA ENGGAK</b><span>+180° atas, 0° tengah, -180° bawah</span></div>
+<canvas id="phaseCanvas" width="1200" height="380"></canvas>
+<div class="stats" style="margin-top:8px">
+<div class="stat"><small>PHASE @ 80Hz</small><strong id="ph80">—°</strong></div>
+<div class="stat"><small>PHASE @ 300Hz</small><strong id="ph300">—°</strong></div>
+<div class="stat"><small>PHASE @ 2500Hz</small><strong id="ph2500">—°</strong></div>
+<div class="stat"><small>PHASE BISA DIPERCAYA?</small><strong id="phaseTrust">Belum ukur</strong></div>
+</div>
+<div class="info">Phase yang bagus miring pelan, ga patah. <b>Kalo level kekecilan, grafik ini sengaja tak kosongin</b>, biar ga jadi gergaji ngawur kayak screenshot kemarin. Phase 1 mic itu relatif, yang dicari lonjakan nya di titik crossover, bukan angka 0° nya. Cara paling bener cek polarity tetap: balik polarity di DLMS, liat magnitude di crossover nya naik apa jeblok. Yang naik itu yang bener.</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+<button class="phbtn" id="runPhase" style="flex:2">🧭 CEK PHASE / POLARITY OTOMATIS</button>
+<button id="copyPhase" style="flex:1">📋 SALIN HASIL PHASE</button>
+</div>
+<table class="eqtable" id="phaseTableWrap" style="display:none"><thead><tr><th>CROSSOVER</th><th>PHASE KIRI</th><th>PHASE KANAN</th><th>LONCATAN</th><th>KESIMPULAN</th></tr></thead><tbody id="phaseBody"></tbody></table>
+<div id="phaseResult" style="display:none"></div>
+</section>
+
+<!-- AUTO EQ 15 BAND -->
 <section class="panel" style="border:2px solid #7c3aed">
-<div class="title"><b>🤖 AUTO EQ MID 15 BAND</b><span id="eqScore">Skor: —</span></div>
-<div style="display:flex;gap:8px;flex-wrap:wrap">
-<label style="flex:1">SUMBER<br><select id="eqSource"><option value="capture">Capture Slot Mid</option><option value="live">LIVE sekarang</option></select></label>
-<label style="flex:1">TARGET MID<br><select id="eqTarget"><option value="house" selected>HOUSE - Vocal enak, hajatan</option><option value="flat">FLAT - Rata total</option><option value="vocal">VOCAL JELAS - 1k-3k naik dikit</option></select></label>
-<label style="flex:1">CROSSOVER MID MAS<br><select id="midXover"><option value="300-2500">300 Hz - 2500 Hz</option><option value="250-3000">250 Hz - 3000 Hz</option><option value="200-2000">200 Hz - 2000 Hz</option></select></label>
+<div class="title"><b>🤖 AUTO EQ 15 BAND - PER WAY, CUT SAJA</b><span id="eqScore">Skor: —</span></div>
+<div style="display:flex;gap:6px;flex-wrap:wrap">
+<button class="wayBtn on" data-way="MID">MID<br><small>125 - 3150 Hz</small></button>
+<button class="wayBtn" data-way="SUB">SUB<br><small>25 - 100 Hz</small></button>
+<button class="wayBtn" data-way="LOW">LOW<br><small>80 - 315 Hz</small></button>
+<button class="wayBtn" data-way="FLAT">FLAT / SEMUA<br><small>31 - 16000 Hz</small></button>
+</div>
+<div class="info" id="wayInfo">MID: Output 5-6 DLMS. Mute Sub + High dulu. Ini daerah vocal, kendang, gitar.</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+<label style="flex:1">SUMBER<br><select id="eqSource"><option value="capture">Capture Slot terpilih</option><option value="live">LIVE sekarang</option></select></label>
+<label style="flex:1">TARGET<br><select id="eqTarget"><option value="house" selected>HOUSE CURVE - Hajatan</option><option value="flat">FLAT - Rata</option><option value="vocal">VOCAL JELAS</option></select></label>
 </div>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-<button class="eqbtn" id="runAutoEQ" style="flex:2">🤖 JALANKAN AUTO EQ MID 15 BAND</button>
-<button id="copyEQ" style="flex:1">📋 SALIN KE DLMS OUT 5-6</button>
+<button class="eqbtn" id="runAutoEQ" style="flex:2">🤖 JALANKAN AUTO EQ 15 BAND</button>
+<button id="copyEQ" style="flex:1">📋 SALIN KE DLMS</button>
 <button id="resetEQ">RESET</button>
 </div>
 <div id="warnBox"></div><div id="okBox"></div>
-
-<table class="eqtable" id="eqTableWrap" style="display:none">
-<thead><tr><th>BAND</th><th>FREQ MID</th><th>UKUR</th><th>TARGET</th><th>GAIN DLMS</th><th>Q</th><th>ARTINYA</th></tr></thead>
-<tbody id="eqBody"></tbody>
-</table>
+<table class="eqtable" id="eqTableWrap" style="display:none"><thead><tr><th>BAND</th><th>FREQ</th><th>UKUR</th><th>TARGET</th><th>GAIN DLMS</th><th>Q</th><th>ARTINYA</th></tr></thead><tbody id="eqBody"></tbody></table>
 <div id="eqResult" style="display:none"></div>
-
 <div class="stats" style="margin-top:8px">
-<div class="stat"><small>SELISIH SEBELUM - CUMA MID</small><strong id="errBefore">—</strong></div>
+<div class="stat"><small>SELISIH SEBELUM - CUMA WAY INI</small><strong id="errBefore">—</strong></div>
 <div class="stat"><small>SELISIH SESUDAH</small><strong id="errAfter">—</strong></div>
 <div class="stat"><small>BAND DIUBAH</small><strong id="bandCount">—</strong></div>
 </div>
-<div class="info"><b>15 band Mid:</b> 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3150 Hz.<br>
-<b>Kunci aman:</b> Boost max +2 dB, Cut max -6 dB, di bawah 125Hz & di atas 3150Hz diabaikan, itu urusan crossover, bukan EQ Mid. Kalo ada yang minta +2 semua, berarti ukur gagal, dia nolak sendiri.</div>
 </section>
 
-<section class="panel"><div class="title"><b>WATERFALL</b></div><canvas id="waterfall" width="1200" height="300"></canvas></section>
+<section class="panel"><div class="title"><b>LIVE SPECTROGRAM / WATERFALL</b><span>Waktu berjalan ↓</span></div><canvas id="waterfall" width="1200" height="300"></canvas></section>
+<section class="panel"><div class="stats">
+<div class="stat"><small>PEAK LEVEL</small><strong id="peakdb">— dBFS</strong></div>
+<div class="stat"><small>PEAK FREQUENCY</small><strong id="peakfreq">— Hz</strong></div>
+<div class="stat"><small>SAMPLE RATE</small><strong id="samplerate">— Hz</strong></div>
+<div class="stat"><small>INPUT</small><strong id="inputstate">OFF</strong></div>
+</div><div class="info">dBFS relatif, bukan dB SPL. Matikan AGC, noise suppression, echo cancellation. Untuk SUB, mic HP sangat terbatas di bawah 40Hz, hasil SUB cuma panduan, jangan dipaksa rata total.</div></section>
 </main>
 <script>
 const $=id=>document.getElementById(id);
-const spec=$('spectrum'),sc=spec.getContext('2d'),water=$('waterfall'),wc=water.getContext('2d');
+const spec=$('spectrum'),sc=spec.getContext('2d'),water=$('waterfall'),wc=water.getContext('2d'),phC=$('phaseCanvas'),phCtx=phC.getContext('2d');
 let audio=null,stream=null,an=null,src=null,raf=0,sm=[],hold=[],fft=8192;
-const SLOT_COUNT=6;
+const SLOT_COUNT=10;
 let captures=Array(SLOT_COUNT).fill(null),visibleSlots=Array(SLOT_COUNT).fill(true),selectedSlot=0;
-const captureColors=['#ff6b6b','#b58cff','#67d69b','#56cfe1','#f4a261','#a8dadc'];
-let currentVals=[],avgFrames=[],cursorFreq=1000,cursorActive=false;
-let eqBands=[],eqAnalyzed=false,lastPeak=-120;
+const captureColors=['#ff6b6b','#b58cff','#67d69b','#56cfe1','#f4a261','#a8dadc','#e9c46a','#cdb4db','#90be6d','#f28482'];
+let currentVals=[],currentPhase=[],avgFrames=[],cursorFreq=1000,cursorActive=false;
+let eqBands=[],eqAnalyzed=false,lastPeak=-120,currentWay='MID';
 const minF=20,maxF=20000;
-// 15 BAND MID - 1/3 OKTAF
-const EQ_FREQS=[125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150];
-const EQ_MEANING={125:'Dengung / gendang bawah',160:'Bass vocal cowok',200:'Tebal vocal',250:'Dengung ruangan',315:'Kotak / kardus',400:'Vocal mendem',500:'Bodi vocal',630:'Hidung / nasal',800:'Jelas ga nya vocal',1000:'Patokan tengah',1250:'Vocal cewek',1600:'Pedes dikit',2000:'Artikulasi / jelas',2500:'Pedes vocal',3150:'Sibilance / sss'};
-
+// 15 BAND PER WAY - 1/3 oktaf, sengaja dibatasi biar ga ngawur di ujung
+const WAYS={
+ SUB:{label:'SUB - Output 1-2',info:'SUB: Output 1-2 DLMS. Mute Mid + High dulu. Mic HP lemah di bawah 40Hz, jangan kejar rata total.',freqs:[25,31,40,50,63,80,100,125,160,200,250,315,400,500,630],ref:[40,80],out:'Output 1-2 SUB',fmin:25,fmax:100},
+ LOW:{label:'LOW - Output 3-4',info:'LOW: Output 3-4 DLMS. Mute Sub + Mid + High, atau Sub nyala tapi fokus 80-315Hz.',freqs:[63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600],ref:[125,250],out:'Output 3-4 LOW',fmin:80,fmax:315},
+ MID:{label:'MID - Output 5-6',info:'MID: Output 5-6 DLMS. Mute Sub + High dulu. Ini daerah vocal, kendang, gitar.',freqs:[125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150],ref:[500,1250],out:'Output 5-6 MID',fmin:125,fmax:3150},
+ FLAT:{label:'FLAT - Semua bunyi',info:'FLAT: Semua output nyala, buat cek akhir setelah SUB/LOW/MID selesai. Jangan dipake buat nyetting awal.',freqs:[31,40,50,63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150,4000,5000,6300,8000,10000,12500,16000],ref:[500,2000],out:'Semua Output - cek akhir saja',fmin:31,fmax:16000}
+};
+// Untuk FLAT, 15 band utama yang ditampilkan tetap 15, sisanya panduan
+const MEANING={25:'Sub paling bawah',31:'Sub dalam',40:'Pukulan sub',50:'Bass dangdut',63:'Bass tebal',80:'Crossover Sub/Low',100:'Bass atas',125:'Dengung',160:'Bass vocal cowok',200:'Tebal vocal',250:'Dengung ruangan',315:'Kotak',400:'Vocal mendem',500:'Bodi vocal',630:'Nasal',800:'Jelas vocal',1000:'Patokan',1250:'Vocal cewek',1600:'Pedes dikit',2000:'Artikulasi',2500:'Pedes vocal',3150:'Sibilance',4000:'Pedes high',5000:'Air / desis',6300:'Cring high',8000:'Detail',10000:'Udara',12500:'Udara',16000:'Paling atas'};
 function median(a){let s=[...a].sort((x,y)=>x-y);return s[Math.floor(s.length/2)];}
-function targetCurve(f,m){
-  if(m==='flat') return 0;
-  if(m==='house'){ if(f<250) return 1; if(f<1000) return 0; if(f<=2500) return 0.5; return 0; }
-  if(m==='vocal'){ if(f<400) return -0.5; if(f<=2500) return 1.5; return 0.5; }
-  return 0;
+function targetCurve(f,m,way){
+  if(way==='SUB'){ if(m==='flat')return 0; if(f<=50)return 4; if(f<=80)return 2; return 0; }
+  if(way==='LOW'){ if(m==='flat')return 0; if(f<160)return 2; return 0; }
+  if(way==='MID'){ if(m==='flat')return 0; if(m==='vocal'){if(f<400)return -0.5; if(f<=2500)return 1.5; return 0.5;} if(f<250)return 1; if(f<=2500)return 0.5; return 0; }
+  if(m==='flat')return 0; if(m==='vocal'){if(f<400)return 0; if(f<=3000)return 1; return 0;}
+  if(f<100)return 4; if(f<250)return 2; if(f<2000)return 0; return -1;
 }
-function avgAround(f,data){
-  // rata-rata sempit 1/3 oktaf, cuma di sekitar band itu, biar presisi
-  let v=data.filter(o=>o.f>=f/1.15 && o.f<=f*1.15).map(o=>o.v);
+function avgAround(f,data,wide){
+  let r=wide||1.15; let v=data.filter(o=>o.f>=f/r&&o.f<=f*r).map(o=>o.v);
   return v.length?median(v):null;
 }
+function phaseAround(f,data){let v=data.filter(o=>o.f>=f/1.2&&o.f<=f*1.2&&o.mag>-65).map(o=>o.ph);return v.length?median(v):null;}
 function showWarn(t){let b=$('warnBox');b.style.display='block';b.innerHTML=t;$('okBox').style.display='none';}
 function showOk(t){let b=$('okBox');b.style.display='block';b.innerHTML=t;$('warnBox').style.display='none';}
+document.querySelectorAll('.wayBtn').forEach(b=>{b.onclick=()=>{document.querySelectorAll('.wayBtn').forEach(x=>x.classList.remove('on'));b.classList.add('on');currentWay=b.dataset.way;$('wayInfo').textContent=WAYS[currentWay].info;eqBands=[];eqAnalyzed=false;$('eqTableWrap').style.display='none';$('eqResult').style.display='none';redrawCurrentView();};});
 
+// FFT kompleks untuk phase
+function fftComplex(re,im){let n=re.length;for(let i=1,j=0;i<n;i++){let bit=n>>1;for(;j&bit;bit>>=1)j^=bit;j^=bit;if(i<j){let t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t;}}for(let len=2;len<=n;len<<=1){let ang=-2*Math.PI/len,wr=Math.cos(ang),wi=Math.sin(ang);for(let i=0;i<n;i+=len){let cwr=1,cwi=0;for(let j=0;j<len/2;j++){let ur=re[i+j],ui=im[i+j];let vr=re[i+j+len/2]*cwr-im[i+j+len/2]*cwi,vi=re[i+j+len/2]*cwi+im[i+j+len/2]*cwr;re[i+j]=ur+vr;im[i+j]=ui+vi;re[i+j+len/2]=ur-vr;im[i+j+len/2]=ui-vi;let t=cwr*wr-cwi*wi;cwi=cwr*wi+cwi*wr;cwr=t;}}}}
+
+// ===== AUTO EQ 15 BAND =====
 function runAutoEQ(){
   $('warnBox').style.display='none';$('okBox').style.display='none';
-  let source=$('eqSource').value,mode=$('eqTarget').value,data=null,peakUsed=lastPeak;
-  if(source==='capture'){
-    let cap=captures[selectedSlot];
-    if(!cap){showWarn('❌ SLOT '+(selectedSlot+1)+' KOSONG.<br>Capture Mid dulu, Sub + High harus MUTE.');return;}
-    data=cap.data;peakUsed=cap.peak||lastPeak;
-  }else{
-    if(!currentVals.length){showWarn('❌ BELUM LIVE. START LIVE dulu.');return;}
-    data=currentVals;
-  }
-  if(peakUsed<-50){
-    showWarn('❌ GAGAL - Peak '+peakUsed.toFixed(1)+' dBFS KEKECILAN.<br>Kemarin mas -42.6, itu masih kekecilan. Harus -35 s/d -15.<br>Gedein volume mixer, deketin HP 1 meter, ukur ulang. Jangan dipaksa.');
-    return;
-  }
-  if(peakUsed<-35){
-    showWarn('⚠️ PERINGATAN - Peak '+peakUsed.toFixed(1)+' dBFS masih kurang kenceng, tapi tak hitung dulu.<br>Hasil nya mungkin kurang akurat di 125-200Hz. Kalo bisa gedein dikit lagi, ukur ulang.');
-  }
-  // Referensi cuma dari Mid: 500-1250Hz, ini patokan vocal
-  let ref=median(data.filter(o=>o.f>=500&&o.f<=1250).map(o=>o.v));
+  let way=WAYS[currentWay],mode=$('eqTarget').value,source=$('eqSource').value,data=null,peakUsed=lastPeak;
+  if(source==='capture'){let cap=captures[selectedSlot];if(!cap){showWarn('❌ Slot '+(selectedSlot+1)+' kosong. Capture '+way.label+' dulu.');return;}data=cap.data;peakUsed=cap.peak||lastPeak;}
+  else{if(!currentVals.length){showWarn('❌ Belum LIVE.');return;}data=currentVals;}
+  // PENGAMAN 1: LEVEL
+  if(peakUsed<-50){showWarn('❌ GAGAL - Peak '+peakUsed.toFixed(1)+' dBFS kekecilan.<br>Gedein volume mixer, HP 1 meter, ukur ulang '+way.label+' doang. Jangan dipaksa, kemarin -42.6 aja udah ngawur.');return;}
+  if(peakUsed<-35) showWarn('⚠️ Peak '+peakUsed.toFixed(1)+' dBFS masih kurang kenceng, hasil mungkin kurang akurat. Gedein dikit lagi kalo bisa.');
+  // Ambil 15 band utama saja untuk FLAT, biar tabel ga kepanjangan
+  let freqs = currentWay==='FLAT' ? [31,63,100,160,250,400,630,1000,1600,2500,4000,6300,8000,10000,16000] : way.freqs;
+  let ref=median(data.filter(o=>o.f>=way.ref[0]&&o.f<=way.ref[1]).map(o=>o.v));
   eqBands=[];let eb=0,ea=0,n=0;
-  EQ_FREQS.forEach(f=>{
+  freqs.forEach(f=>{
     let meas=avgAround(f,data);if(meas===null)return;
-    let rel=meas-ref,tgt=targetCurve(f,mode);
-    let raw=tgt-rel;
-    let gain=Math.max(-6,Math.min(2,raw));
-    gain=Math.round(gain*2)/2;
-    // Abaikan perubahan kecil di bawah 1 dB, biar DLMS ga penuh
-    if(Math.abs(gain)>=1) eqBands.push({f:f,meas:rel,tgt:tgt,gain:gain,q:1.4,meaning:EQ_MEANING[f]});
+    let rel=meas-ref,tgt=targetCurve(f,mode,currentWay),raw=tgt-rel;
+    let gain=Math.max(-6,Math.min(2,raw)); gain=Math.round(gain*2)/2;
+    if(Math.abs(gain)>=1) eqBands.push({f:f,meas:rel,tgt:tgt,gain:gain,q:f<125?1.0:1.4});
     eb+=Math.abs(tgt-rel);ea+=Math.abs(tgt-(rel+gain));n++;
   });
-  let e1=eb/n,e2=ea/n;
-  if(e1>12){
-    showWarn('❌ GAGAL UKUR MID - Selisih '+e1.toFixed(1)+' dB.<br>Ini bukan Mid nya jelek, tapi ukur nya salah: Sub / High masih bunyi, atau HP kejauhan, atau Pink Noise kekecilan.<br>MUTE Sub + High, ukur ulang Mid doang. Jangan masukin angka di bawah.');
-    $('eqScore').textContent='GAGAL ❌';
-  }else{
-    showOk('✅ MID VALID - Peak '+peakUsed.toFixed(1)+' dBFS, selisih Mid '+e1.toFixed(1)+' dB.<br>Angka di bawah AMAN buat Output 5-6 DLMS. Boost max cuma +2 dB.');
-    $('eqScore').textContent=e2<2.5?'BAGUS ✅':'LUMAYAN';
-  }
-  eqAnalyzed=true;
-  $('eqTableWrap').style.display='table';$('eqResult').style.display='block';
+  let e1=n?eb/n:99,e2=n?ea/n:99;
+  if(e1>12){showWarn('❌ GAGAL UKUR '+way.label+' - Selisih '+e1.toFixed(1)+' dB.<br>Ukur ulang '+way.label+' DOANG, output lain MUTE, volume lebih kenceng. Jangan masukin angka di bawah ke DLMS.');$('eqScore').textContent='GAGAL ❌';}
+  else{showOk('✅ '+way.label+' VALID - Peak '+peakUsed.toFixed(1)+' dBFS. Boost dikunci max +2 dB, aman buat '+way.out+'.');$('eqScore').textContent=e2<2.5?'BAGUS ✅':'LUMAYAN';}
+  eqAnalyzed=true;$('eqTableWrap').style.display='table';$('eqResult').style.display='block';
   let tb=$('eqBody');tb.innerHTML='';
-  if(!eqBands.length) tb.innerHTML='<tr><td colspan="7"><b>Mid nya udah rata mas!</b> Ga perlu EQ. Simpen preset aja.</td></tr>';
-  eqBands.forEach((b,i)=>{
-    let tr=document.createElement('tr');
-    tr.innerHTML='<td>'+(i+1)+'</td><td><b>'+b.f+' Hz</b></td><td>'+b.meas.toFixed(1)+'</td><td>'+(b.tgt>=0?'+':'')+b.tgt+'</td><td class="'+(b.gain<0?'cut':'boost')+'"><b>'+(b.gain>=0?'+':'')+b.gain.toFixed(1)+' dB</b></td><td>'+b.q+'</td><td style="text-align:left;font-size:11px">'+b.meaning+'</td>';
-    tb.appendChild(tr);
-  });
+  if(!eqBands.length) tb.innerHTML='<tr><td colspan="7"><b>Udah rata mas!</b> Ga perlu EQ di way ini.</td></tr>';
+  eqBands.forEach((b,i)=>{let tr=document.createElement('tr');tr.innerHTML='<td>'+(i+1)+'</td><td><b>'+b.f+' Hz</b></td><td>'+b.meas.toFixed(1)+'</td><td>'+(b.tgt>=0?'+':'')+b.tgt+'</td><td class="'+(b.gain<0?'cut':'boost')+'"><b>'+(b.gain>=0?'+':'')+b.gain.toFixed(1)+' dB</b></td><td>'+b.q+'</td><td style="text-align:left;font-size:11px">'+(MEANING[b.f]||'')+'</td>';tb.appendChild(tr);});
   $('errBefore').textContent=e1.toFixed(1)+' dB';$('errAfter').textContent=e2.toFixed(1)+' dB';$('bandCount').textContent=eqBands.length+' / 15 band';
-  let txt='AUTO EQ MID 15 BAND - '+$('eqTarget').selectedOptions[0].text+'\nCrossover Mid: '+$('midXover').value+' Hz\nPeak: '+peakUsed.toFixed(1)+' dBFS | Selisih Mid: '+e1.toFixed(1)+' -> '+e2.toFixed(1)+' dB | '+(e1>12?'GAGAL, UKUR ULANG':'VALID')+'\n\n';
-  txt+='MASUKIN KE DLMS > OUTPUT 5-6 (MID SAJA), JANGAN KE SUB / HIGH:\n\n';
-  if(e1>12) txt+='⚠️ JANGAN DIMASUKIN, UKUR ULANG MID DOANG\n\n';
-  eqBands.forEach((b,i)=>{txt+=(i+1)+'. '+b.f+' Hz | '+(b.gain>=0?'+':'')+b.gain.toFixed(1)+' dB | Q '+b.q+' | '+b.meaning+'\n';});
-  // Band yang ga diubah, tulis 0 biar jelas
-  EQ_FREQS.forEach(f=>{ if(!eqBands.find(b=>b.f===f)) txt+='- '+f+' Hz | 0.0 dB | biarkan flat\n'; });
-  txt+='\nSetelah masukin, UNMUTE Sub + High, ukur lagi semua bunyi, Capture Slot baru, bandingin.';
-  $('eqResult').textContent=txt;window._eqText=txt;
-  redrawCurrentView();
-  if(e1>12) alert('GAGAL MAS, selisih '+e1.toFixed(1)+' dB.\nMute Sub+High, ukur Mid doang, volume lebih kenceng.');
-  else alert('AUTO EQ MID SELESAI.\n'+eqBands.length+' band diubah dari 15 band.\nSelisih '+e1.toFixed(1)+' jadi '+e2.toFixed(1)+' dB.\nMasukin HANYA ke Output 5-6 Mid ya mas.');
+  let txt='AUTO EQ 15 BAND - '+way.label+' - '+$('eqTarget').selectedOptions[0].text+'\nPeak: '+peakUsed.toFixed(1)+' dBFS | Selisih: '+e1.toFixed(1)+' -> '+e2.toFixed(1)+' dB | '+(e1>12?'GAGAL, UKUR ULANG':'VALID')+'\n\nMASUKIN KE DLMS > '+way.out+' SAJA, JANGAN KE OUTPUT LAIN:\n\n';
+  if(e1>12) txt+='⚠️ JANGAN DIMASUKIN, UKUR ULANG\n\n';
+  eqBands.forEach((b,i)=>{txt+=(i+1)+'. '+b.f+' Hz | '+(b.gain>=0?'+':'')+b.gain.toFixed(1)+' dB | Q '+b.q+' | '+(MEANING[b.f]||'')+'\n';});
+  freqs.forEach(f=>{if(!eqBands.find(b=>b.f===f)) txt+='- '+f+' Hz | 0.0 dB | biarkan flat\n';});
+  txt+='\nUrutan: SUB dulu, LOW, MID, terakhir FLAT buat cek. Satu way selesai, ukur lagi, baru pindah way lain.';
+  $('eqResult').textContent=txt;window._eqText=txt;redrawCurrentView();
+  if(e1>12) alert('GAGAL MAS, selisih '+e1.toFixed(1)+' dB.\nUkur ulang '+way.label+' doang, MUTE yang lain, volume lebih kenceng.');
+  else alert('AUTO EQ '+way.label+' SELESAI.\n'+eqBands.length+' band diubah.\nMasukin HANYA ke '+way.out+'.');
 }
 function eqGainAt(f){
-  if(!eqAnalyzed||!eqBands.length) return 0;
-  let t=0,w=0;eqBands.forEach(b=>{let d=Math.abs(Math.log10(f/b.f));let ww=Math.max(0,1-d*3);t+=b.gain*ww;w+=ww;});
-  return w?t/w:0;
+  if(!eqAnalyzed||!eqBands.length)return 0;
+  let t=0,w=0;eqBands.forEach(b=>{let d=Math.abs(Math.log10(f/b.f));let ww=Math.max(0,1-d*3);t+=b.gain*ww;w+=ww;});return w?t/w:0;
 }
 $('runAutoEQ').onclick=runAutoEQ;
-$('copyEQ').onclick=async()=>{if(!window._eqText)return alert('Jalankan dulu mas.');try{await navigator.clipboard.writeText(window._eqText);alert('Ke-salin. Tempel, masukin ke Output 5-6 aja.');}catch(e){alert('Salin manual dari kotak hitam.');}};
+$('copyEQ').onclick=async()=>{if(!window._eqText)return alert('Jalankan Auto EQ dulu.');try{await navigator.clipboard.writeText(window._eqText);alert('Ke-salin.');}catch(e){alert('Salin manual dari kotak hitam.');}};
 $('resetEQ').onclick=()=>{eqBands=[];eqAnalyzed=false;$('eqTableWrap').style.display='none';$('eqResult').style.display='none';$('warnBox').style.display='none';$('okBox').style.display='none';redrawCurrentView();};
 
+// ===== PHASE / POLARITY =====
+function runPhase(){
+  let data=null,peakUsed=lastPeak;
+  let cap=captures[selectedSlot];
+  if(cap&&cap.phase&&cap.phase.length){data=cap.phase;peakUsed=cap.peak||lastPeak;}
+  else if(currentPhase.length){data=currentPhase;}
+  else{alert('Belum ada phase mas.\nSTART LIVE + Pink Noise 5 detik, Capture, baru cek phase.');return;}
+  if(peakUsed<-35){
+    alert('PHASE GA BISA DIPERCAYA MAS.\nPeak '+peakUsed.toFixed(1)+' dBFS, kekecilan.\nGrafik phase kemarin yang gergaji itu gara-gara ini.\nGedein volume sampe -30, ukur ulang.');
+    $('phaseTrust').textContent='TIDAK BISA DIPERCAYA ❌ Peak '+peakUsed.toFixed(1);$('phaseTrust').style.color='#ff6b6b';return;
+  }
+  $('phaseTrust').textContent='BISA DIPERCAYA ✅ Peak '+peakUsed.toFixed(1);$('phaseTrust').style.color='#00ff88';
+  let xovers=[80,300,2500],rows=[],txt='CEK PHASE / POLARITY\nPeak: '+peakUsed.toFixed(1)+' dBFS\n\n';
+  txt+='INGAT: Ini cek lonjakan, bukan angka 0°. Kalo loncat gede, cek manual di DLMS:\nBalik polarity 1 output, liat magnitude di crossover naik apa jeblok. Yang naik = bener.\n\n';
+  xovers.forEach(fx=>{
+    let left=phaseAround(fx*0.7,data),right=phaseAround(fx*1.4,data);
+    if(left===null||right===null)return;
+    let jump=right-left;while(jump>180)jump-=360;while(jump<-180)jump+=360;
+    let concl='';
+    if(Math.abs(jump)>120) concl='🔄 CURIGA KEBALIK - Coba balik polarity output atas '+fx+'Hz, ukur lagi';
+    else if(Math.abs(jump)>60) concl='⏱ MUNGKIN DELAY - Tambah delay 0.5-2 ms ke output atas, ukur lagi';
+    else concl='✅ NYAMBUNG - Jangan diapa-apain';
+    rows.push({fx:fx,left:left,right:right,jump:jump,concl:concl});
+    txt+=fx+' Hz: kiri '+Math.round(left)+'° kanan '+Math.round(right)+'° loncat '+Math.round(jump)+'°\n -> '+concl+'\n\n';
+  });
+  txt+='JANGAN balik polarity semua output. Cuma 1 sisi yang loncat.\nSetelah ganti 1 hal, ukur lagi, Capture slot baru, bandingin.';
+  $('phaseTableWrap').style.display='table';$('phaseResult').style.display='block';$('phaseResult').textContent=txt;window._phaseText=txt;
+  let tb=$('phaseBody');tb.innerHTML='';
+  rows.forEach(r=>{let tr=document.createElement('tr');let cls=Math.abs(r.jump)>120?'cut':(Math.abs(r.jump)>60?'warnC':'boost');tr.innerHTML='<td><b>'+r.fx+' Hz</b></td><td>'+Math.round(r.left)+'°</td><td>'+Math.round(r.right)+'°</td><td class="'+cls+'"><b>'+Math.round(r.jump)+'°</b></td><td style="text-align:left">'+r.concl+'</td>';tb.appendChild(tr);});
+  alert('CEK PHASE SELESAI.\n'+rows.map(r=>r.fx+' Hz loncat '+Math.round(r.jump)+'°').join('\n')+'\n\nYang di atas 120° itu yang curiga kebalik, coba balik 1 output, ukur lagi.');
+}
+$('runPhase').onclick=runPhase;
+$('copyPhase').onclick=async()=>{if(!window._phaseText)return alert('Cek phase dulu.');try{await navigator.clipboard.writeText(window._phaseText);alert('Ke-salin.');}catch(e){alert('Salin manual.');}};
+
+// ===== RTA ASLI + PHASE GATED =====
 function xfreq(f,w){f=Math.max(minF,Math.min(maxF,f));const a=Math.log(1000/minF),b=Math.log(10),c=Math.log(maxF/10000),p1=.15,p2=.70;if(f<=1000)return (Math.log(f/minF)/a)*p1*w;if(f<=10000)return (p1+Math.log(f/1000)/b*p2)*w;return (p1+p2+Math.log(f/10000)/c*(1-p1-p2))*w;}
 function freqAtX(x,w){const r=Math.max(0,Math.min(1,x/w)),p1=.15,p2=.70;if(r<=p1)return minF*Math.exp((r/p1)*Math.log(1000/minF));if(r<=p1+p2)return 1000*Math.exp(((r-p1)/p2)*Math.log(10));return 10000*Math.exp(((r-p1-p2)/(1-p1-p2))*Math.log(2));}
-function grid(){const w=spec.width,h=spec.height,plotH=h-36;sc.clearRect(0,0,w,h);sc.fillStyle='#030507';sc.fillRect(0,0,w,h);sc.strokeStyle='#303640';sc.lineWidth=1;sc.fillStyle='#aab2bf';sc.font='17px Arial';[20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000].forEach(f=>{let x=xfreq(f,w);sc.beginPath();sc.moveTo(x,0);sc.lineTo(x,plotH);sc.stroke();let label=f===20?'20 Hz':(f===20000?'20 kHz':(f>=1000?(f/1000)+'k':String(f)));sc.textAlign=f===20000?'right':(f===20?'left':'center');sc.fillText(label,f===20000?w-4:(f===20?4:x),h-10)});sc.textAlign='left';let range=+$('range').value;for(let d=0;d<=range;d+=10){let y=d/range*plotH;sc.beginPath();sc.moveTo(0,y);sc.lineTo(w,y);sc.stroke();sc.fillText(-d+' dB',5,Math.max(13,y-3))}
-// Kotak kuning daerah Mid
-sc.fillStyle='rgba(255,234,0,.06)';let x1=xfreq(125,w),x2=xfreq(3150,w);sc.fillRect(x1,0,x2-x1,plotH);sc.strokeStyle='#ffea00';sc.setLineDash([6,4]);sc.beginPath();sc.moveTo(x1,0);sc.lineTo(x1,plotH);sc.moveTo(x2,0);sc.lineTo(x2,plotH);sc.stroke();sc.setLineDash([]);sc.fillStyle='#ffea00';sc.fillText('◀ DAERAH MID 15 BAND ▶',x1+8,20);
+function grid(){
+ const w=spec.width,h=spec.height,plotH=h-36;sc.clearRect(0,0,w,h);sc.fillStyle='#030507';sc.fillRect(0,0,w,h);
+ sc.strokeStyle='#303640';sc.lineWidth=1;sc.fillStyle='#aab2bf';sc.font='17px Arial';
+ [20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000].forEach(f=>{let x=xfreq(f,w);sc.beginPath();sc.moveTo(x,0);sc.lineTo(x,plotH);sc.stroke();let label=f===20?'20 Hz':(f===20000?'20 kHz':(f>=1000?(f/1000)+'k':String(f)));sc.textAlign=f===20000?'right':(f===20?'left':'center');let tx=f===20000?w-4:(f===20?4:x);sc.fillText(label,tx,h-10)});sc.textAlign='left';
+ let range=+$('range').value;for(let d=0;d<=range;d+=10){let y=d/range*plotH;sc.beginPath();sc.moveTo(0,y);sc.lineTo(w,y);sc.stroke();sc.fillText(-d+' dB',5,Math.max(13,y-3))}
+ // kotak way
+ let way=WAYS[currentWay];sc.fillStyle='rgba(255,234,0,.07)';let x1=xfreq(way.fmin,w),x2=xfreq(way.fmax,w);sc.fillRect(x1,0,x2-x1,plotH);sc.strokeStyle='#ffea00';sc.setLineDash([6,4]);sc.beginPath();sc.moveTo(x1,0);sc.lineTo(x1,plotH);sc.moveTo(x2,0);sc.lineTo(x2,plotH);sc.stroke();sc.setLineDash([]);sc.fillStyle='#ffea00';sc.fillText('◀ '+currentWay+' ▶',x1+8,20);
 }
-function drawTargetMid(range,ph,yFunc,base){
+function drawTarget(range,ph,yFunc,base){
   if(!base.length)return;
-  let ref=median(base.filter(o=>o.f>=500&&o.f<=1250).map(o=>o.v));
-  let mode=$('eqTarget').value;
+  let way=WAYS[currentWay],mode=$('eqTarget').value;
+  let ref=median(base.filter(o=>o.f>=way.ref[0]&&o.f<=way.ref[1]).map(o=>o.v));
   sc.beginPath();sc.strokeStyle='#a78bfa';sc.lineWidth=2;sc.setLineDash([8,6]);
-  for(let f=125;f<=3150;f*=1.05){let Y=yFunc(ref+targetCurve(f,mode));let X=xfreq(f,spec.width);if(f===125)sc.moveTo(X,Y);else sc.lineTo(X,Y);}
+  for(let f=way.fmin;f<=way.fmax;f*=1.05){let Y=yFunc(ref+targetCurve(f,mode,currentWay));let X=xfreq(f,spec.width);if(f===way.fmin)sc.moveTo(X,Y);else sc.lineTo(X,Y);}
   sc.stroke();sc.setLineDash([]);
-  if(eqAnalyzed){sc.beginPath();sc.strokeStyle='#fff';sc.lineWidth=2.5;sc.setLineDash([10,5]);base.forEach((o,i)=>{if(o.f<100||o.f>4000)return;let X=xfreq(o.f,spec.width),Y=yFunc(o.v+eqGainAt(o.f));if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y);});sc.stroke();sc.setLineDash([]);}
+  if(eqAnalyzed){sc.beginPath();sc.strokeStyle='#fff';sc.lineWidth=2.5;sc.setLineDash([10,5]);base.forEach((o,i)=>{if(o.f<way.fmin/1.5||o.f>way.fmax*1.5)return;let X=xfreq(o.f,spec.width),Y=yFunc(o.v+eqGainAt(o.f));if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y);});sc.stroke();sc.setLineDash([]);}
 }
 function colorFor(v){let t=Math.max(0,Math.min(1,(v+95)/75));let stops=[[20,16,48],[67,47,118],[170,76,137],[239,139,143],[255,218,142]];let p=t*4,i=Math.min(3,Math.floor(p)),a=p-i;let c=stops[i].map((n,k)=>Math.round(n*(1-a)+stops[i+1][k]*a));return `rgb(${c[0]},${c[1]},${c[2]})`}
+function drawPhaseGraph(){
+  let W=phC.width,H=phC.height,ctx=phCtx;
+  ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='#222';for(let y=0;y<H;y+=H/6){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  ctx.strokeStyle='#fff';ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();
+  ctx.fillStyle='#aaa';ctx.font='15px Arial';ctx.fillText('+180°',6,18);ctx.fillText('0°',6,H/2+4);ctx.fillText('-180°',6,H-8);
+  [20,50,100,200,500,1000,2000,5000,10000,20000].forEach(f=>{let x=xfreq(f,W);ctx.strokeStyle='#333';ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();ctx.fillStyle='#aaa';ctx.fillText(f>=1000?(f/1000)+'k':f,x-10,H-6);});
+  // GATING: kalo peak kecil, jangan gambar phase ngawur
+  if(!currentPhase.length||lastPeak<-35){ctx.fillStyle='#ff6b6b';ctx.font='19px Arial';ctx.fillText('PHASE DISEMBUNYIIN - Peak kekecilan ('+lastPeak.toFixed(0)+' dBFS)',W*0.12,H/2-10);ctx.fillStyle='#aaa';ctx.font='15px Arial';ctx.fillText('Gedein volume sampe -35 s/d -15, phase baru muncul. Ini pengaman biar ga gergaji.',W*0.12,H/2+18);return;}
+  ctx.strokeStyle='#ffea00';ctx.lineWidth=2.5;ctx.beginPath();let prevY=null;
+  currentPhase.forEach((o,i)=>{if(o.mag<-65)return;let x=xfreq(o.f,W);let y=H/2-(o.ph/180)*(H/2);if(prevY!==null&&Math.abs(y-prevY)>H*0.45){ctx.moveTo(x,y);}else if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);prevY=y;});
+  ctx.stroke();
+  ctx.strokeStyle='#ff1744';ctx.setLineDash([6,4]);[80,300,2500].forEach(f=>{let x=xfreq(f,W);ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();});ctx.setLineDash([]);
+  let p80=phaseAround(80,currentPhase),p300=phaseAround(300,currentPhase),p2500=phaseAround(2500,currentPhase);
+  if(p80!==null)$('ph80').textContent=Math.round(p80)+'°';
+  if(p300!==null)$('ph300').textContent=Math.round(p300)+'°';
+  if(p2500!==null)$('ph2500').textContent=Math.round(p2500)+'°';
+}
 function drawFrozen(){
-  grid();const w=spec.width,h=spec.height,ph=h-36,range=+$('range').value;const y=v=>Math.max(0,Math.min(range,-v))/range*ph;
-  let base=captures[selectedSlot]?captures[selectedSlot].data:(captures.find(c=>c)?captures.find(c=>c).data:[]);
-  if(base.length)drawTargetMid(range,ph,y,base);
-  captures.forEach((cap,ci)=>{if(!cap||!visibleSlots[ci])return;sc.beginPath();sc.strokeStyle=captureColors[ci];sc.lineWidth=3;cap.data.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(o.v);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});sc.stroke();});
+ grid();const w=spec.width,h=spec.height,ph=h-36,range=+$('range').value;const y=v=>Math.max(0,Math.min(range,-v))/range*ph;
+ let base=captures[selectedSlot]?captures[selectedSlot].data:(captures.find(c=>c)?captures.find(c=>c).data:[]);
+ if(base.length)drawTarget(range,ph,y,base);
+ captures.forEach((cap,ci)=>{if(!cap||!visibleSlots[ci])return;sc.beginPath();sc.strokeStyle=captureColors[ci];sc.lineWidth=3;cap.data.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(o.v);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});sc.stroke();});
+ if(cursorActive){
+  const cx=xfreq(cursorFreq,w);sc.save();sc.strokeStyle='rgba(255,255,255,.22)';sc.lineWidth=14;sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();sc.strokeStyle='#fff';sc.lineWidth=4;sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();sc.restore();
+  const available=captures.map((cap,i)=>({cap,i})).filter(x=>x.cap&&visibleSlots[x.i]);const chosen=available.find(x=>x.i===selectedSlot)||available[available.length-1];const data=chosen?chosen.cap.data:[];
+  if(data.length){const nearest=data.reduce((best,o)=>Math.abs(o.f-cursorFreq)<Math.abs(best.f-cursorFreq)?o:best,data[0]);$('cursorlevel').textContent=nearest.v.toFixed(1)+' dBFS (capture)';}
+ }
+ let cap=captures[selectedSlot]||captures.find(c=>c);
+ if(cap&&cap.phase){currentPhase=cap.phase;lastPeak=cap.peak||lastPeak;drawPhaseGraph();}
 }
 function draw(){
  if(!an)return;
+ let td=new Float32Array(fft);an.getFloatTimeDomainData(td);
+ let re=new Float32Array(fft),im=new Float32Array(fft);
+ for(let i=0;i<fft;i++)re[i]=td[i]*(0.5-0.5*Math.cos(2*Math.PI*i/(fft-1)));
+ fftComplex(re,im);
  let n=an.frequencyBinCount,raw=new Float32Array(n);an.getFloatFrequencyData(raw);
  let vals=[],peak=-Infinity,peakBin=1,range=+$('range').value;
  for(let i=1;i<n;i++){let f=i*audio.sampleRate/fft;if(f<minF||f>maxF)continue;let v=Number.isFinite(raw[i])?raw[i]:-120;vals.push({f,v,i});if(v>peak){peak=v;peakBin=i}}
@@ -233,47 +308,69 @@ function draw(){
  const averaged=target.map((_,i)=>avgFrames.reduce((s,fr)=>s+fr[i],0)/avgFrames.length);
  if(sm.length!==vals.length){sm=averaged.slice();hold=averaged.slice()}else vals.forEach((o,i)=>{sm[i]=smoothing*sm[i]+(1-smoothing)*averaged[i];hold[i]=Math.max(averaged[i],hold[i]-.12)});
  grid();let w=spec.width,h=spec.height,ph=h-36;function y(v){return Math.max(0,Math.min(range,-v))/range*ph}
- let liveData=vals.map((o,i)=>({f:o.f,v:sm[i]}));drawTargetMid(range,ph,y,liveData);
+ let liveData=vals.map((o,i)=>({f:o.f,v:sm[i]}));drawTarget(range,ph,y,liveData);
  sc.beginPath();sc.strokeStyle='#55d9ed';sc.lineWidth=2.2;vals.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(sm[i]);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});sc.stroke();
  sc.beginPath();sc.strokeStyle='#ffd16a';sc.lineWidth=1.2;vals.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(hold[i]);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});sc.stroke();
  currentVals=vals.map((o,i)=>({f:o.f,v:sm[i]}));
+ currentPhase=[];
+ for(let f=20;f<=20000;f*=1.04){let bin=Math.round(f*fft/audio.sampleRate);if(bin>=fft/2)break;let mag=Math.sqrt(re[bin]*re[bin]+im[bin]*im[bin]);let ph=Math.atan2(im[bin],re[bin])*180/Math.PI;currentPhase.push({f:f,ph:ph,mag:20*Math.log10(mag+0.00001)});}
+ drawPhaseGraph();
  captures.forEach((cap,ci)=>{if(!cap||!visibleSlots[ci])return;sc.beginPath();sc.strokeStyle=captureColors[ci];sc.lineWidth=2.4;cap.data.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(o.v);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});sc.stroke();});
+ if(cursorActive){
+  const cx=xfreq(cursorFreq,w);sc.save();sc.strokeStyle='rgba(255,255,255,.22)';sc.lineWidth=14;sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();sc.strokeStyle='#ffffff';sc.lineWidth=4;sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();sc.restore();
+  let nearest=vals.reduce((best,o)=>Math.abs(o.f-cursorFreq)<Math.abs(best.f-cursorFreq)?o:best,vals[0]);$('cursorfreq').textContent=cursorFreq>=1000?(cursorFreq/1000).toFixed(2)+' kHz':cursorFreq.toFixed(0)+' Hz';$('cursorlevel').textContent=(nearest?sm[vals.indexOf(nearest)]:-120).toFixed(1)+' dBFS';
+ }
  let image=wc.getImageData(0,0,water.width,water.height-1);wc.putImageData(image,0,0);
  let row=wc.createImageData(water.width,1);
  for(let x=0;x<water.width;x++){let f=freqAtX(x,water.width);let bin=Math.max(1,Math.min(n-1,Math.round(f*fft/audio.sampleRate)));let v=raw[bin];let col=colorFor(v);let m=col.match(/\d+/g).map(Number);let p=x*4;row.data[p]=m[0];row.data[p+1]=m[1];row.data[p+2]=m[2];row.data[p+3]=255}
  wc.putImageData(row,0,water.height-1);
- $('peakdb').textContent=peak.toFixed(1)+' dBFS';$('peakfreq').textContent=(peakBin*audio.sampleRate/fft).toFixed(0)+' Hz';
- $('measureLevel').textContent=peak>-35?'BAGUS ✅ Mid boleh diukur':(peak>-50?'KURANG KENCENG ⚠️ Gedein dikit':'KEKECILAN ❌ Jangan capture');
- $('measureLevel').style.color=peak>-35?'#00ff88':'#ff6b6b';
- raf=requestAnimationFrame(draw);
+ $('peakdb').textContent=peak.toFixed(1)+' dBFS';$('peakfreq').textContent=(peakBin*audio.sampleRate/fft).toFixed(0)+' Hz';raf=requestAnimationFrame(draw);
 }
+$('landscape').onclick=async()=>{
+ try{if(!document.fullscreenElement&&document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock('landscape');document.body.classList.add('landscape-mode');$('landscape').textContent='↔ LANDSCAPE ON';}
+ catch(e){document.body.classList.toggle('landscape-mode');alert('Putar HP manual ke mendatar.');}
+};
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&screen.orientation?.unlock)screen.orientation.unlock()});
 $('start').onclick=async()=>{
  try{
+  if(!navigator.mediaDevices?.getUserMedia)throw Error('Browser tidak mendukung mikrofon. Buka via HTTPS.');
   stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
   audio=new(window.AudioContext||window.webkitAudioContext)();await audio.resume();src=audio.createMediaStreamSource(stream);an=audio.createAnalyser();fft=+$('fft').value;an.fftSize=fft;an.smoothingTimeConstant=0;src.connect(an);
-  sm=[];hold=[];avgFrames=[];currentVals=[];wc.clearRect(0,0,water.width,water.height);$('capture').disabled=false;$('status').textContent='LIVE - MID SAJA';$('inputstate').textContent='MIC ON';$('start').disabled=true;$('stop').disabled=false;draw();
- }catch(e){$('status').textContent='MIC ERROR';alert('Mic gagal: '+e.message+'\nBuka di Chrome, https, izinkan mic.')}
+  sm=[];hold=[];avgFrames=[];currentVals=[];currentPhase=[];wc.clearRect(0,0,water.width,water.height);$('capture').disabled=false;$('status').textContent='LIVE';$('inputstate').textContent='MIC ON';$('samplerate').textContent=audio.sampleRate+' Hz';$('start').disabled=true;$('stop').disabled=false;draw();
+ }catch(e){$('status').textContent='MIC ERROR';alert('Tidak bisa membuka mikrofon: '+e.message+'. Izinkan mic, pakai HTTPS.')}
 };
-$('stop').onclick=()=>{cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());if(audio)audio.close();audio=null;stream=null;an=null;currentVals=[];sm=[];hold=[];avgFrames=[];$('status').textContent='STOPPED';$('inputstate').textContent='OFF';$('start').disabled=false;$('stop').disabled=true;$('capture').disabled=true;drawFrozen()};
+$('stop').onclick=()=>{cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());if(audio)audio.close();audio=null;stream=null;an=null;currentVals=[];sm=[];hold=[];avgFrames=[];$('status').textContent='STOPPED • HANYA CAPTURE TERSIMPAN';$('inputstate').textContent='OFF';$('start').disabled=false;$('stop').disabled=true;$('capture').disabled=true;drawFrozen()};
+function moveCursor(ev){const rect=spec.getBoundingClientRect();const px=Math.max(0,Math.min(spec.width,(ev.clientX-rect.left)/rect.width*spec.width));cursorFreq=freqAtX(px,spec.width);cursorActive=true;$('cursorfreq').textContent=cursorFreq>=1000?(cursorFreq/1000).toFixed(2)+' kHz':cursorFreq.toFixed(0)+' Hz';if(an){cancelAnimationFrame(raf);draw()}else{drawFrozen()}}
+let draggingCursor=false;spec.style.touchAction='none';
+spec.addEventListener('pointerdown',ev=>{draggingCursor=true;try{spec.setPointerCapture(ev.pointerId)}catch(_){}moveCursor(ev);});
+spec.addEventListener('pointermove',ev=>{if(draggingCursor)moveCursor(ev)});
+function endCursorDrag(){draggingCursor=false}
+spec.addEventListener('pointerup',endCursorDrag);spec.addEventListener('pointercancel',endCursorDrag);spec.addEventListener('lostpointercapture',endCursorDrag);
 $('fft').onchange=()=>{if(an){fft=+$('fft').value;an.fftSize=fft;sm=[];hold=[];avgFrames=[]}};
 $('average').onchange=()=>{avgFrames=[];};
 $('range').onchange=()=>{if(an){cancelAnimationFrame(raf);draw()}else drawFrozen()};
 function refreshSlotControls(){
  const target=$('targetslot');
- if(target.options.length!==SLOT_COUNT){target.innerHTML='';for(let i=0;i<SLOT_COUNT;i++){const o=document.createElement('option');o.value=i;o.textContent='Slot Mid '+(i+1);target.appendChild(o);}}
+ if(target.options.length!==SLOT_COUNT){target.innerHTML='';for(let i=0;i<SLOT_COUNT;i++){const opt=document.createElement('option');opt.value=i;opt.textContent='Slot '+(i+1);target.appendChild(opt);}}
  target.value=String(selectedSlot);
  const list=$('slotlist');list.innerHTML='';
- for(let i=0;i<SLOT_COUNT;i++){const wrap=document.createElement('label');wrap.style.cssText='display:flex;align-items:center;gap:7px;background:#090d12;border:1px solid #394553;border-radius:7px;padding:7px;font-size:12px';const check=document.createElement('input');check.type='checkbox';check.checked=visibleSlots[i];check.onchange=()=>{visibleSlots[i]=check.checked;redrawCurrentView()};const text=document.createElement('span');text.textContent='Slot Mid '+(i+1)+(captures[i]?' • tersimpan, peak '+(captures[i].peak||0).toFixed(0)+' dB':' • kosong');text.style.color=captures[i]?captureColors[i]:'#9ca4b1';wrap.append(check,text);list.appendChild(wrap);}
+ for(let i=0;i<SLOT_COUNT;i++){
+  const wrap=document.createElement('label');wrap.style.cssText='display:flex;align-items:center;gap:7px;background:#090d12;border:1px solid #394553;border-radius:7px;padding:7px;color:#e8eaf0;font-size:12px';
+  const check=document.createElement('input');check.type='checkbox';check.checked=visibleSlots[i];check.onchange=()=>{visibleSlots[i]=check.checked;redrawCurrentView()};
+  const text=document.createElement('span');text.textContent='Slot '+(i+1)+(captures[i]?' • tersimpan, peak '+(captures[i].peak||0).toFixed(0)+' dB':' • kosong');text.style.color=captures[i]?captureColors[i]:'#9ca4b1';if(i===selectedSlot)text.style.fontWeight='bold';wrap.append(check,text);list.appendChild(wrap);
+ }
 }
 function redrawCurrentView(){if(an){cancelAnimationFrame(raf);draw()}else drawFrozen();}
 $('targetslot').onchange=()=>{selectedSlot=Number($('targetslot').value);refreshSlotControls()};
 $('capture').onclick=()=>{
- if(!an||!currentVals.length){$('capturestatus').textContent='START LIVE dulu.';return}
- if(lastPeak<-50){$('capturestatus').textContent='❌ JANGAN CAPTURE - Peak '+lastPeak.toFixed(1)+' kekecilan.';alert('Jangan capture mas, kekecilan: '+lastPeak.toFixed(1)+'\nGedein volume mixer, HP 1 meter, Mid doang yang bunyi.');return;}
- captures[selectedSlot]={name:'Mid '+(selectedSlot+1),data:currentVals.map(o=>({...o})),[STRIPPED]
- $('capturestatus').textContent='✅ Slot Mid '+(selectedSlot+1)+' tersimpan. Peak '+lastPeak.toFixed(1)+' dBFS - VALID.';
+ if(!an||!currentVals.length){$('capturestatus').textContent='Tekan START LIVE dulu.';return}
+ if(lastPeak<-50){$('capturestatus').textContent='❌ JANGAN CAPTURE - Peak '+lastPeak.toFixed(1)+' kekecilan.';alert('Jangan capture mas, kekecilan: '+lastPeak.toFixed(1)+' dBFS.\nGedein volume, HP 1 meter.');return;}
+ captures[selectedSlot]={name:'Capture '+(selectedSlot+1),data:currentVals.map(o=>({...o})),phase:currentPhase.map(o=>({...o})),peak:lastPeak,way:currentWay};
+ $('capturestatus').textContent='✅ Slot '+(selectedSlot+1)+' tersimpan ('+currentWay+', Peak '+lastPeak.toFixed(1)+' dBFS). Slot lain tidak berubah.';
  refreshSlotControls();redrawCurrentView();
 };
-$('clearcaptures').onclick=()=>{captures[selectedSlot]=null;refreshSlotControls();redrawCurrentView();};
-refreshSlotControls();grid();
+$('clearcaptures').onclick=()=>{captures[selectedSlot]=null;$('capturestatus').textContent='Slot '+(selectedSlot+1)+' dihapus.';refreshSlotControls();redrawCurrentView();};
+$('showall').onclick=()=>{visibleSlots.fill(true);refreshSlotControls();redrawCurrentView()};
+$('hideall').onclick=()=>{visibleSlots.fill(false);refreshSlotControls();redrawCurrentView()};
+refreshSlotControls();grid();drawPhaseGraph();
 </script></body></html>
