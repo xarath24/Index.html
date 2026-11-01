@@ -52,8 +52,9 @@ body.landscape-mode header h1{font-size:15px}
 <section class="toolbar">
 <div class="tb tb-btn"><button class="go" id="start">▶ START LIVE</button></div>
 <div class="tb tb-btn"><button id="stop" disabled>■ STOP</button></div>
-<div class="tb"><label>FFT</label><select id="fft"><option value="512">512</option><option value="2048">2048</option><option value="4096" selected>4096</option><option value="8192">8192</option></select></div>
-<div class="tb"><label>AVERAGE</label><select id="average"><option value="1">1x</option><option value="4" selected>4x</option><option value="8">8x</option><option value="16">16x</option></select></div>
+<div class="tb"><label>FFT</label><select id="fft"><option value="2048">2048</option><option value="4096">4096</option><option value="8192" selected>8192</option><option value="16384">16384</option></select></div>
+<div class="tb"><label>AVERAGE</label><select id="average"><option value="1">1x</option><option value="4">4x</option><option value="8" selected>8x</option><option value="16">16x</option></select></div>
+<div class="tb"><label>DETAIL</label><select id="detail"><option value="0">RAW</option><option value="12">1/12 OKT</option><option value="6" selected>1/6 OKT</option><option value="3">1/3 OKT</option></select></div>
 <div class="tb"><label>RANGE</label><select id="range"><option value="60">60 dB</option><option value="90" selected>90 dB</option><option value="120">120 dB</option></select></div>
 <div class="tb"><label>SMOOTH</label><select id="smooth"><option value="0">OFF</option><option value=".55">LOW</option><option value=".8" selected>MED</option><option value=".93">HIGH</option></select></div>
 </section>
@@ -73,7 +74,7 @@ body.landscape-mode header h1{font-size:15px}
 </section>
 
 <section class="panel"><div class="title"><b>MAGNITUDE / FREQUENCY RESPONSE</b><span>20 Hz — 20 kHz</span></div><canvas id="spectrum" width="1200" height="400"></canvas>
-<div id="fftwarn" class="warn">⚠ FFT 512 itu kasar, 1 titik nya 93 Hz. Kurva udah dihalusin biar ga ngambang, tapi buat ukur akurat balik ke 4096.</div>
+<div id="accinfo" class="info" style="color:#7ee0ad">AKURAT: rata-rata power-domain • FFT 8192 • bin 5.9 Hz • 1/6 oktaf</div>
 <div class="cursorctl">
  <button id="curleft" aria-label="geser kiri">◀</button>
  <input type="range" id="cursorslider" min="0" max="1000" value="660">
@@ -100,24 +101,26 @@ body.landscape-mode header h1{font-size:15px}
 <section class="panel"><div class="stats">
 <div class="stat"><small>PEAK LEVEL</small><strong id="peakdb">— dBFS</strong></div>
 <div class="stat"><small>PEAK FREQUENCY</small><strong id="peakfreq">— Hz</strong></div>
-<div class="stat"><small>SAMPLE RATE</small><strong id="samplerate">— Hz</strong></div>
+<div class="stat"><small>BIN WIDTH</small><strong id="binwidth">— Hz</strong></div>
 <div class="stat"><small>INPUT</small><strong id="inputstate">OFF</strong></div>
 </div><div class="info">Catatan: pembacaan level adalah dBFS relatif, bukan dB SPL terkalibrasi. Untuk hasil ukur sistem PA, gunakan measurement microphone dan soundcard/interface yang baik. Matikan AGC, noise suppression, dan echo cancellation bila perangkat mengizinkan.</div></section>
 </main>
 <script>
 const $=id=>document.getElementById(id);
 const spec=$('spectrum'),sc=spec.getContext('2d'),water=$('waterfall'),wc=water.getContext('2d');
-let audio=null,stream=null,an=null,src=null,raf=0,sm=[],hold=[],frame=0,fft=4096,avgCount=4;
+let audio=null,stream=null,an=null,src=null,raf=0,smP=[],holdP=[],fft=8192,avgCount=8;
 const SLOT_COUNT=10;
 let captures=Array(SLOT_COUNT).fill(null);
 let visibleSlots=Array(SLOT_COUNT).fill(true);
 let selectedSlot=0;
 const captureColors=['#ff6b6b','#b58cff','#67d69b','#56cfe1','#f4a261','#a8dadc','#e9c46a','#cdb4db','#90be6d','#f28482'];
-let currentVals=[];let avgFrames=[];
+let currentVals=[];let avgFramesP=[];
 let cursorFreq=4720,cursorActive=true;
 const minF=20,maxF=20000;
 const PLOT_BOTTOM=48;
 const SEGS=[[20,1000,.26],[1000,3000,.14],[3000,7000,.16],[7000,10000,.10],[10000,15000,.08],[15000,20000,.26]];
+const db2p=v=>Math.pow(10,Math.max(-120,v)/10);
+const p2db=p=>10*Math.log10(Math.max(1e-12,p));
 function xfreq(f,w){
  f=Math.max(minF,Math.min(maxF,f));
  let start=0;
@@ -139,37 +142,44 @@ function freqAtX(x,w){
  return maxF;
 }
 function fmtFreq(f){return f>=1000?(f/1000).toFixed(2)+' kHz':f.toFixed(0)+' Hz'}
-// Interpolasi log-frekuensi, buat ngisi titik yang jarang di FFT 512
-function levelAtLog(data,f){
- if(!data||!data.length)return null;
- if(f<=data[0].f) return data[0].v;
- if(f>=data[data.length-1].f) return data[data.length-1].v;
- let lo=0,hi=data.length-1;
- while(hi-lo>1){let mid=(lo+hi)>>1;if(data[mid].f<=f)lo=mid;else hi=mid}
- const a=data[lo],b=data[hi];
+// Interpolasi di POWER, bukan dB. Ini kunci akuratnya.
+function powerAtLog(freqs,pArr,f){
+ if(!freqs.length)return null;
+ if(f<=freqs[0].f) return pArr[0];
+ if(f>=freqs[freqs.length-1].f) return pArr[pArr.length-1];
+ let lo=0,hi=freqs.length-1;
+ while(hi-lo>1){let mid=(lo+hi)>>1;if(freqs[mid].f<=f)lo=mid;else hi=mid}
+ const a=freqs[lo],b=freqs[hi];
  const t=(Math.log(f)-Math.log(a.f))/(Math.log(b.f)-Math.log(a.f));
- return a.v+(b.v-a.v)*t;
+ return pArr[lo]+(pArr[hi]-pArr[lo])*t;
 }
-// BIKIN KURVA RAPET: dari titik FFT asli (jarang di 512) jadi 200 titik rata di layar.
-// Ini yang bikin garis ga loncat panjang dan titik cursor ga melayang.
-function densify(freqs,valsArr){
+// Smoothing 1/N oktaf di power domain, di sepanjang sumbu log. Bukan blur asal.
+function octaveSmooth(dense,perOct){
+ if(!perOct||!dense.length) return dense;
+ const half=1/(2*perOct);
+ return dense.map((o,i)=>{
+  const loF=o.f*Math.pow(2,-half), hiF=o.f*Math.pow(2,half);
+  let sum=0,cnt=0;
+  for(let j=0;j<dense.length;j++){
+   if(dense[j].f>=loF&&dense[j].f<=hiF){sum+=db2p(dense[j].v);cnt++}
+  }
+  return {f:o.f,v:p2db(cnt?sum/cnt:db2p(o.v)),x:o.x};
+ });
+}
+function densifyPower(freqs,pArr){
  const out=[],W=spec.width;
  for(let x=0;x<=W;x+=6){
   const f=freqAtX(x,W);
-  const v=levelAtLog(freqs.map((o,i)=>({f:o.f,v:valsArr[i]})),f);
-  if(v!==null&&Number.isFinite(v)) out.push({f,v,x});
+  const p=powerAtLog(freqs,pArr,f);
+  if(p!==null&&Number.isFinite(p)) out.push({f,v:p2db(p),x});
  }
- return out;
+ return octaveSmooth(out,+$('detail').value||0);
 }
-// TITIK PERSIS DI GARIS LAYAR: cari 2 titik gambar yang mengapit cursor, tarik lurus di layar.
-// Bukan di log-frekuensi lagi, jadi pasti nempel di garis yang keliatan.
 function pointOnLine(data,f){
  if(!data||!data.length)return null;
  const W=spec.width,cx=xfreq(f,W);
- if(data.length===1) return {v:data[0].v,x:cx};
- let pts=data;
- // pastikan tiap titik punya x
- pts=pts.map(o=>({f:o.f,v:o.v,x:o.x!==undefined?o.x:xfreq(o.f,W)}));
+ const pts=data.map(o=>({f:o.f,v:o.v,x:o.x!==undefined?o.x:xfreq(o.f,W)}));
+ if(pts.length===1) return {v:pts[0].v,x:cx};
  if(cx<=pts[0].x) return {v:pts[0].v,x:cx};
  if(cx>=pts[pts.length-1].x) return {v:pts[pts.length-1].v,x:cx};
  for(let i=0;i<pts.length-1;i++){
@@ -179,7 +189,7 @@ function pointOnLine(data,f){
    return {v:a.v+(b.v-a.v)*t,x:cx};
   }
  }
- return {v:levelAtLog(data,f),x:cx};
+ return {v:pts[0].v,x:cx};
 }
 function cursorData(){
  if(currentVals.length) return currentVals;
@@ -297,6 +307,12 @@ function syncCursorUI(){
  const pos=Math.round(xfreq(cursorFreq,spec.width)/spec.width*1000);
  if(document.activeElement!==s) s.value=String(pos);
 }
+function updateAccInfo(){
+ const sr=audio?audio.sampleRate:48000;
+ const bw=sr/fft;
+ $('accinfo').textContent='AKURAT: rata-rata power-domain • FFT '+fft+' • bin '+bw.toFixed(1)+' Hz • '+($('detail').value==='0'?'RAW':('1/'+$('detail').value+' oktaf'))+' • Average '+$('average').value+'x power';
+ $('binwidth').textContent=bw.toFixed(1)+' Hz';
+}
 function setCursor(f){
  cursorFreq=Math.max(minF,Math.min(maxF,f));cursorActive=true;syncCursorUI();
  if(an){cancelAnimationFrame(raf);draw()}else drawFrozen();
@@ -319,17 +335,28 @@ function draw(){
  let n=an.frequencyBinCount,raw=new Float32Array(n);an.getFloatFrequencyData(raw);
  let vals=[],peak=-Infinity,peakBin=1,range=+$('range').value;
  for(let i=1;i<n;i++){let f=i*audio.sampleRate/fft;if(f<minF||f>maxF)continue;let v=Number.isFinite(raw[i])?raw[i]:-120;vals.push({f,v,i});if(v>peak){peak=v;peakBin=i}}
- let smoothing=+$('smooth').value;
- const target=vals.map(o=>o.v);
- avgFrames.push(target);
+ // Parabola di 3 bin buat peak freq yang akurat, bukan cuma kelipatan bin
+ let peakFreq=peakBin*audio.sampleRate/fft;
+ if(peakBin>1&&peakBin<n-1){
+  const a=raw[peakBin-1],b=raw[peakBin],c=raw[peakBin+1];
+  const denom=(a-2*b+c);
+  if(denom!==0){const d=0.5*(a-c)/denom;peakFreq=(peakBin+d)*audio.sampleRate/fft}
+ }
+ // RATA-RATA DI POWER, BUKAN DI dB
+ const powerFrame=vals.map(o=>db2p(o.v));
+ avgFramesP.push(powerFrame);
  const wanted=Math.max(1,+$('average').value);
- while(avgFrames.length>wanted)avgFrames.shift();
- const averaged=target.map((_,i)=>avgFrames.reduce((sum,frame)=>sum+frame[i],0)/avgFrames.length);
- if(sm.length!==vals.length){sm=averaged.slice();hold=averaged.slice()}
- else vals.forEach((o,i)=>{sm[i]=smoothing*sm[i]+(1-smoothing)*averaged[i];hold[i]=Math.max(averaged[i],hold[i]-.12)});
- // Kurva rapet, biar FFT 512 ga loncat-loncat
- const denseLive=densify(vals,sm);
- const denseHold=densify(vals,hold);
+ while(avgFramesP.length>wanted)avgFramesP.shift();
+ const avgP=powerFrame.map((_,i)=>avgFramesP.reduce((s,fr)=>s+fr[i],0)/avgFramesP.length);
+ let smoothing=+$('smooth').value;
+ if(smP.length!==vals.length){smP=avgP.slice();holdP=avgP.slice()}
+ else vals.forEach((o,i)=>{
+  smP[i]=smoothing*smP[i]+(1-smoothing)*avgP[i];
+  // peak hold turun pelan di power, biar ga ngambang di atas
+  holdP[i]=Math.max(avgP[i],holdP[i]*0.985);
+ });
+ const denseLive=densifyPower(vals,smP);
+ const denseHold=densifyPower(vals,holdP);
  grid();let w=spec.width,h=spec.height,ph=h-PLOT_BOTTOM;
  function y(v){return Math.max(0,Math.min(range, -v))/range*ph}
  sc.beginPath();sc.strokeStyle='#55d9ed';sc.lineWidth=2.5;
@@ -346,7 +373,7 @@ function draw(){
  drawCursor(ph,range,currentVals);
  syncCursorUI();
  drawWaterfall(raw,n);
- $('peakdb').textContent=peak.toFixed(1)+' dBFS';$('peakfreq').textContent=(peakBin*audio.sampleRate/fft).toFixed(0)+' Hz';raf=requestAnimationFrame(draw);
+ $('peakdb').textContent=peak.toFixed(1)+' dBFS';$('peakfreq').textContent=peakFreq.toFixed(0)+' Hz';raf=requestAnimationFrame(draw);
 }
 $('landscape').onclick=async()=>{
  try{
@@ -365,11 +392,11 @@ $('start').onclick=async()=>{
  try{
   if(!navigator.mediaDevices?.getUserMedia)throw Error('Browser tidak mendukung akses mikrofon. Buka file melalui HTTPS.');
   stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
-  audio=new(window.AudioContext||window.webkitAudioContext)();await audio.resume();src=audio.createMediaStreamSource(stream);an=audio.createAnalyser();fft=+$('fft').value;avgCount=+$('average').value;an.fftSize=fft;an.smoothingTimeConstant=0;src.connect(an);
-  sm=[];hold=[];avgFrames=[];currentVals=[];wc.fillStyle='#141030';wc.fillRect(0,0,water.width,water.height);$('capture').disabled=false;$('status').textContent='LIVE';$('inputstate').textContent='MIC ON';$('samplerate').textContent=audio.sampleRate+' Hz';$('start').disabled=true;$('stop').disabled=false;draw();
+  audio=new(window.AudioContext||window.webkitAudioContext)();await audio.resume();src=audio.createMediaStreamSource(stream);an=audio.createAnalyser();fft=+$('fft').value;an.fftSize=fft;an.smoothingTimeConstant=0;an.minDecibels=-120;an.maxDecibels=0;src.connect(an);
+  smP=[];holdP=[];avgFramesP=[];currentVals=[];wc.fillStyle='#141030';wc.fillRect(0,0,water.width,water.height);$('capture').disabled=false;$('status').textContent='LIVE';$('inputstate').textContent='MIC ON';$('samplerate').textContent=audio.sampleRate+' Hz';$('start').disabled=true;$('stop').disabled=false;updateAccInfo();draw();
  }catch(e){$('status').textContent='MIC ERROR';alert('Tidak bisa membuka mikrofon: '+e.message+'. Izinkan akses mikrofon dan gunakan browser yang mendukung HTTPS.')}
 };
-$('stop').onclick=()=>{cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());if(audio)audio.close();audio=null;stream=null;an=null;currentVals=[];sm=[];hold=[];avgFrames=[];$('status').textContent='STOPPED • HANYA CAPTURE TERSIMPAN';$('inputstate').textContent='OFF';$('start').disabled=false;$('stop').disabled=true;$('capture').disabled=true;drawFrozen()};
+$('stop').onclick=()=>{cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());if(audio)audio.close();audio=null;stream=null;an=null;currentVals=[];smP=[];holdP=[];avgFramesP=[];$('status').textContent='STOPPED • HANYA CAPTURE TERSIMPAN';$('inputstate').textContent='OFF';$('start').disabled=false;$('stop').disabled=true;$('capture').disabled=true;drawFrozen()};
 function moveCursor(ev){
  ev.preventDefault();
  const rect=spec.getBoundingClientRect();
@@ -397,13 +424,9 @@ function nudgeCursor(dir){
 }
 $('curleft').onclick=()=>nudgeCursor(-1);
 $('curright').onclick=()=>nudgeCursor(1);
-function updateFftWarn(){
- const is512=+$('fft').value===512;
- $('fftwarn').style.display=is512?'block':'none';
- if(an){fft=+$('fft').value;an.fftSize=fft;sm=[];hold=[];avgFrames=[]}
-}
-$('fft').onchange=updateFftWarn;
-$('average').onchange=()=>{avgFrames=[];};
+$('fft').onchange=()=>{if(an){fft=+$('fft').value;an.fftSize=fft;smP=[];holdP=[];avgFramesP=[]}updateAccInfo()};
+$('average').onchange=()=>{avgFramesP=[];updateAccInfo()};
+$('detail').onchange=()=>{updateAccInfo();if(!an)drawFrozen()};
 $('range').onchange=()=>{if(an){cancelAnimationFrame(raf);draw()}else drawFrozen()};
 function refreshSlotControls(){
  const target=$('targetslot');
@@ -445,6 +468,6 @@ $('clearcaptures').onclick=()=>{
 $('showall').onclick=()=>{visibleSlots.fill(true);refreshSlotControls();redrawCurrentView()};
 $('hideall').onclick=()=>{visibleSlots.fill(false);refreshSlotControls();redrawCurrentView()};
 refreshSlotControls();
-updateFftWarn();
+updateAccInfo();
 drawFrozen();
 </script></body></html>
