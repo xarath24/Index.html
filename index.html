@@ -38,7 +38,7 @@ body.landscape-mode #spectrum{height:min(62vh,520px)}
 <header><div><h1>SMART RTA LIVE - FFT 512</h1><div class="sub">FFT 512 • AUTO EQ 15 BAND • PHASE CHECK</div></div><div style="display:flex;align-items:center;gap:8px"><button id="landscape">↔ LANDSCAPE</button><div id="status" class="status">STANDBY</div></div></header>
 <main>
 
-<div class="panel" style="border:2px solid #ffea00;background:#1a1600"><b style="color:#ffea00">⚠️ FFT 512 - BACA DULU MAS:</b><div class="info" style="color:#fff;font-size:12px;line-height:1.6">FFT 512 = 1 kotak <b id="binInfo">~94 Hz</b>. Kenceng, ga lemot, cocok buat cek MID cepet.<br><b>TAPI:</b> Di bawah 200Hz ga akurat. SUB (25-100Hz) sama LOW (80-315Hz) <b>JANGAN</b> di Auto EQ pake 512, nanti ngawur lagi kayak kemarin.<br>Cara nya: mau ukur SUB/LOW, ganti FFT ke <b>4096 / 8192</b> dulu di atas, capture, baru balik ke 512. Tombol nya udah tak sediain.</div></div>
+<div class="panel" style="border:2px solid #ffea00;background:#1a1600"><b style="color:#ffea00">⚠️ FFT 512 SUDAH DITAMBAH:</b><div class="info" style="color:#fff;font-size:12px;line-height:1.6">1 kotak FFT 512 = <b id="binInfo">~94 Hz</b>. Enak buat MID, HP enteng.<br><b>JANGAN</b> buat SUB / LOW. Mau ukur SUB/LOW, ganti ke 4096 / 8192 dulu, capture, baru balik ke 512. Kode ini udah tak kunci, kalo maksa SUB pake 512 dia nolak.</div></div>
 
 <section class="toolbar">
 <button class="go" id="start">▶ START LIVE</button><button id="stop" disabled>■ STOP</button>
@@ -61,13 +61,13 @@ body.landscape-mode #spectrum{height:min(62vh,520px)}
 <button id="showall">TAMPILKAN SEMUA</button>
 <button id="hideall">SEMBUNYIKAN SEMUA</button>
 <div id="slotlist" class="slotlist" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;width:100%;margin-top:6px"></div>
-<span id="capturestatus" class="info">Capture nyimpen magnitude + phase + peak + FFT nya. Kalo ganti FFT, capture lama tetep, tapi ukur baru harus capture ulang.</span>
+<span id="capturestatus" class="info">Capture nyimpen magnitude + phase + peak + FFT nya.</span>
 </div>
 <div class="legend"><span><i class="dot" style="background:#55d9ed"></i>LIVE</span><span><i class="dot" style="background:#ffd16a"></i>PEAK HOLD</span><span><i class="dot" style="background:#a78bfa"></i>TARGET</span><span><i class="dot" style="background:#fff"></i>SETELAH EQ</span></div>
 </section>
 
 <section class="panel" style="border:2px solid #f59e0b">
-<div class="title"><b>〰️ PHASE - POLARITY KEBALIK APA ENGGAK</b><span>FFT 512: phase di bawah 200Hz diabaikan</span></div>
+<div class="title"><b>〰️ PHASE - POLARITY KEBALIK APA ENGGAK</b><span>FFT 512: 80Hz di-skip</span></div>
 <canvas id="phaseCanvas" width="1200" height="380"></canvas>
 <div class="stats" style="margin-top:8px">
 <div class="stat"><small>PHASE @ 80Hz</small><strong id="ph80">—° (512: ga akurat)</strong></div>
@@ -81,7 +81,6 @@ body.landscape-mode #spectrum{height:min(62vh,520px)}
 </div>
 <table class="eqtable" id="phaseTableWrap" style="display:none"><thead><tr><th>CROSSOVER</th><th>PHASE KIRI</th><th>PHASE KANAN</th><th>LONCATAN</th><th>KESIMPULAN</th></tr></thead><tbody id="phaseBody"></tbody></table>
 <div id="phaseResult" style="display:none"></div>
-<div class="info">Kalo FFT 512, cek phase cuma di 300Hz sama 2500Hz yang tak hitung. 80Hz tak skip, soalnya 1 kotak nya 94Hz, ga bisa dipercaya. Mau cek 80Hz, ganti FFT 4096 dulu.</div>
 </section>
 
 <section class="panel" style="border:2px solid #7c3aed">
@@ -119,7 +118,7 @@ body.landscape-mode #spectrum{height:min(62vh,520px)}
 <div class="stat"><small>SAMPLE RATE</small><strong id="samplerate">— Hz</strong></div>
 <div class="stat"><small>RESOLUSI FFT</small><strong id="binSize">94 Hz / kotak</strong></div>
 <div class="stat"><small>INPUT</small><strong id="inputstate">OFF</strong></div>
-</div><div class="info">FFT 512 cepat tapi kasar di bass. FFT 8192 lambat dikit tapi akurat di bass. Pilih sesuai yang diukur.</div></section>
+</div><div class="info">FFT 512 cepat tapi kasar di bass. FFT 8192 akurat di bass. Peak harus -35 s/d -15 dBFS, kalo -42 kayak kemarin itu kekecilan, Auto EQ nolak.</div></section>
 </main>
 <script>
 const $=id=>document.getElementById(id);
@@ -132,14 +131,14 @@ let currentVals=[],currentPhase=[],avgFrames=[],cursorFreq=1000,cursorActive=fal
 let eqBands=[],eqAnalyzed=false,lastPeak=-120,currentWay='MID',lastFFT=512;
 const minF=20,maxF=20000;
 const WAYS={
- SUB:{label:'SUB - Output 1-2',info:'SUB: Output 1-2. WAJIB FFT 4096/8192. FFT 512 DITOLAK buat SUB.',freqs:[25,31,40,50,63,80,100,125,160,200,250,315,400,500,630],ref:[40,80],out:'Output 1-2 SUB',fmin:25,fmax:100,minFFT:4096},
- LOW:{label:'LOW - Output 3-4',info:'LOW: Output 3-4. WAJIB FFT 4096/8192. FFT 512 DITOLAK buat LOW.',freqs:[63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600],ref:[125,250],out:'Output 3-4 LOW',fmin:80,fmax:315,minFFT:4096},
- MID:{label:'MID - Output 5-6',info:'MID: Output 5-6. Boleh FFT 512, ini yang paling cocok buat 512.',freqs:[125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150],ref:[500,1250],out:'Output 5-6 MID',fmin:125,fmax:3150,minFFT:512},
- FLAT:{label:'FLAT - Semua bunyi',info:'FLAT: Semua nyala, cek akhir. Sebaiknya FFT 4096, kalo 512 cuma liat 500Hz ke atas.',freqs:[31,63,100,160,250,400,630,1000,1600,2500,4000,6300,8000,10000,16000],ref:[500,2000],out:'Semua Output - cek akhir',fmin:31,fmax:16000,minFFT:512}
+ SUB:{label:'SUB - Output 1-2',info:'SUB: Output 1-2. WAJIB FFT 4096/8192. FFT 512 DITOLAK.',freqs:[25,31,40,50,63,80,100,125,160,200,250,315,400,500,630],ref:[40,80],out:'Output 1-2 SUB',fmin:25,fmax:100,minFFT:4096},
+ LOW:{label:'LOW - Output 3-4',info:'LOW: Output 3-4. WAJIB FFT 4096/8192. FFT 512 DITOLAK.',freqs:[63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600],ref:[125,250],out:'Output 3-4 LOW',fmin:80,fmax:315,minFFT:4096},
+ MID:{label:'MID - Output 5-6',info:'MID: Output 5-6. Boleh FFT 512.',freqs:[125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150],ref:[500,1250],out:'Output 5-6 MID',fmin:125,fmax:3150,minFFT:512},
+ FLAT:{label:'FLAT - Semua bunyi',info:'FLAT: Semua nyala, cek akhir. Sebaiknya FFT 4096.',freqs:[31,63,100,160,250,400,630,1000,1600,2500,4000,6300,8000,10000,16000],ref:[500,2000],out:'Semua Output - cek akhir',fmin:31,fmax:16000,minFFT:512}
 };
 const MEANING={25:'Sub bawah',31:'Sub dalam',40:'Pukulan sub',50:'Bass dangdut',63:'Bass tebal',80:'Xover Sub/Low',100:'Bass atas',125:'Dengung',160:'Bass vocal',200:'Tebal vocal',250:'Dengung ruangan',315:'Kotak',400:'Vocal mendem',500:'Bodi vocal',630:'Nasal',800:'Jelas vocal',1000:'Patokan',1250:'Vocal cewek',1600:'Pedes dikit',2000:'Artikulasi',2500:'Pedes vocal',3150:'Sibilance',4000:'Pedes high',6300:'Cring',8000:'Detail',10000:'Udara',16000:'Atas'};
 function median(a){let s=[...a].sort((x,y)=>x-y);return s[Math.floor(s.length/2)];}
-function updateBinInfo(){let sr=audio?audio.sampleRate:48000;let bin=(sr/fft).toFixed(0);$('binSize').textContent=bin+' Hz / kotak';$('binInfo').textContent='~'+bin+' Hz';$('fftNow').textContent=fft;lastFFT=fft;}
+function updateBinInfo(){let sr=audio?audio.sampleRate:48000;let bin=Math.round(sr/fft);$('binSize').textContent=bin+' Hz / kotak';$('binInfo').textContent='~'+bin+' Hz';$('fftNow').textContent=fft;lastFFT=fft;}
 function targetCurve(f,m,way){
   if(way==='SUB'){if(m==='flat')return 0;if(f<=50)return 4;if(f<=80)return 2;return 0;}
   if(way==='LOW'){if(m==='flat')return 0;if(f<160)return 2;return 0;}
@@ -157,11 +156,7 @@ function runAutoEQ(){
   let way=WAYS[currentWay],mode=$('eqTarget').value,source=$('eqSource').value,data=null,peakUsed=lastPeak,fftUsed=lastFFT;
   if(source==='capture'){let cap=captures[selectedSlot];if(!cap){showWarn('❌ Slot kosong. Capture dulu.');return;}data=cap.data;peakUsed=cap.peak||lastPeak;fftUsed=cap.fft||512;}
   else{if(!currentVals.length){showWarn('❌ Belum LIVE.');return;}data=currentVals;fftUsed=fft;}
-  // PENGAMAN FFT 512 UNTUK SUB/LOW
-  if(fftUsed<way.minFFT){
-    showWarn('❌ DITOLAK - '+way.label+' pake FFT '+fftUsed+', padahal minimal '+way.minFFT+'.<br>FFT 512 resolusi nya '+(audio?Math.round(audio.sampleRate/fftUsed):94)+' Hz/kotak, bass nya numpuk semua, hasil nya pasti ngawur.<br><b>Ganti FFT di atas ke 4096 / 8192, Capture ulang, baru Auto EQ.</b><br>MID boleh pake 512, SUB/LOW tidak boleh.');
-    return;
-  }
+  if(fftUsed<way.minFFT){showWarn('❌ DITOLAK - '+way.label+' pake FFT '+fftUsed+', minimal '+way.minFFT+'.<br>Ganti FFT ke 4096 / 8192, Capture ulang, baru Auto EQ. MID boleh pake 512.');return;}
   if(peakUsed<-50){showWarn('❌ GAGAL - Peak '+peakUsed.toFixed(1)+' dBFS kekecilan. Gedein volume, HP 1 meter.');return;}
   let ref=median(data.filter(o=>o.f>=way.ref[0]&&o.f<=way.ref[1]).map(o=>o.v));
   eqBands=[];let eb=0,ea=0,n=0;
@@ -194,11 +189,11 @@ function runPhase(){
   if(cap&&cap.phase&&cap.phase.length){data=cap.phase;peakUsed=cap.peak||lastPeak;fftUsed=cap.fft||512;}
   else if(currentPhase.length){data=currentPhase;fftUsed=fft;}
   else{alert('Belum ada phase. START + Pink Noise 5 detik, Capture, baru cek.');return;}
-  if(peakUsed<-35){alert('Phase ga bisa dipercaya, Peak '+peakUsed.toFixed(1)+' kekecilan. Gedein sampe -30.');$('phaseTrust').textContent='TIDAK BISA ❌';return;}
+  if(peakUsed<-35){alert('Phase ga bisa dipercaya, Peak '+peakUsed.toFixed(1)+' kekecilan.');$('phaseTrust').textContent='TIDAK BISA ❌';return;}
   $('phaseTrust').textContent='BISA ✅ Peak '+peakUsed.toFixed(1);
   let xovers=fftUsed<2048?[300,2500]:[80,300,2500];
   let rows=[],txt='CEK PHASE - FFT '+fftUsed+'\n';
-  if(fftUsed<2048)txt+='⚠️ FFT 512: 80Hz di-skip, ga akurat. Mau cek 80Hz ganti FFT 4096.\n\n';
+  if(fftUsed<2048)txt+='⚠️ FFT 512: 80Hz di-skip, ga akurat.\n\n';
   xovers.forEach(fx=>{
     let left=phaseAround(fx*0.7,data),right=phaseAround(fx*1.4,data);if(left===null||right===null)return;
     let jump=right-left;while(jump>180)jump-=360;while(jump<-180)jump+=360;
@@ -248,7 +243,7 @@ function drawFrozen(){
  if(base.length)drawTarget(range,ph,y,base);
  captures.forEach((cap,ci)=>{if(!cap||!visibleSlots[ci])return;sc.beginPath();sc.strokeStyle=captureColors[ci];sc.lineWidth=3;cap.data.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(o.v);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});sc.stroke();});
  if(cursorActive){const cx=xfreq(cursorFreq,w);sc.save();sc.strokeStyle='rgba(255,255,255,.22)';sc.lineWidth=14;sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();sc.strokeStyle='#fff';sc.lineWidth=4;sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();sc.restore();const available=captures.map((cap,i)=>({cap,i})).filter(x=>x.cap&&visibleSlots[x.i]);const chosen=available.find(x=>x.i===selectedSlot)||available[available.length-1];const data=chosen?chosen.cap.data:[];if(data.length){const nearest=data.reduce((best,o)=>Math.abs(o.f-cursorFreq)<Math.abs(best.f-cursorFreq)?o:best,data[0]);$('cursorlevel').textContent=nearest.v.toFixed(1)+' dBFS (capture)';}}
- let cap=captures[selectedSlot]||captures.find(c=>c);if(cap&&cap.phase){currentPhase=cap.phase;lastPeak=cap.peak||lastPeak;fft=cap.fft||fft;drawPhaseGraph();}
+ let cap=captures[selectedSlot]||captures.find(c=>c);if(cap&&cap.phase){currentPhase=cap.phase;lastPeak=cap.peak||lastPeak;drawPhaseGraph();}
 }
 function draw(){
  if(!an)return;
@@ -319,7 +314,7 @@ $('targetslot').onchange=()=>{selectedSlot=Number($('targetslot').value);refresh
 $('capture').onclick=()=>{
  if(!an||!currentVals.length){$('capturestatus').textContent='Tekan START LIVE dulu.';return}
  if(lastPeak<-50){$('capturestatus').textContent='❌ JANGAN CAPTURE - Peak '+lastPeak.toFixed(1)+' kekecilan.';alert('Jangan capture, kekecilan: '+lastPeak.toFixed(1)+' dBFS. Gedein volume, HP 1 meter.');return;}
- captures[selectedSlot]={name:'Capture '+(selectedSlot+1),data:currentVals.map(o=>({...o})),[STRIPPED]
+ captures[selectedSlot]={name:'Capture '+(selectedSlot+1),data:currentVals.map(o=>({...o})),phase:currentPhase.map(o=>({...o})),peak:lastPeak,fft:fft,way:currentWay};
  $('capturestatus').textContent='✅ Slot '+(selectedSlot+1)+' tersimpan ('+currentWay+', FFT '+fft+', Peak '+lastPeak.toFixed(1)+' dBFS).';
  refreshSlotControls();redrawCurrentView();
 };
