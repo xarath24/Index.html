@@ -68,6 +68,10 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 .peakMeterFill{height:100%;width:0%;background:#22ff88;border-radius:6px;transition:width .06s linear}
 .setRow{display:flex;flex-direction:column;gap:7px}
 .setRow label{font-size:10px;color:#8b95a5;display:flex;flex-direction:column;gap:3px}
+.miniRef{display:flex;gap:5px}
+.miniRef button{flex:1;padding:7px 4px;font-size:11px;font-weight:700;white-space:nowrap}
+.miniVol{display:block;margin-top:7px;color:#8b95a5;font-size:10px}
+.miniVol input{margin-top:2px;height:18px}
 :fullscreen body{background:#0a0c10}
 </style>
 </head>
@@ -88,15 +92,6 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 <div class="layout">
   <aside>
     <div class="panel">
-      <h3>REFERENCE</h3>
-      <button id="pinkbtn" style="width:100%;padding:12px">🩷 PINK NOISE</button>
-      <button id="noiseoff" style="width:100%;padding:10px;margin-top:6px">■ OFF</button>
-      <label style="display:block;margin-top:10px;color:#8b95a5;font-size:11px">VOLUME <b id="voltxt" style="color:#fff">30%</b>
-        <input type="range" id="noisevol" min="0" max="100" value="30">
-      </label>
-    </div>
-
-    <div class="panel" style="margin-top:8px">
       <h3>📸 CAPTURE — TAK TERBATAS</h3>
       <button id="capturebtn" class="cap" style="width:100%;padding:12px">📸 CAPTURE KURVA INI</button>
       <button id="clearcap" class="danger" style="width:100%;padding:8px;margin-top:6px">🗑 HAPUS SEMUA CAPTURE</button>
@@ -200,6 +195,17 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
           </select>
         </label>
       </div>
+    </div>
+
+    <div class="panel" style="margin-top:8px">
+      <h3>REFERENCE • KECIL</h3>
+      <div class="miniRef">
+        <button id="pinkbtn">🩷 PINK</button>
+        <button id="noiseoff">■ OFF</button>
+      </div>
+      <label class="miniVol">VOLUME <b id="voltxt" style="color:#fff">30%</b>
+        <input type="range" id="noisevol" min="0" max="100" value="30">
+      </label>
     </div>
   </aside>
 </div>
