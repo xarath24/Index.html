@@ -6,17 +6,20 @@
 <title>SMART LIVE — Like Smaart</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#0a0c10;color:#e8eaf0;font:12px system-ui,Arial;overflow-x:hidden}
+body{margin:0;background:#0a0c10;color:#e8eaf0;font:12px system-ui,Arial;overflow-x:auto}
 button,select{font:inherit;cursor:pointer}
-.topbar{height:46px;background:#10141a;border-bottom:2px solid #3fd4ec;display:flex;align-items:center;gap:14px;padding:0 12px;position:sticky;top:0;z-index:20;white-space:nowrap}
+.topbar{height:46px;background:#10141a;border-bottom:2px solid #3fd4ec;display:flex;align-items:center;gap:14px;padding:0 12px;position:sticky;top:0;z-index:20;white-space:nowrap;min-width:900px}
 .logo{font-weight:900;font-size:17px}.logo b{color:#3fd4ec}.logo span{color:#8b95a5;font-weight:400;font-size:10px;display:block;letter-spacing:2px}
 .topbtns{margin-left:auto;display:flex;gap:6px;align-items:center}
 button{background:#222b37;color:#e8eaf0;border:1px solid #4a5566;border-radius:6px;padding:7px 12px}
 button.go{background:#087e91;border-color:#13b5c9}
 button.on{background:#c2410c!important;border-color:#fb923c!important;color:#fff}
 button:disabled{opacity:.45}
+button.cap{background:#7c3aed;border-color:#a78bfa;font-weight:800}
+button.danger{background:#7f1d1d;border-color:#ef4444}
 select{background:#222b37;color:#e8eaf0;border:1px solid #4a5566;border-radius:6px;padding:6px}
-.layout{display:grid;grid-template-columns:220px 1fr 180px;gap:8px;padding:8px;max-width:1500px;margin:auto}
+/* LANDSCAPE: 3 KOLOM TETAP, GA NUMPUK */
+.layout{display:grid;grid-template-columns:250px minmax(640px,1fr) 170px;gap:8px;padding:8px;max-width:1600px;margin:auto;min-width:900px}
 .panel{background:#14181f;border:1px solid #2b323e;border-radius:8px;padding:9px}
 h3{margin:0 0 8px;font-size:11px;letter-spacing:1px;color:#8b95a5}
 canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-resize;touch-action:none}
@@ -31,10 +34,17 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
 .kv b{color:#fff}.kv span{color:#8b95a5}
 .cursor{display:flex;gap:6px;align-items:center;margin-top:7px;background:#090d12;border:1px solid #2b323e;border-radius:6px;padding:6px}
 .cursor input{flex:1;accent-color:#fff}
-.statusbar{background:#10141a;border-top:1px solid #2b323e;padding:7px 12px;display:flex;gap:16px;flex-wrap:wrap;color:#8b95a5;font-size:11px;position:sticky;bottom:0}
+.statusbar{background:#10141a;border-top:1px solid #2b323e;padding:7px 12px;display:flex;gap:16px;flex-wrap:wrap;color:#8b95a5;font-size:11px;position:sticky;bottom:0;min-width:900px}
 .statusbar b{color:#7ee0ad}
 input[type=range]{width:100%;accent-color:#3fd4ec}
-@media(max-width:900px){.layout{grid-template-columns:1fr}}
+/* CAPTURE LIST KIRI */
+.capitem{display:flex;align-items:center;gap:6px;padding:6px 4px;border-bottom:1px solid #2b323e}
+.capitem .dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.capitem .nm{flex:1;min-width:0}
+.capitem .nm b{display:block;color:#fff;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.capitem .nm span{color:#8b95a5;font-size:10px}
+.capitem button{padding:4px 7px;font-size:11px}
+.capempty{color:#8b95a5;font-size:11px;line-height:1.6;padding:4px 0}
 </style>
 </head>
 <body>
@@ -45,6 +55,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
     <button id="start" class="go">▶ START</button>
     <button id="stop" disabled>■ STOP</button>
     <b id="liveind" style="color:#7ee0ad">● STANDBY</b>
+    <span style="color:#fbbf24;font-size:11px">↻ PUTAR HP KE LANDSCAPE</span>
   </div>
 </div>
 
@@ -62,6 +73,19 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         Pink ON = Magnitude + Phase jalan.
       </p>
     </div>
+
+    <div class="panel" style="margin-top:8px">
+      <h3>📸 CAPTURE — TAK TERBATAS</h3>
+      <button id="capturebtn" class="cap" style="width:100%;padding:12px">📸 CAPTURE KURVA INI</button>
+      <button id="clearcap" class="danger" style="width:100%;padding:8px;margin-top:6px">🗑 HAPUS SEMUA CAPTURE</button>
+      <div id="caplist" style="margin-top:6px"></div>
+      <p style="color:#8b95a5;font-size:11px;line-height:1.6;margin:8px 0 0">
+        Capture 1x = 1 kurva beku.<br>
+        Bisa capture terus, ga ada batas.<br>
+        Centang = tampilin, Hapus = hapus 1 itu doang.
+      </p>
+    </div>
+
     <div class="panel" style="margin-top:8px">
       <h3>STATUS</h3>
       <div class="kv"><span>Mode</span><b id="modetxt">RTA</b></div>
@@ -69,6 +93,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <div class="kv"><span>Peak</span><b id="peakdb">—</b></div>
       <div class="kv"><span>Peak Freq</span><b id="peakfreq">—</b></div>
       <div class="kv"><span>Cursor Freq</span><b id="cursorfreqbig">4.19 kHz</b></div>
+      <div class="kv"><span>Capture</span><b id="capcount">0</b></div>
       <div class="kv"><span>Sample Rate</span><b id="samplerate">48000 Hz</b></div>
     </div>
   </aside>
@@ -130,11 +155,15 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
     <div class="panel">
       <h3>CARA PAKAI</h3>
       <div style="font-size:11px;color:#8b95a5;line-height:1.8">
-        1. Pencet START, izinin mic<br>
-        2. Pencet PINK, volume 30%<br>
-        3. Pink lewat kabel AUX ke speaker<br>
-        4. HP / mic 1 meter di depan speaker<br>
-        5. Garis ijo tengah itu 0 dB. Di atas garis = naik, di bawah garis = turun.
+        1. Putar HP landscape<br>
+        2. Pencet START, izinin mic<br>
+        3. Pencet PINK, volume 30%<br>
+        4. Pink lewat kabel AUX ke speaker<br>
+        5. HP / mic 1 meter di depan speaker<br>
+        6. Kurva bagus? Pencet CAPTURE di kiri<br>
+        7. Ubah EQ / posisi, liat live nya vs capture nya<br>
+        8. Ga cocok? Hapus capture itu doang di kiri<br><br>
+        Garis ijo tengah itu 0 dB. Di atas = naik, di bawah = turun.
       </div>
     </div>
   </aside>
@@ -159,9 +188,10 @@ const SEGS=[[20,1000,.33],[1000,3000,.17],[3000,7000,.21],[7000,10000,.10],[1000
 const MAJORS=[20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000];
 const MAJORSET=new Set(MAJORS);
 const FREQS=[20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000];
+const CAPCOLORS=['#fb923c','#facc15','#f472b6','#a78bfa','#34d399','#f87171','#93c5fd','#fdba74','#e879f9','#4ade80','#fbbf24','#fb7185'];
 
 const S={ctx:null,stream:null,src:null,an:null,refAn:null,noise:null,noiseGain:null,pink:false,running:false,fft:8192,raf:0,
-  cursor:4190,live:[],phase:[],coh:[],sm:null,acc:null,accN:0,magOffset:null};
+  cursor:4190,live:[],phase:[],coh:[],sm:null,acc:null,accN:0,magOffset:null,captures:[],capN:0};
 
 function xfreq(f,w){f=Math.max(MINF,Math.min(MAXF,f));let s=0;for(const[a,b,p]of SEGS){if(f<=b||a===15000)return(s+Math.log(f/a)/Math.log(b/a)*p)*w;s+=p}return w}
 function freqAtX(x,w){const r=Math.max(0,Math.min(1,x/w));let s=0;for(const[a,b,p]of SEGS){if(r<=s+p||a===15000)return a*Math.exp(((r-s)/p)*Math.log(b/a));s+=p}return MAXF}
@@ -170,6 +200,35 @@ function fmtLab(f){return f>=1000?(f/1000).toString().replace(/\.0$/,'')+'k':(''
 function yMag(v,range,h){return Math.max(0,Math.min(h,(range/2-v)/range*h))}
 function db2p(v){return Math.pow(10,Math.max(-120,v)/10)}
 function p2db(p){return 10*Math.log10(Math.max(1e-12,p))}
+
+/* CAPTURE: TAK TERBATAS, HAPUS SATU-SATU BISA */
+function renderCaptures(){
+  const el=$('caplist');$('capcount').textContent=S.captures.length;
+  if(!S.captures.length){el.innerHTML='<div class="capempty">Belum ada capture.<br>Pencet CAPTURE pas kurva nya lagi bagus.</div>';return}
+  el.innerHTML='';
+  S.captures.forEach((cp,idx)=>{
+    const row=document.createElement('div');row.className='capitem';
+    row.innerHTML='<span class="dot" style="background:'+cp.color+'"></span><label style="display:flex;align-items:center;gap:4px"><input type="checkbox" '+(cp.show?'checked':'')+' style="accent-color:'+cp.color+'"></label><div class="nm"><b>'+cp.name+'</b><span>'+cp.time+' • '+(cp.mode||'RTA')+'</span></div><button>Hapus</button>';
+    row.querySelector('input').onchange=e=>{cp.show=e.target.checked;drawAll()};
+    row.querySelector('button').onclick=()=>{S.captures.splice(idx,1);renderCaptures();drawAll()};
+    el.appendChild(row);
+  });
+}
+$('capturebtn').onclick=()=>{
+  if(!S.live.length){alert('Belum ada kurva. START dulu, tunggu grafik jalan, baru CAPTURE.');return}
+  S.capN++;
+  const now=new Date(),hh=String(now.getHours()).padStart(2,'0'),mm=String(now.getMinutes()).padStart(2,'0'),ss=String(now.getSeconds()).padStart(2,'0');
+  S.captures.push({
+    id:Date.now()+Math.random(),name:'Capture '+S.capN,
+    color:CAPCOLORS[(S.capN-1)%CAPCOLORS.length],show:true,
+    time:hh+':'+mm+':'+ss,mode:S.pink?'TF':'RTA',
+    mag:S.live.map(o=>({f:o.f,v:o.v,x:o.x})),
+    phase:S.phase.map(o=>({f:o.f,v:o.v,x:o.x}))
+  });
+  renderCaptures();drawAll();
+};
+$('clearcap').onclick=()=>{if(!S.captures.length)return;if(confirm('Hapus semua '+S.captures.length+' capture?')){S.captures=[];renderCaptures();drawAll()}};
+renderCaptures();
 
 async function ensureCtx(){
   if(!S.ctx)S.ctx=new(window.AudioContext||window.webkitAudioContext)({latencyHint:'interactive',sampleRate:48000});
@@ -235,7 +294,6 @@ function drawCursorOnCurve(c,cx,cy,W,H,txt){
   c.fillText(txt,centerX,centerY);
   c.textAlign='left';c.textBaseline='alphabetic';
 }
-/* GARIS LURUS TENGAH 0 dB, DIGAMBAR PALING ATAS BIAR GA KETUTUP KURVA */
 function drawZeroLine(c,w,h,range){
   const y=yMag(0,range,h);
   c.strokeStyle='#22ff88';c.lineWidth=3;
@@ -300,6 +358,12 @@ function drawAll(){
   const w=mag.width,h=mag.height,range=+$('range').value;
   gridMag(mg,w,h,range);
   $('cursorfreqbig').textContent=fmtF(S.cursor);
+  /* CAPTURE BEKU DI BELAKANG LIVE */
+  S.captures.forEach(cp=>{
+    if(!cp.show||!cp.mag.length)return;
+    mg.beginPath();mg.strokeStyle=cp.color;mg.lineWidth=2;mg.setLineDash([6,4]);
+    cp.mag.forEach((o,i)=>{const Y=yMag(o.v,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke();mg.setLineDash([]);
+  });
   if(S.live.length){
     mg.beginPath();mg.strokeStyle='#3fd4ec';mg.lineWidth=2.5;
     S.live.forEach((o,i)=>{const Y=yMag(o.v,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke();
@@ -308,7 +372,6 @@ function drawAll(){
     mg.beginPath();mg.strokeStyle='#5fd68a';mg.lineWidth=1.5;
     S.coh.forEach((o,i)=>{const Y=h-Math.max(0,Math.min(1,o.v))*22-4;if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke();
   }
-  /* GARIS 0 dB DI ATAS KURVA */
   drawZeroLine(mg,w,h,range);
   const pt=pointOn(S.live,S.cursor),cx=Math.max(6,Math.min(w-6,xfreq(S.cursor,w)));
   mg.strokeStyle='#fff';mg.lineWidth=3;mg.beginPath();mg.moveTo(cx,0);mg.lineTo(cx,h);mg.stroke();
@@ -327,9 +390,14 @@ function drawAll(){
   FREQS.forEach(f=>{const x=xfreq(f,pw);pg.beginPath();pg.moveTo(x,0);pg.lineTo(x,phH);pg.stroke()});
   pg.strokeStyle='#ff6b6b';pg.lineWidth=1;
   [180,-180].forEach(d=>{const y=yFor(d);pg.beginPath();pg.moveTo(0,y);pg.lineTo(pw,y);pg.stroke();pg.fillStyle='#ff6b6b';pg.font='bold 11px Arial';pg.fillText('±180°',10,d===180?12:y+12)});
-  /* GARIS LURUS TENGAH PHASE 0° JUGA DITEBELIN */
   pg.strokeStyle='#22ff88';pg.lineWidth=3;pg.beginPath();pg.moveTo(0,yFor(0));pg.lineTo(pw,yFor(0));pg.stroke();
   pg.fillStyle='#22ff88';pg.font='bold 11px Arial';pg.fillText('0°',10,yFor(0)+12);
+  /* CAPTURE PHASE JUGA */
+  S.captures.forEach(cp=>{
+    if(!cp.show||!cp.phase.length)return;
+    pg.beginPath();pg.strokeStyle=cp.color;pg.lineWidth=1.5;pg.setLineDash([6,4]);
+    cp.phase.forEach((o,i)=>{const Y=yFor(Math.max(-180,Math.min(180,o.v)));if(i===0)pg.moveTo(o.x,Y);else pg.lineTo(o.x,Y)});pg.stroke();pg.setLineDash([]);
+  });
   if(S.phase.length&&S.pink){
     pg.beginPath();pg.strokeStyle='#3fd4ec';pg.lineWidth=2.5;let pen=false;
     S.phase.forEach((o,i)=>{
