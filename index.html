@@ -53,31 +53,6 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 .findres small{color:#8b95a5;font-weight:400}
 #toast{position:fixed;left:50%;bottom:52px;transform:translateX(-50%);background:#1f2937;border:1px solid #4a5566;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;z-index:99;opacity:0;pointer-events:none;transition:opacity .25s;max-width:92vw;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #toast.show{opacity:1}
-.lampRow{display:flex;align-items:center;gap:8px;background:#090d12;border:1px solid #2b323e;border-radius:8px;padding:9px 10px;margin-top:10px}
-.lamp{width:18px;height:18px;border-radius:50%;background:#3a4452;border:2px solid #6b7280;flex-shrink:0}
-.lamp.on{background:#ff4d9d;border-color:#ff8ac2;box-shadow:0 0 12px #ff4d9d,0 0 26px #ff4d9d;animation:pinkPulse 1s infinite}
-@keyframes pinkPulse{0%,100%{box-shadow:0 0 8px #ff4d9d,0 0 18px #ff4d9d}50%{box-shadow:0 0 16px #ff4d9d,0 0 34px #ff8ac2}}
-.lampTxt{flex:1;font-weight:800;font-size:12px;letter-spacing:.4px}
-.lampTxt small{display:block;color:#8b95a5;font-weight:400;font-size:10px;letter-spacing:0}
-.lampState{font-weight:900;font-size:12px;color:#8b95a5}
-.lampState.on{color:#ff8ac2}
-.sigRow{background:#090d12;border:1px solid #2b323e;border-radius:8px;padding:9px 10px;margin-top:6px}
-.sigTop{display:flex;align-items:center;gap:8px}
-.sigLamp{width:16px;height:16px;border-radius:50%;background:#3a4452;border:2px solid #6b7280;flex-shrink:0}
-.sigLamp.on{background:#22ff88;border-color:#86efac;box-shadow:0 0 10px #22ff88,0 0 22px #22ff88}
-.sigLabel{flex:1;font-weight:800;font-size:12px}
-.sigLabel small{display:block;color:#8b95a5;font-weight:400;font-size:10px}
-.sigDb{font-weight:900;font-size:12px;white-space:nowrap}
-.meter{height:10px;background:#1f2937;border-radius:5px;overflow:hidden;margin-top:8px;position:relative}
-.meterFill{height:100%;width:0%;background:#22ff88;border-radius:5px;transition:width .06s linear}
-.meterMark{position:absolute;top:0;bottom:0;width:2px;background:#fff;opacity:.6}
-.clipRow{display:flex;align-items:center;gap:8px;margin-top:8px}
-.clipLamp{width:16px;height:16px;border-radius:50%;background:#3a4452;border:2px solid #6b7280;flex-shrink:0}
-.clipLamp.on{background:#ef4444;border-color:#fca5a5;box-shadow:0 0 12px #ef4444,0 0 26px #ef4444;animation:clipBlink .3s infinite alternate}
-@keyframes clipBlink{from{opacity:1}to{opacity:.55}}
-.clipTxt{font-weight:900;font-size:12px;color:#8b95a5;letter-spacing:.5px}
-.clipTxt.on{color:#f87171}
-.clipHint{margin-left:auto;font-size:10px;color:#8b95a5}
 .cursorTop{flex:1;min-width:280px;background:#090d12;border:1px solid #2b323e;border-radius:8px;padding:10px 12px;display:flex;gap:16px;align-items:center;justify-content:center;text-align:center;white-space:nowrap;overflow:hidden;margin:0 auto}
 .cursorTop .lab{font-size:10px;color:#8b95a5;letter-spacing:1px}
 .cursorTop .freq{font-weight:900;font-size:16px;color:#fff}
@@ -119,28 +94,6 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <label style="display:block;margin-top:10px;color:#8b95a5;font-size:11px">VOLUME <b id="voltxt" style="color:#fff">30%</b>
         <input type="range" id="noisevol" min="0" max="100" value="30">
       </label>
-      <div class="lampRow">
-        <span id="pinklamp" class="lamp"></span>
-        <div class="lampTxt">PINK NOISE: <span id="pinklamptext">OFF</span><small id="pinklampsub">Pink mati, ga ada suara keluar</small></div>
-        <span id="pinklampstate" class="lampState">MATI</span>
-      </div>
-      <div class="sigRow">
-        <div class="sigTop">
-          <span id="siglamp" class="sigLamp"></span>
-          <div class="sigLabel">SIGNAL <small id="sigsub">Mic belum jalan</small></div>
-          <span class="sigDb" id="sigdb">— dB</span>
-        </div>
-        <div class="meter"><div class="meterFill" id="sigfill"></div><div class="meterMark" style="left:75%"></div><div class="meterMark" style="left:90%"></div></div>
-        <div class="clipRow">
-          <span id="cliplamp" class="clipLamp"></span>
-          <span id="cliptxt" class="clipTxt">PEAK / CLIP</span>
-          <span class="clipHint">Merah = kegedean, kecilin volume</span>
-        </div>
-      </div>
-      <p style="color:#8b95a5;font-size:11px;line-height:1.6;margin:8px 0 0">
-        Pink OFF = live mati, cursor + phase capture tetep aktif.<br>
-        Pink ON = Magnitude + Phase jalan, walau coherence rendah.
-      </p>
     </div>
 
     <div class="panel" style="margin-top:8px">
@@ -280,6 +233,7 @@ const S={ctx:null,stream:null,src:null,an:null,refAn:null,noise:null,noiseGain:n
 
 function updatePeakPanel(peakDb,peakFreq){
   const big=$('peakBig'),fill=$('peakFill');
+  if(!big||!fill)return;
   if(peakDb==null){
     big.textContent='— dBFS';big.className='big';
     fill.style.width='0%';fill.style.background='#22ff88';
@@ -293,55 +247,15 @@ function updatePeakPanel(peakDb,peakFreq){
 }
 updatePeakPanel(null);
 
-function updatePinkLamp(){
-  const lamp=$('pinklamp'),txt=$('pinklamptext'),sub=$('pinklampsub'),st=$('pinklampstate');
-  if(S.pink&&S.noise){
-    lamp.classList.add('on');txt.textContent='ON';txt.style.color='#ff8ac2';
-    sub.textContent='Pink lagi bunyi, lagi ngukur';
-    st.textContent='NYALA';st.classList.add('on');
-  }else{
-    lamp.classList.remove('on');txt.textContent='OFF';txt.style.color='#fff';
-    sub.textContent='Pink mati, ga ada suara keluar';
-    st.textContent='MATI';st.classList.remove('on');
-  }
-}
-updatePinkLamp();
-
-function resetSignalUI(){
-  $('siglamp').classList.remove('on');
-  $('sigsub').textContent='Mic belum jalan';
-  $('sigdb').textContent='— dB';
-  $('sigfill').style.width='0%';$('sigfill').style.background='#22ff88';
-  $('cliplamp').classList.remove('on');$('cliptxt').classList.remove('on');$('cliptxt').textContent='PEAK / CLIP';
-  S.clipUntil=0;S.peakHoldDb=-120;
-}
 function updateSignalUI(){
-  if(!S.an||!S.running){resetSignalUI();return}
+  if(!S.an||!S.running){S.clipUntil=0;S.peakHoldDb=-120;return}
   const td=new Float32Array(S.an.fftSize);
   S.an.getFloatTimeDomainData(td);
-  let peak=0,sum=0;
-  for(let i=0;i<td.length;i++){const a=Math.abs(td[i]);if(a>peak)peak=a;sum+=td[i]*td[i]}
-  const rms=Math.sqrt(sum/Math.max(1,td.length));
-  const db=peak<=0.00001?-120:20*Math.log10(peak);
-  const now=performance.now();
-  if(db>S.peakHoldDb||now>S.peakHoldUntil){S.peakHoldDb=db;S.peakHoldUntil=now+900}
-  const showDb=Math.max(db,S.peakHoldDb-0.001);
-  const pct=Math.max(0,Math.min(100,(showDb+60)/60*100));
-  const fill=$('sigfill');
-  fill.style.width=pct+'%';
-  fill.style.background=showDb>=-3?'#ef4444':showDb>=-12?'#facc15':'#22ff88';
-  $('sigdb').textContent=(showDb<=-99?'-99':showDb.toFixed(0))+' dB';
-  const sig=$('siglamp');
-  if(rms>0.002||peak>0.01){sig.classList.add('on');$('sigsub').textContent=showDb>=-3?'Kenceng banget, hati-hati clip':showDb>=-20?'Sinyal bagus':'Sinyal kecil, deketin mic / gedein volume'}
-  else{sig.classList.remove('on');$('sigsub').textContent='Sinyal kecil / hening'}
-  if(peak>=0.89){S.clipUntil=now+1000}
-  const clipOn=now<S.clipUntil;
-  $('cliplamp').classList.toggle('on',clipOn);
-  $('cliptxt').classList.toggle('on',clipOn);
-  $('cliptxt').textContent=clipOn?'⚠ CLIP! KECILIN VOLUME':'PEAK / CLIP';
-  return db;
+  let peak=0;
+  for(let i=0;i<td.length;i++){const a=Math.abs(td[i]);if(a>peak)peak=a}
+  if(peak>=0.89){S.clipUntil=performance.now()+1000}
+  return peak<=0.00001?-120:20*Math.log10(peak);
 }
-resetSignalUI();
 
 let toastTimer=0;
 function toast(msg){
@@ -612,7 +526,7 @@ async function startPink(){
   S.refAn=c.createAnalyser();S.refAn.fftSize=S.fft;S.refAn.smoothingTimeConstant=0;
   S.noise.connect(S.noiseGain);S.noiseGain.connect(c.destination);S.noiseGain.connect(S.refAn);S.noise.start();
   S.pink=true;$('refstat').textContent='PINK NOISE';$('modetxt').textContent='TF';$('phasesub').textContent='Pink ON — Phase jalan';
-  $('pinkbtn').classList.add('on');resetAcc();updatePinkLamp();
+  $('pinkbtn').classList.add('on');resetAcc();
 }
 function stopPinkNoiseOnly(){
   if(S.noise){try{S.noise.stop()}catch(e){}try{S.noise.disconnect()}catch(e){}S.noise=null}
@@ -624,7 +538,6 @@ function stopPink(){
   S.pink=false;
   $('refstat').textContent='OFF';$('modetxt').textContent='RTA';$('phasesub').textContent='Pink OFF — Live mati, phase capture tetep aktif';
   $('pinkbtn').classList.remove('on');
-  updatePinkLamp();
   killLive();drawAll();
 }
 $('pinkbtn').onclick=()=>{autoLandscape();S.pink?stopPink():startPink()};
@@ -901,7 +814,7 @@ $('stop').onclick=()=>{
   if(S.stream)S.stream.getTracks().forEach(t=>t.stop());
   S.stream=null;S.an=null;$('start').disabled=false;$('stop').disabled=true;
   $('status').textContent='STANDBY';$('liveind').textContent='● STANDBY';
-  resetSignalUI();updatePeakPanel(null);
+  updatePeakPanel(null);
   if(S.pink)stopPink();else{killLive();drawAll()}
 };
 $('fft').onchange=()=>{if(S.an&&S.ctx){S.fft=+$('fft').value;S.an.fftSize=S.fft;if(S.refAn)S.refAn.fftSize=S.fft;resetAcc();$('fftstat').textContent=S.fft}};
