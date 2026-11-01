@@ -47,7 +47,14 @@ body.landscape-mode header h1{font-size:15px}
  <div class="stat"><small>LEVEL DI TITIK</small><strong id="cursorlevel">— dBFS</strong></div>
 </div>
 <div class="info">Sentuh lalu geser garis vertikal pada grafik untuk membaca frekuensi dan level. Rentang sumbu: 20 Hz–20 kHz.</div>
-<div class="capturebar"><button class="go" id="capture">📸 CAPTURE CURVE</button><button id="clearcaptures">HAPUS CAPTURE</button><span id="capturestatus" class="info">Belum ada capture.</span></div>
+<div class="capturebar">
+ <button id="slot1" class="slotbtn go">SLOT 1</button>
+ <button id="slot2" class="slotbtn">SLOT 2</button>
+ <button id="slot3" class="slotbtn">SLOT 3</button>
+ <button class="go" id="capture">📸 SIMPAN / GANTI CAPTURE</button>
+ <button id="clearcaptures">HAPUS SLOT TERPILIH</button>
+ <span id="capturestatus" class="info">Pilih slot, lalu simpan capture. Capture baru akan mengganti isi slot terpilih.</span>
+</div>
 <div class="legend"><span><i class="dot" style="background:#55d9ed"></i>LIVE</span><span><i class="dot" style="background:#ffd16a"></i>PEAK HOLD</span><span><i class="dot" style="background:#ff6b6b"></i>CAPTURE 1</span><span><i class="dot" style="background:#b58cff"></i>CAPTURE 2</span><span><i class="dot" style="background:#67d69b"></i>CAPTURE 3</span></div>
 <div class="info">Capture menyimpan kurva magnitude saat itu. Kurva tersimpan akan ditampilkan sebagai overlay agar bisa dibandingkan dengan kondisi LIVE atau capture lain.</div></section>
 <section class="panel"><div class="title"><b>LIVE SPECTROGRAM / WATERFALL</b><span>Waktu berjalan ↓</span></div><canvas id="waterfall" width="1200" height="300"></canvas><div class="info">Warna terang menunjukkan energi frekuensi lebih kuat. Waterfall bergerak saat mikrofon menerima suara.</div></section>
@@ -62,7 +69,7 @@ body.landscape-mode header h1{font-size:15px}
 const $=id=>document.getElementById(id);
 const spec=$('spectrum'),sc=spec.getContext('2d'),water=$('waterfall'),wc=water.getContext('2d');
 let audio=null,stream=null,an=null,src=null,raf=0,sm=[],hold=[],frame=0,fft=4096,avgCount=4;
-let captures=[];const captureColors=['#ff6b6b','#b58cff','#67d69b'];let currentVals=[];let avgFrames=[];
+let captures=[null,null,null];let selectedSlot=0;const captureColors=['#ff6b6b','#b58cff','#67d69b'];let currentVals=[];let avgFrames=[];
 let cursorFreq=1000,cursorActive=false;
 const minF=20,maxF=20000;
 // Piecewise log scale: give the important 1 kHz–10 kHz region half of the graph width.
@@ -92,7 +99,8 @@ function drawFrozen(){
  const w=spec.width,h=spec.height,ph=h-36,range=+$('range').value;
  const y=v=>Math.max(0,Math.min(range,-v))/range*ph;
  captures.forEach((cap,ci)=>{
-  sc.beginPath();sc.strokeStyle=captureColors[ci%captureColors.length];sc.lineWidth=3;
+  if(!cap)return;
+  sc.beginPath();sc.strokeStyle=captureColors[ci];sc.lineWidth=3;
   cap.data.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(o.v);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});
   sc.stroke();
  });
@@ -101,7 +109,8 @@ function drawFrozen(){
   sc.save();sc.setLineDash([]);sc.strokeStyle='rgba(255,255,255,.22)';sc.lineWidth=14;
   sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();
   sc.strokeStyle='#fff';sc.lineWidth=4;sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();sc.restore();
-  const data=captures.length?captures[captures.length-1].data:[];
+  const available=captures.filter(Boolean);
+  const data=available.length?available[available.length-1].data:[];
   if(data.length){
    const nearest=data.reduce((best,o)=>Math.abs(o.f-cursorFreq)<Math.abs(best.f-cursorFreq)?o:best,data[0]);
    $('cursorlevel').textContent=nearest.v.toFixed(1)+' dBFS (capture)';
@@ -130,7 +139,8 @@ function draw(){
  currentVals=vals.map((o,i)=>({f:o.f,v:sm[i]}));
  // Draw saved curves on top of the live trace for direct comparison.
  captures.forEach((cap,ci)=>{
-  sc.beginPath();sc.strokeStyle=captureColors[ci%captureColors.length];sc.lineWidth=2.4;
+  if(!cap)return;
+  sc.beginPath();sc.strokeStyle=captureColors[ci];sc.lineWidth=2.4;
   cap.data.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(o.v);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});
   sc.stroke();
  });
@@ -199,12 +209,29 @@ spec.addEventListener('lostpointercapture',endCursorDrag);
 $('fft').onchange=()=>{if(an){fft=+$('fft').value;an.fftSize=fft;sm=[];hold=[];avgFrames=[]}};
 $('average').onchange=()=>{avgFrames=[];};
 $('range').onchange=()=>{if(an){cancelAnimationFrame(raf);draw()}else drawFrozen()};
+function refreshSlotButtons(){
+ for(let i=0;i<3;i++){
+  const b=$('slot'+(i+1));
+  b.classList.toggle('go',i===selectedSlot);
+  b.textContent='SLOT '+(i+1)+(captures[i]?' ✓':'');
+ }
+}
+[0,1,2].forEach(i=>$('slot'+(i+1)).onclick=()=>{
+ selectedSlot=i;refreshSlotButtons();
+ $('capturestatus').textContent='Slot '+(i+1)+' dipilih. Capture berikutnya akan mengganti isi slot ini.';
+});
 $('capture').onclick=()=>{
  if(!an||!currentVals.length){$('capturestatus').textContent='Tekan START LIVE dan tunggu grafik terbaca sebelum capture.';return}
- if(captures.length>=3){$('capturestatus').textContent='Maksimal 3 capture. Hapus capture lama untuk mengambil yang baru.';return}
- captures.push({name:'Capture '+(captures.length+1),data:currentVals.map(o=>({...o}))});
- $('capturestatus').textContent=captures.length+' capture tersimpan. Capture tetap tampil setelah STOP.';
+ captures[selectedSlot]={name:'Capture '+(selectedSlot+1),data:currentVals.map(o=>({...o}))};
+ $('capturestatus').textContent='Capture slot '+(selectedSlot+1)+' disimpan/diganti.';
+ refreshSlotButtons();
 };
-$('clearcaptures').onclick=()=>{captures=[];$('capturestatus').textContent='Semua capture dihapus.';if(an){cancelAnimationFrame(raf);draw()}else drawFrozen()};
+$('clearcaptures').onclick=()=>{
+ captures[selectedSlot]=null;
+ $('capturestatus').textContent='Isi slot '+(selectedSlot+1)+' dihapus.';
+ refreshSlotButtons();
+ if(an){cancelAnimationFrame(raf);draw()}else drawFrozen();
+};
+refreshSlotButtons();
 grid();
 </script></body></html>
