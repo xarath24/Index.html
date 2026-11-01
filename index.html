@@ -49,8 +49,6 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 </div>
 
 <div class="layout">
-
-  <!-- KIRI: CUMA PINK -->
   <aside>
     <div class="panel">
       <h3>REFERENCE</h3>
@@ -74,7 +72,6 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
     </div>
   </aside>
 
-  <!-- TENGAH: CUMA 2 GRAFIK -->
   <main>
     <div class="panel">
       <div class="ctl">
@@ -128,7 +125,6 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
     </div>
   </main>
 
-  <!-- KANAN: CUMA INFO -->
   <aside>
     <div class="panel">
       <h3>CARA PAKAI</h3>
@@ -138,11 +134,11 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         3. Pink lewat kabel AUX ke speaker<br>
         4. HP / mic 1 meter di depan speaker<br>
         5. Liat grafik nya, jangan gerak dulu 5 detik<br><br>
-        Jangan pake speaker HP sendiri / bluetooth, coherence nya bakal rendah.
+        Jangan pake speaker HP sendiri / bluetooth, coherence nya bakal rendah.<br><br>
+        Kalo RTA doang (Pink OFF), bunyiin musik / tepuk tangan, kurva nya harus naik ke tengah.
       </div>
     </div>
   </aside>
-
 </div>
 
 <div class="statusbar">
@@ -181,8 +177,6 @@ async function ensureCtx(){
   if(S.ctx.state==='suspended')await S.ctx.resume();
   return S.ctx;
 }
-
-/* FFT */
 function fftCalc(re,im){
   const n=re.length;
   for(let i=1,j=0;i<n;i++){let bit=n>>1;for(;j&bit;bit>>=1)j^=bit;j^=bit;if(i<j){let t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t}}
@@ -198,7 +192,6 @@ function fftCalc(re,im){
   }
 }
 function ifftCalc(re,im){for(let i=0;i<re.length;i++)im[i]=-im[i];fftCalc(re,im);const n=re.length;for(let i=0;i<n;i++){re[i]/=n;im[i]=-im[i]/n}}
-
 function pinkBuffer(c){
   const N=65536,re=new Float32Array(N),im=new Float32Array(N),sr=c.sampleRate,k0=Math.max(1,Math.floor(20*N/sr));
   for(let k=k0;k<N/2;k++){const a=1/Math.sqrt(k),p=Math.random()*2*Math.PI;re[k]=a*Math.cos(p);im[k]=a*Math.sin(p);re[N-k]=re[k];im[N-k]=-im[k]}
@@ -208,9 +201,7 @@ function pinkBuffer(c){
   for(let i=0;i<N;i++)d[i]=re[i]*(0.35/r);
   return b;
 }
-
 function resetAcc(){S.acc=null;S.accN=0;S.sm=null;S.magOffset=null}
-
 async function startPink(){
   stopPink();await ensureCtx();const c=S.ctx;
   S.noise=c.createBufferSource();S.noise.buffer=pinkBuffer(c);S.noise.loop=true;
@@ -231,7 +222,6 @@ $('pinkbtn').onclick=()=>S.pink?stopPink():startPink();
 $('noiseoff').onclick=stopPink;
 $('noisevol').oninput=e=>{$('voltxt').textContent=e.target.value+'%';if(S.noiseGain&&S.ctx)S.noiseGain.gain.setTargetAtTime((e.target.value/100)*0.5,S.ctx.currentTime,.02)};
 
-/* GAMBAR */
 function drawScale(){
   const c=fg,W=fsc.width,H=fsc.height;
   c.clearRect(0,0,W,H);c.fillStyle='#0b0f14';c.fillRect(0,0,W,H);
@@ -245,7 +235,6 @@ function drawScale(){
   c.strokeStyle='#fff';c.lineWidth=3;c.beginPath();c.moveTo(cx,0);c.lineTo(cx,H);c.stroke();
   c.textAlign='left';
 }
-
 function gridMag(c,w,h,range){
   c.clearRect(0,0,w,h);c.fillStyle='#05070a';c.fillRect(0,0,w,h);
   FREQS.forEach(f=>{const x=xfreq(f,w);c.strokeStyle=MAJORSET.has(f)?'#3a4452':'#232a35';c.lineWidth=1;c.beginPath();c.moveTo(x,0);c.lineTo(x,h);c.stroke()});
@@ -258,7 +247,6 @@ function gridMag(c,w,h,range){
     c.fillText((d>0?'+'+d:d===0?'0 dB':''+d)+' dB',4,Math.max(11,Math.min(h-2,y+11)));
   }
 }
-
 function densify(freqs,pArr,phArr,cohArr){
   const W=mag.width,N=301,out=[],ph=[],co=[];
   const logF=new Float64Array(freqs.length),pref=new Float64Array(freqs.length+1);
@@ -274,7 +262,6 @@ function densify(freqs,pArr,phArr,cohArr){
   }
   return{mag:out,phase:ph,coh:co};
 }
-
 function pointOn(data,f){
   if(!data.length)return null;
   const cx=xfreq(f,mag.width);
@@ -285,7 +272,6 @@ function pointOn(data,f){
   const a=data[lo],b=data[hi],t=b.x===a.x?0:(cx-a.x)/(b.x-a.x);
   return{f,v:a.v+(b.v-a.v)*t,x:cx};
 }
-
 function drawAll(){
   const w=mag.width,h=mag.height,range=+$('range').value;
   gridMag(mg,w,h,range);
@@ -305,7 +291,6 @@ function drawAll(){
     $('cursorread').textContent=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB';
   }else $('cursorread').textContent=fmtF(S.cursor)+' • — dB';
   drawScale();
-
   const pw=phc.width,phH=phc.height,yFor=d=>((180-d)/360)*phH;
   pg.clearRect(0,0,pw,phH);pg.fillStyle='#05070a';pg.fillRect(0,0,pw,phH);pg.strokeStyle='#232a35';pg.lineWidth=1;
   FREQS.forEach(f=>{const x=xfreq(f,pw);pg.beginPath();pg.moveTo(x,0);pg.lineTo(x,phH);pg.stroke()});
@@ -329,8 +314,6 @@ function drawAll(){
     pg.fillText('NO REFERENCE — HIDUPKAN PINK NOISE',pw/2,phH/2);pg.textAlign='left';
   }
 }
-
-/* TF — RATA-RATA, TANPA DELAY */
 function computeTF(){
   const N=S.fft,tdM=new Float32Array(N),tdR=new Float32Array(N);
   S.an.getFloatTimeDomainData(tdM);S.refAn.getFloatTimeDomainData(tdR);
@@ -359,7 +342,13 @@ function computeTF(){
   }
   return{freqs,magP,ph,coh};
 }
-
+/* INI PERBAIKAN NYA: RTA JUGA DINORMALISASI KE TENGAH, JANGAN MENTOK BAWAH */
+function normalizeToCenter(freqs,powerArr){
+  const mid=powerArr.filter((_,i)=>freqs[i].f>=500&&freqs[i].f<=2000);
+  const avgMid=mid.reduce((s,v)=>s+v,0)/Math.max(1,mid.length);
+  if(S.magOffset===null)S.magOffset=avgMid;else S.magOffset=S.magOffset*0.98+avgMid*0.02;
+  return powerArr.map(v=>v/Math.max(1e-12,S.magOffset));
+}
 function draw(){
   if(!S.running||!S.an||!S.ctx)return;
   const n=S.an.frequencyBinCount,raw=new Float32Array(n);S.an.getFloatFrequencyData(raw);
@@ -367,18 +356,15 @@ function draw(){
   for(let i=1;i<n;i++){const f=i*S.ctx.sampleRate/S.fft;if(f<MINF||f>MAXF)continue;if(raw[i]>peak){peak=raw[i];peakBin=i}}
   const peakFreq=peakBin*S.ctx.sampleRate/S.fft;
   $('peakdb').textContent=peak.toFixed(1)+' dBFS';$('peakfreq').textContent=Math.round(peakFreq)+' Hz';
-
   let freqs,pArr,phArr,cohArr;
   if(S.pink&&S.refAn){
     const tf=computeTF();freqs=tf.freqs;phArr=tf.ph;cohArr=tf.coh;
-    const mid=tf.magP.filter((_,i)=>freqs[i].f>=500&&freqs[i].f<=2000);
-    const avgMid=mid.reduce((s,v)=>s+v,0)/Math.max(1,mid.length);
-    if(S.magOffset===null)S.magOffset=avgMid;else S.magOffset=S.magOffset*0.98+avgMid*0.02;
-    pArr=tf.magP.map(v=>v/Math.max(1e-12,S.magOffset));
+    pArr=normalizeToCenter(freqs,tf.magP);
     $('cohtxt').textContent=(cohArr.reduce((s,v)=>s+v,0)/Math.max(1,cohArr.length)).toFixed(2);
   }else{
-    freqs=[];pArr=[];phArr=null;cohArr=null;S.magOffset=null;$('cohtxt').textContent='—';
-    for(let i=1;i<n;i++){const f=i*S.ctx.sampleRate/S.fft;if(f<MINF||f>MAXF)continue;freqs.push({f});pArr.push(db2p(raw[i]))}
+    freqs=[];const rawP=[];phArr=null;cohArr=null;$('cohtxt').textContent='—';
+    for(let i=1;i<n;i++){const f=i*S.ctx.sampleRate/S.fft;if(f<MINF||f>MAXF)continue;freqs.push({f});rawP.push(db2p(raw[i]))}
+    pArr=normalizeToCenter(freqs,rawP);
   }
   if(!S.sm||S.sm.length!==pArr.length)S.sm=Float64Array.from(pArr);
   else for(let i=0;i<pArr.length;i++)S.sm[i]=0.8*S.sm[i]+0.2*pArr[i];
@@ -387,7 +373,6 @@ function draw(){
   drawAll();
   S.raf=requestAnimationFrame(draw);
 }
-
 $('start').onclick=async()=>{
   try{
     S.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
@@ -411,7 +396,6 @@ $('stop').onclick=()=>{
 $('fft').onchange=()=>{if(S.an&&S.ctx){S.fft=+$('fft').value;S.an.fftSize=S.fft;if(S.refAn)S.refAn.fftSize=S.fft;resetAcc();$('fftstat').textContent=S.fft}};
 $('average').onchange=resetAcc;
 $('detail').onchange=drawAll;
-
 function moveFromX(x,el){
   const r=el.getBoundingClientRect();
   const px=Math.max(0,Math.min(mag.width,(x-r.left)/r.width*mag.width));
@@ -427,7 +411,6 @@ let drag=false;
 $('cursorslider').addEventListener('input',e=>{S.cursor=freqAtX(+e.target.value/1000*mag.width,mag.width);drawAll()});
 $('curleft').onclick=()=>{S.cursor=Math.max(20,S.cursor-50);drawAll()};
 $('curright').onclick=()=>{S.cursor=Math.min(20000,S.cursor+50);drawAll()};
-
 drawAll();
 </script>
 </body>
