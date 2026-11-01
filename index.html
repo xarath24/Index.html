@@ -31,6 +31,7 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
 .ctl label{font-size:10px;color:#8b95a5;display:flex;flex-direction:column;gap:3px}
 .kv{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #2b323e}
 .kv b{color:#fff}.kv span{color:#8b95a5}
+.kv b.ok{color:#4ade80}.kv b.bad{color:#f87171}
 .cursor{display:flex;gap:6px;align-items:center;margin-top:7px;background:#090d12;border:1px solid #2b323e;border-radius:6px;padding:6px}
 .cursor input{flex:1;accent-color:#fff}
 .statusbar{background:#10141a;border-top:1px solid #2b323e;padding:7px 12px;display:flex;gap:16px;flex-wrap:wrap;color:#8b95a5;font-size:11px;position:sticky;bottom:0;min-width:900px}
@@ -40,7 +41,8 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 .capitem .dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
 .capitem .nm{flex:1;min-width:0}
 .capitem .nm b{display:block;color:#fff;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.capitem .nm span{color:#8b95a5;font-size:10px}
+.capitem .nm span{color:#8b95a5;font-size:10px;display:block}
+.capitem .nm span.pol-ok{color:#4ade80}.capitem .nm span.pol-bad{color:#f87171}
 .capitem button{padding:4px 7px;font-size:11px}
 .capempty{color:#8b95a5;font-size:11px;line-height:1.6;padding:4px 0}
 :fullscreen body{background:#0a0c10}
@@ -68,9 +70,8 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         <input type="range" id="noisevol" min="0" max="100" value="30">
       </label>
       <p style="color:#8b95a5;font-size:11px;line-height:1.6;margin:8px 0 0">
-        Pink OFF = kurva mati.<br>
-        Pink ON = Magnitude + Phase jalan.<br>
-        Sentuh layar 1x = otomatis landscape.
+        Pink OFF = semua kurva mati, phase capture juga mati.<br>
+        Pink ON = Magnitude + Phase jalan.
       </p>
     </div>
 
@@ -90,6 +91,8 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <div class="kv"><span>Cursor Freq</span><b id="cursorfreqbig">4.19 kHz</b></div>
       <div class="kv"><span>Phase @ Cursor</span><b id="phasecursor">—</b></div>
       <div class="kv"><span>Delay (dari Phase)</span><b id="delaytxt">—</b></div>
+      <div class="kv"><span>Polarity</span><b id="polaritytxt">—</b></div>
+      <div class="kv"><span>Phase Rata2</span><b id="phaseavgtxt">—</b></div>
       <div class="kv"><span>Capture</span><b id="capcount">0</b></div>
       <div class="kv"><span>Sample Rate</span><b id="samplerate">48000 Hz</b></div>
     </div>
@@ -153,6 +156,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
             <option value="500-4000">500 Hz — 4 kHz</option>
           </select>
         </label>
+        <span style="color:#8b95a5;font-size:11px">Phase deket 180° = kebalik. Deket 0° = normal.</span>
       </div>
       <canvas id="phase" width="1200" height="190"></canvas>
 
@@ -167,15 +171,15 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 
   <aside>
     <div class="panel">
-      <h3>CARA PAKAI</h3>
+      <h3>CARA CEK POLARITY</h3>
       <div style="font-size:11px;color:#8b95a5;line-height:1.8">
-        1. Buka file, sentuh layar 1x, otomatis landscape<br>
-        2. START + PINK ON, layar tetep landscape<br>
-        3. Tunggu 5 detik, phase jalan<br>
-        4. Pencet UNWRAP, phase jadi lurus<br>
-        5. Pencet OFF / STOP, kurva mati<br>
-        6. Geser dari atas HP buat keluar fullscreen, sentuh lagi buat landscape lagi<br><br>
-        Garis ijo tengah = 0 dB / 0°.
+                1. Sentuh layar 1x, otomatis landscape<br>
+                2. START + PINK ON, tunggu 5 detik<br>
+                3. Liat tulisan gede di grafik phase: NORMAL / TERBALIK<br>
+                4. Kalo TERBALIK, balik kabel speaker nya, + ke -, - ke +<br>
+                5. Capture sebelum + sesudah dibalik, bandingin tulisan di list kiri<br>
+                6. OFF / STOP, semua phase mati, magnitude capture tetep lurus<br><br>
+        Garis ijo tengah = 0 dB / 0°. Delay yang bener itu yang bikin phase miring, bukan yang bikin phase 180°.
       </div>
     </div>
   </aside>
@@ -186,6 +190,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
   <span>Input: <b>Mic 1</b></span>
   <span>Reference: <b id="refstat">OFF</b></span>
   <span>FFT: <b id="fftstat">8192</b></span>
+  <span>Polarity: <b id="polstat">—</b></span>
   <span style="margin-left:auto">SMART LIVE • dBFS rel, bukan SPL terkalibrasi</span>
 </div>
 
@@ -203,9 +208,9 @@ const FREQS=[20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20
 const CAPCOLORS=['#fb923c','#facc15','#f472b6','#a78bfa','#34d399','#f87171','#93c5fd','#fdba74','#e879f9','#4ade80','#fbbf24','#fb7185'];
 
 const S={ctx:null,stream:null,src:null,an:null,refAn:null,noise:null,noiseGain:null,pink:false,running:false,fft:8192,raf:0,
-  cursor:4190,live:[],phase:[],phaseRaw:[],coh:[],sm:null,acc:null,accN:0,magOffset:null,captures:[],capN:0,unwrap:false,delayMs:null};
+  cursor:4190,live:[],phase:[],phaseRaw:[],coh:[],sm:null,acc:null,accN:0,magOffset:null,captures:[],capN:0,unwrap:false,delayMs:null,
+  polarity:null,phaseAvg:null};
 
-/* ROTASI OTOMATIS: SENTUH 1X LANGSUNG FULLSCREEN + LANDSCAPE */
 let lastAutoTry=0;
 async function autoLandscape(){
   const now=Date.now();
@@ -233,13 +238,39 @@ function yMag(v,range,h){return Math.max(0,Math.min(h,(range/2-v)/range*h))}
 function db2p(v){return Math.pow(10,Math.max(-120,v)/10)}
 function p2db(p){return 10*Math.log10(Math.max(1e-12,p))}
 
+/* POLARITY: RATA-RATA MELINGKAR PHASE 200-2000 Hz, COH BAGUS AJA */
+function detectPolarity(raw,coh){
+  if(!raw.length||!coh.length)return{state:null,avg:null};
+  let sx=0,sy=0,n=0;
+  for(let i=0;i<raw.length;i++){
+    if(raw[i].f<200||raw[i].f>2000)continue;
+    if(!coh[i]||coh[i].v<0.6)continue;
+    const r=raw[i].v*Math.PI/180;
+    sx+=Math.cos(r);sy+=Math.sin(r);n++;
+  }
+  if(n<5)return{state:null,avg:null};
+  let avg=Math.atan2(sy,sx)*180/Math.PI;
+  const state=Math.abs(avg)>90?'TERBALIK':'NORMAL';
+  return{state,avg};
+}
+function setPolarityUI(state,avg){
+  S.polarity=state;S.phaseAvg=avg;
+  const el=$('polaritytxt'),el2=$('polstat');
+  if(!state){el.textContent='—';el.className='';el2.textContent='—';$('phaseavgtxt').textContent='—';return}
+  el.textContent=state==='TERBALIK'?'TERBALIK ⚠':'NORMAL ✓';
+  el.className=state==='TERBALIK'?'bad':'ok';
+  el2.textContent=el.textContent;
+  $('phaseavgtxt').textContent=avg.toFixed(0)+'°';
+}
+
 function renderCaptures(){
   const el=$('caplist');$('capcount').textContent=S.captures.length;
   if(!S.captures.length){el.innerHTML='<div class="capempty">Belum ada capture.<br>Pencet CAPTURE pas kurva nya lagi bagus.</div>';return}
   el.innerHTML='';
   S.captures.forEach((cp,idx)=>{
     const row=document.createElement('div');row.className='capitem';
-    row.innerHTML='<span class="dot" style="background:'+cp.color+'"></span><label style="display:flex;align-items:center;gap:4px"><input type="checkbox" '+(cp.show?'checked':'')+' style="accent-color:'+cp.color+'"></label><div class="nm"><b>'+cp.name+'</b><span>'+cp.time+' • '+(cp.mode||'RTA')+'</span></div><button>Hapus</button>';
+    const pol=cp.polarity?('<span class="'+(cp.polarity==='TERBALIK'?'pol-bad':'pol-ok')+'">Polarity: '+cp.polarity+(cp.polarity==='TERBALIK'?' ⚠':' ✓')+(cp.phaseAvg!=null?' ('+cp.phaseAvg.toFixed(0)+'°)':'')+'</span>'):'<span>Polarity: —</span>';
+    row.innerHTML='<span class="dot" style="background:'+cp.color+'"></span><label style="display:flex;align-items:center;gap:4px"><input type="checkbox" '+(cp.show?'checked':'')+' style="accent-color:'+cp.color+'"></label><div class="nm"><b>'+cp.name+'</b><span>'+cp.time+' • '+(cp.mode||'RTA')+'</span>'+pol+'</div><button>Hapus</button>';
     row.querySelector('input').onchange=e=>{cp.show=e.target.checked;drawAll()};
     row.querySelector('button').onclick=()=>{S.captures.splice(idx,1);renderCaptures();drawAll()};
     el.appendChild(row);
@@ -250,8 +281,10 @@ $('capturebtn').onclick=()=>{
   if(!S.live.length){alert('Belum ada kurva. START dulu, tunggu grafik jalan, baru CAPTURE.');return}
   S.capN++;
   const now=new Date(),hh=String(now.getHours()).padStart(2,'0'),mm=String(now.getMinutes()).padStart(2,'0'),ss=String(now.getSeconds()).padStart(2,'0');
+  const pol=detectPolarity(S.phaseRaw,S.coh);
   S.captures.push({id:Date.now()+Math.random(),name:'Capture '+S.capN,color:CAPCOLORS[(S.capN-1)%CAPCOLORS.length],show:true,
     time:hh+':'+mm+':'+ss,mode:S.pink?'TF':'RTA',
+    polarity:pol.state,phaseAvg:pol.avg,
     mag:S.live.map(o=>({f:o.f,v:o.v,x:o.x})),phase:S.phase.map(o=>({f:o.f,v:o.v,x:o.x})),phaseRaw:S.phaseRaw.map(o=>({f:o.f,v:o.v,x:o.x}))});
   renderCaptures();drawAll();
 };
@@ -290,11 +323,17 @@ function computeDelay(){
   S.delayMs=d;
   $('delaytxt').textContent=d==null?'—':d.toFixed(3)+' ms';
 }
+function updatePolarityLive(){
+  if(!S.pink||!S.running){setPolarityUI(null,null);return}
+  const pol=detectPolarity(S.phaseRaw,S.coh);
+  setPolarityUI(pol.state,pol.avg);
+}
 function killLive(){
   S.live=[];S.phase=[];S.phaseRaw=[];S.coh=[];
   S.sm=null;S.acc=null;S.accN=0;S.magOffset=null;S.delayMs=null;
   $('cohtxt').textContent='—';$('peakdb').textContent='—';$('peakfreq').textContent='—';
   $('phasecursor').textContent='—';$('delaytxt').textContent='—';
+  setPolarityUI(null,null);
 }
 
 async function ensureCtx(){
@@ -464,7 +503,9 @@ function drawAll(){
   }
   drawScale();
   const pw=phc.width,phH=phc.height;
-  const disp=phaseDisplayRaw(S.phaseRaw);
+  /* PHASE HIDUP CUMA PAS PINK ON + LAGI JALAN. PAS OFF, SEMUA PHASE MATI, TERMASUK CAPTURE */
+  const phaseAlive=S.pink&&S.running&&S.phaseRaw.length>0;
+  const disp=phaseAlive?phaseDisplayRaw(S.phaseRaw):[];
   const minPh=S.unwrap&&disp.length?(Math.min(...disp.map(o=>o.v),-180)): -180;
   const maxPh=S.unwrap&&disp.length?(Math.max(...disp.map(o=>o.v),180)):180;
   const yPh=v=>{if(S.unwrap){const span=Math.max(360,maxPh-minPh);return ((maxPh-v)/span)*phH}return ((180-v)/360)*phH};
@@ -477,7 +518,7 @@ function drawAll(){
   pg.strokeStyle='#22ff88';pg.lineWidth=3;pg.beginPath();pg.moveTo(0,yPh(0));pg.lineTo(pw,yPh(0));pg.stroke();
   pg.fillStyle='#22ff88';pg.font='bold 11px Arial';pg.fillText(S.unwrap?'0° (unwrap)':'0°',10,Math.max(11,Math.min(phH-2,yPh(0)+12)));
   const pp=pointOn(disp,S.cursor);
-  if(S.pink&&disp.length){
+  if(phaseAlive){
     S.captures.forEach(cp=>{
       if(!cp.show||!cp.phaseRaw.length)return;
       let carr=phaseDisplayRaw(cp.phaseRaw);
@@ -492,6 +533,19 @@ function drawAll(){
       if(i===disp.length-1||(S.coh[i+1]&&S.coh[i+1].v<0.5&&!S.unwrap))pg.stroke();
     });
     pg.strokeStyle='#fff';pg.lineWidth=3;pg.beginPath();pg.moveTo(cx,0);pg.lineTo(cx,phH);pg.stroke();
+    /* BADGE POLARITY GEDE DI TENGAH ATAS GRAFIK PHASE */
+    if(S.polarity){
+      const txt='POLARITY: '+S.polarity+(S.polarity==='TERBALIK'?' ⚠':' ✓');
+      pg.font='bold 22px Arial';
+      const tw=pg.measureText(txt).width+30;
+      const bx=pw/2-tw/2, by=10;
+      pg.fillStyle=S.polarity==='TERBALIK'?'rgba(127,29,29,0.92)':'rgba(6,95,70,0.92)';
+      pg.beginPath();pg.roundRect(bx,by,tw,34,8);pg.fill();
+      pg.strokeStyle=S.polarity==='TERBALIK'?'#f87171':'#4ade80';pg.lineWidth=2;
+      pg.beginPath();pg.roundRect(bx,by,tw,34,8);pg.stroke();
+      pg.fillStyle='#fff';pg.textAlign='center';pg.textBaseline='middle';
+      pg.fillText(txt,pw/2,by+18);pg.textAlign='left';pg.textBaseline='alphabetic';
+    }
     if(pp){
       const Y=yPh(Math.max(minPh,Math.min(maxPh,pp.v)));
       pg.beginPath();pg.arc(cx,Y,8,0,Math.PI*2);pg.fillStyle='#fff';pg.fill();
@@ -539,7 +593,7 @@ function normalizeToCenter(freqs,powerArr){
   if(S.magOffset===null)S.magOffset=avgMid;else S.magOffset=S.magOffset*0.98+avgMid*0.02;
   return powerArr.map(v=>v/Math.max(1e-12,S.magOffset));
 }
-let delayTick=0;
+let delayTick=0,polTick=0;
 function draw(){
   if(!S.running||!S.an||!S.ctx)return;
   const n=S.an.frequencyBinCount,raw=new Float32Array(n);S.an.getFloatFrequencyData(raw);
@@ -562,6 +616,7 @@ function draw(){
   const den=densify(freqs,Array.from(S.sm),phArr,cohArr);
   S.live=den.mag;S.phaseRaw=phArr?den.phase:[];S.phase=S.phaseRaw.slice();S.coh=cohArr?den.coh:[];
   if(S.pink&&(++delayTick%30===0))computeDelay();
+  if(S.pink&&(++polTick%30===0))updatePolarityLive();
   drawAll();
   S.raf=requestAnimationFrame(draw);
 }
