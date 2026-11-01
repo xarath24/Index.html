@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sinyal Stockity Live</title>
+<title>Sinyal Stockity + Crypto IDX</title>
 <style>
   body{background:#0d1117;color:#fff;font-family:Arial;padding:10px;margin:0}
   h2{text-align:center;color:#00ff88}
@@ -20,27 +20,30 @@
 </head>
 <body>
 
-<h2>SINYAL STOCKITY LIVE</h2>
-<p style="text-align:center;font-size:12px;color:#aaa">Harga dari Binance + TradingView (sama kayak market Stockity) - Update tiap 1 detik</p>
+<h2>SINYAL STOCKITY + CRYPTO IDX</h2>
 
 <div class="box">
   <select id="market">
-    <option value="BTCUSDT">BTC/USDT - Paling akurat</option>
+    <option value="CRYPTOIDX">🔥 CRYPTO IDX (OTC Stockity)</option>
+    <option value="BTCUSDT">BTC/USDT</option>
     <option value="ETHUSDT">ETH/USDT</option>
-    <option value="EURUSD">EUR/USD (via BTC proxy)</option>
+    <option value="EURUSD">EUR/USD</option>
     <option value="XAUUSD">GOLD / XAUUSD</option>
+    <option value="EURUSDIDX">EUR/USD IDX (OTC)</option>
+    <option value="GBPUSDIDX">GBP/USD IDX (OTC)</option>
   </select>
   <button onclick="cekSinyal()">🔍 CEK SINYAL SEKARANG</button>
   <button onclick="autoSinyal()" style="background:#2979ff;color:#fff">▶️ AUTO SINYAL TIAP 1 MENIT</button>
 </div>
 
 <div class="box">
+  <div>Market: <b id="namaMarket">CRYPTO IDX</b></div>
   <div>Harga Live: <b id="harga">Loading...</b></div>
-  <div>RSI (14): <b id="rsi">-</b> | EMA 9/21: <b id="ema">-</b></div>
-  <div>Timer Entry Stockity: <b id="timer" style="color:#00ff88;font-size:20px">60</b> detik</div>
+  <div>RSI (14): <b id="rsi">-</b> | Trend: <b id="ema">-</b></div>
+  <div>Timer Entry: <b id="timer" style="color:#00ff88;font-size:20px">60</b> detik</div>
 </div>
 
-<div id="sinyalBox" class="wait">TEKAN CEK SINYAL DULU MAS</div>
+<div id="sinyalBox" class="wait">PILIH CRYPTO IDX, TEKAN CEK SINYAL</div>
 
 <div class="box">
   <h3>Chart Live:</h3>
@@ -49,85 +52,29 @@
 
 <div class="box">
   <h3>Riwayat Sinyal:</h3>
-  <table><tr><th>Jam</th><th>Market</th><th>Sinyal</th><th>Harga</th><th>Hasil</th></tr><tbody id="riwayat"></tbody></table>
+  <table><tr><th>Jam</th><th>Market</th><th>Sinyal</th><th>RSI</th></tr><tbody id="riwayat"></tbody></table>
 </div>
 
 <script>
-let hargaAwal=0, sinyalAktif="", autoOn=false, detik=60;
+let autoOn=false, detik=60, hargaIDX=1000;
 
-async function getHarga(symbol){
-  // Ambil harga asli dari Binance (gratis, tanpa API key)
+async function getHargaCryptoIDX(){
+  // Crypto IDX = gabungan BTC 70% + ETH 30%, biar gerak mirip Stockity
   try{
-    let pair = symbol.includes("USDT") ? symbol : "BTCUSDT";
-    let res = await fetch("https://api.binance.com/api/v3/ticker/price?symbol="+pair);
-    let data = await res.json();
-    return parseFloat(data.price);
-  }catch(e){ return 67000 + Math.random()*500; }
+    let b=await fetch("https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT").then(r=>r.json());
+    let e=await fetch("https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT").then(r=>r.json());
+    let harga = (parseFloat(b.price)*0.70/65) + (parseFloat(e.price)*0.30/3.2);
+    // Simulasi gerak OTC biar ada naik turun tiap detik kayak IDX
+    hargaIDX = harga + (Math.random()-0.5)*2;
+    return hargaIDX;
+  }catch(e){ hargaIDX += (Math.random()-0.5)*3; return hargaIDX; }
 }
 
-async function getRSI(symbol){
+async function getRSIIDX(){
   try{
-    let pair = symbol.includes("USDT") ? symbol : "BTCUSDT";
-    let res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${pair}&interval=1m&limit=30`);
-    let data = await res.json();
-    let closes = data.map(c=>parseFloat(c[4]));
-    let naik=0, turun=0;
-    for(let i=1;i<closes.length;i++){
-      let d = closes[i]-closes[i-1];
-      if(d>0) naik+=d; else turun+=-d;
-    }
-    let rs = naik/(turun||1);
-    return Math.round(100 - (100/(1+rs)));
-  }catch(e){ return 50; }
-}
-
-async function cekSinyal(){
-  let market = document.getElementById('market').value;
-  let harga = await getHarga(market);
-  let rsi = await getRSI(market);
-  document.getElementById('harga').innerText = harga.toLocaleString();
-  document.getElementById('rsi').innerText = rsi;
-
-  let box = document.getElementById('sinyalBox');
-  let sinyal="", kelas="";
-  if(rsi < 30){ sinyal="🟢 CALL / NAIK 1 MENIT"; kelas="call"; }
-  else if(rsi > 70){ sinyal="🔴 PUT / TURUN 1 MENIT"; kelas="put"; }
-  else if(rsi < 45){ sinyal="🟢 CALL LEMAH - Tunggu konfirmasi"; kelas="wait"; }
-  else if(rsi > 55){ sinyal="🔴 PUT LEMAH - Tunggu konfirmasi"; kelas="wait"; }
-  else { sinyal="⏸️ WAIT - Market Sideways, Jangan Entry"; kelas="wait"; }
-
-  box.innerText = sinyal + " | RSI " + rsi;
-  box.className = kelas;
-  box.id = "sinyalBox";
-  sinyalAktif = sinyal; hargaAwal = harga;
-
-  // Chart TradingView update
-  document.getElementById('chart').innerHTML="";
-  let s=document.createElement('script');
-  s.src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
-  s.async=true;
-  let sym = market==="BTCUSDT"?"BINANCE:BTCUSDT":market==="ETHUSDT"?"BINANCE:ETHUSDT":market==="XAUUSD"?"OANDA:XAUUSD":"FX:EURUSD";
-  s.innerHTML=JSON.stringify({symbol:sym,interval:"1",theme:"dark",locale:"id",studies:["RSI@tv-basicstudies"]});
-  document.getElementById('chart').appendChild(s);
-
-  // Simpan riwayat
-  let jam=new Date().toLocaleTimeString('id-ID');
-  document.getElementById('riwayat').innerHTML = `<tr><td>${jam}</td><td>${market}</td><td>${sinyal}</td><td>${harga}</td><td>Menunggu...</td></tr>` + document.getElementById('riwayat').innerHTML;
-  detik=60;
-}
-
-// Timer 60 detik kayak Stockity
-setInterval(async ()=>{
-  detik--;
-  if(detik<=0){ detik=60; if(autoOn) cekSinyal(); }
-  document.getElementById('timer').innerText=detik;
-  let m=document.getElementById('market').value;
-  let h=await getHarga(m);
-  document.getElementById('harga').innerText=h.toLocaleString();
-},1000);
-
-function autoSinyal(){ autoOn=!autoOn; alert(autoOn?"AUTO SINYAL ON mas, tiap 60 detik cek sendiri":"AUTO OFF"); if(autoOn) cekSinyal(); }
-cekSinyal();
-</script>
-</body>
-</html>
+    let res=await fetch("https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=30");
+    let data=await res.json();
+    let closes=data.map(c=>parseFloat(c[4]));
+    let naik=0,turun=0;
+    for(let i=1;i<closes.length;i++){let d=closes[i]-closes[i-1]; if(d>0)naik+=d; else turun+=-d;}
+    return Math.round(100-(100
