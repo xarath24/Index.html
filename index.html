@@ -157,10 +157,10 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <div style="font-size:11px;color:#8b95a5;line-height:1.8">
         1. Sentuh layar 1x, otomatis landscape<br>
         2. START + PINK ON, volume 100%, mic 1 m dari speaker<br>
-        3. Garis phase sekarang muncul terus, walau coherence rendah<br>
-        4. Liat tulisan gede di grafik phase: NORMAL / TERBALIK<br>
-        5. Kalo ada tanda ?, coherence nya masih rendah, deketin mic nya<br>
-        6. Capture, OFF, phase capture + cursor tetep aktif<br><br>
+        3. Liat kiri grafik phase, di bawah ±180°, ada tulisan NORMAL / TERBALIK<br>
+        4. Kalo ada tanda ?, coherence nya masih rendah, deketin mic nya<br>
+        5. Capture, OFF, phase capture + cursor tetep aktif<br>
+        6. Kalo TERBALIK, balik kabel speaker nya<br><br>
         Garis ijo tengah = 0 dB / 0°. Coherence di screenshot mas kemarin cuma 0.02, itu yang bikin garis nya ilang kemarin.
       </div>
     </div>
@@ -220,7 +220,6 @@ function yMag(v,range,h){return Math.max(0,Math.min(h,(range/2-v)/range*h))}
 function db2p(v){return Math.pow(10,Math.max(-120,v)/10)}
 function p2db(p){return 10*Math.log10(Math.max(1e-12,p))}
 
-/* POLARITY: DIBOBOTI COHERENCE, JANGAN NUNGGU COH 0.6 LAGI */
 function detectPolarity(raw,coh){
   if(!raw.length)return{state:null,avg:null,cohAvg:null};
   let sx=0,sy=0,wsum=0,csum=0,cn=0;
@@ -466,6 +465,29 @@ function phaseDisplayRaw(raw){
   if(S.unwrap)arr=unwrapPhase(arr);
   return arr;
 }
+/* TULISAN POLARITY DI KIRI GRAFIK PHASE, PAS DI TEMPAT CORETAN IJO MAS */
+function drawPolarityBadge(c,pw){
+  const low=S.cohAvg!=null&&S.cohAvg<0.3;
+  let txt,bg,stroke;
+  if(S.polarity){
+    txt='POLARITY: '+S.polarity+(S.polarity==='TERBALIK'?' ⚠':' ✓')+(low?' ?':'');
+    bg=S.polarity==='TERBALIK'?'rgba(127,29,29,0.92)':'rgba(6,95,70,0.92)';
+    stroke=S.polarity==='TERBALIK'?'#f87171':'#4ade80';
+  }else{
+    txt='POLARITY: —';
+    bg='rgba(30,35,45,0.92)';
+    stroke='#8b95a5';
+  }
+  c.font='bold 22px Arial';
+  const tw=c.measureText(txt).width+30;
+  const bx=14, by=42;
+  c.fillStyle=bg;
+  c.beginPath();c.roundRect(bx,by,tw,38,8);c.fill();
+  c.strokeStyle=stroke;c.lineWidth=2;
+  c.beginPath();c.roundRect(bx,by,tw,38,8);c.stroke();
+  c.fillStyle='#fff';c.textAlign='center';c.textBaseline='middle';
+  c.fillText(txt,bx+tw/2,by+20);c.textAlign='left';c.textBaseline='alphabetic';
+}
 function drawAll(){
   const w=mag.width,h=mag.height,range=+$('range').value;
   gridMag(mg,w,h,range);
@@ -529,25 +551,12 @@ function drawAll(){
       carr.forEach((o,i)=>{const Y=yPh(Math.max(minPh,Math.min(maxPh,o.v)));if(i===0)pg.moveTo(o.x,Y);else pg.lineTo(o.x,Y)});pg.stroke();
     });
     if(livePhase){
-      /* GARIS PHASE LIVE: DIGAMBAR TERUS, GA DIPUTUS GARA-GARA COHERENCE LAGI */
       pg.beginPath();pg.strokeStyle='#3fd4ec';pg.lineWidth=3;pg.setLineDash([]);
       disp.forEach((o,i)=>{const Y=yPh(Math.max(minPh,Math.min(maxPh,o.v)));if(i===0)pg.moveTo(o.x,Y);else pg.lineTo(o.x,Y)});
       pg.stroke();
     }
     pg.strokeStyle='#fff';pg.lineWidth=3;pg.beginPath();pg.moveTo(cx,0);pg.lineTo(cx,phH);pg.stroke();
-    if(S.polarity){
-      const low=S.cohAvg!=null&&S.cohAvg<0.3;
-      const txt='POLARITY: '+S.polarity+(S.polarity==='TERBALIK'?' ⚠':' ✓')+(low?' ?':'');
-      pg.font='bold 22px Arial';
-      const tw=pg.measureText(txt).width+30;
-      const bx=pw/2-tw/2, by=10;
-      pg.fillStyle=S.polarity==='TERBALIK'?'rgba(127,29,29,0.92)':'rgba(6,95,70,0.92)';
-      pg.beginPath();pg.roundRect(bx,by,tw,34,8);pg.fill();
-      pg.strokeStyle=S.polarity==='TERBALIK'?'#f87171':'#4ade80';pg.lineWidth=2;
-      pg.beginPath();pg.roundRect(bx,by,tw,34,8);pg.stroke();
-      pg.fillStyle='#fff';pg.textAlign='center';pg.textBaseline='middle';
-      pg.fillText(txt,pw/2,by+18);pg.textAlign='left';pg.textBaseline='alphabetic';
-    }
+    drawPolarityBadge(pg,pw);
     if(pp){
       const Y=yPh(Math.max(minPh,Math.min(maxPh,pp.v)));
       pg.beginPath();pg.arc(cx,Y,8,0,Math.PI*2);pg.fillStyle='#fff';pg.fill();
@@ -559,10 +568,11 @@ function drawAll(){
   }else{
     $('phasecursor').textContent='—';
     pg.strokeStyle='#fff';pg.lineWidth=3;pg.beginPath();pg.moveTo(cx,0);pg.lineTo(cx,phH);pg.stroke();
+    drawPolarityBadge(pg,pw);
     pg.fillStyle='#fff';pg.font='bold 18px Arial';pg.textAlign='center';
     pg.fillText(fmtF(S.cursor),cx,24);pg.textAlign='left';
     pg.fillStyle='#8b95a5';pg.font='bold 14px Arial';pg.textAlign='center';
-    pg.fillText('NO REFERENCE — HIDUPKAN PINK NOISE',pw/2,phH/2);pg.textAlign='left';
+    pg.fillText('NO REFERENCE — HIDUPKAN PINK NOISE',pw/2,phH/2+28);pg.textAlign='left';
   }
 }
 function computeTF(){
