@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>SMART RTA LIVE</title>
+<title>SMART RTA LIVE + AUTO EQ</title>
 <style>
 :root{color-scheme:dark;--bg:#050608;--panel:#101319;--grid:#333943;--txt:#e8eaf0;--muted:#9ca4b1;--cyan:#55d9ed;--gold:#ffd16a;--pink:#e76a91}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:14px system-ui,Arial}
@@ -11,7 +11,7 @@ h1{font-size:17px;margin:0;letter-spacing:.5px}.sub{font-size:11px;color:var(--m
 main{padding:10px;max-width:1100px;margin:auto}.toolbar,.panel{background:var(--panel);border:1px solid #303640;border-radius:10px;padding:10px;margin-bottom:10px}
 .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 button,select{background:#222b37;color:var(--txt);border:1px solid #566171;border-radius:7px;padding:9px 11px;font-size:13px}
-button.go{background:#087e91;border-color:#13b5c9}button:disabled{opacity:.45}
+button.go{background:#087e91;border-color:#13b5c9}button.eqbtn{background:#7c3aed;border-color:#a78bfa}button:disabled{opacity:.45}
 label{font-size:11px;color:var(--muted)}canvas{display:block;width:100%;background:#030507;border-radius:5px}
 #spectrum{height:430px}#waterfall{height:220px}
 .capturebar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
@@ -23,16 +23,19 @@ label{font-size:11px;color:var(--muted)}canvas{display:block;width:100%;backgrou
 .info{font-size:11px;color:var(--muted);line-height:1.45;margin-top:7px}
 .stats{display:flex;gap:8px;flex-wrap:wrap}.stat{background:#090d12;border-radius:7px;padding:7px 10px;min-width:105px;flex:1}.stat small{display:block;color:var(--muted);font-size:10px}.stat strong{font-size:15px}
 .status{font-size:12px;color:#7ee0ad;margin-left:auto}
-@media(max-width:520px){header{align-items:flex-start}}
+.eqtable{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}
+.eqtable th,.eqtable td{border:1px solid #303640;padding:7px 5px;text-align:center}
+.eqtable th{background:#1a2230;color:#cbd3df}
+.eqtable td b{color:#fff}
+.cut{color:#ff6b6b}.boost{color:#67d69b}
+#eqResult{white-space:pre-wrap;background:#090d12;border:1px solid #303640;border-radius:7px;padding:10px;font-size:12px;line-height:1.6;margin-top:8px}
+@media(orientation:landscape){#spectrum{height:min(68vh,560px)}#waterfall{height:min(30vh,240px)}}
 body.landscape-mode main{max-width:none;padding:8px}
 body.landscape-mode #spectrum{height:min(68vh,560px)}
 body.landscape-mode #waterfall{height:min(30vh,240px)}
-body.landscape-mode .toolbar{position:sticky;top:0;z-index:5}
-body.landscape-mode header h1{font-size:15px}
-@media(orientation:landscape){#spectrum{height:min(68vh,560px)}#waterfall{height:min(30vh,240px)}}
 </style></head>
 <body>
-<header><div><h1>SMART RTA LIVE</h1><div class="sub">REAL-TIME SPECTRUM • WATERFALL • AUDIO ANALYZER</div></div><div style="display:flex;align-items:center;gap:8px"><button id="landscape">↔ LANDSCAPE</button><div id="status" class="status">STANDBY</div></div></header>
+<header><div><h1>SMART RTA LIVE + AUTO EQ</h1><div class="sub">REAL-TIME SPECTRUM • WATERFALL • AUTO EQ UNTUK DLMS</div></div><div style="display:flex;align-items:center;gap:8px"><button id="landscape">↔ LANDSCAPE</button><div id="status" class="status">STANDBY</div></div></header>
 <main>
 <section class="toolbar">
 <button class="go" id="start">▶ START LIVE</button><button id="stop" disabled>■ STOP</button>
@@ -41,12 +44,13 @@ body.landscape-mode header h1{font-size:15px}
 <label>RANGE<br><select id="range"><option value="60">60 dB</option><option value="90" selected>90 dB</option><option value="120">120 dB</option></select></label>
 <label>SMOOTH<br><select id="smooth"><option value="0">OFF</option><option value=".55">LOW</option><option value=".8" selected>MED</option><option value=".93">HIGH</option></select></label>
 </section>
+
 <section class="panel"><div class="title"><b>MAGNITUDE / FREQUENCY RESPONSE</b><span>20 Hz — 20 kHz</span></div><canvas id="spectrum" width="1200" height="760"></canvas>
 <div class="stats" style="margin-top:9px">
  <div class="stat"><small>CURSOR FREQUENCY</small><strong id="cursorfreq">Geser garis pada grafik</strong></div>
  <div class="stat"><small>LEVEL DI TITIK</small><strong id="cursorlevel">— dBFS</strong></div>
 </div>
-<div class="info">Sentuh lalu geser garis vertikal pada grafik untuk membaca frekuensi dan level. Rentang sumbu: 20 Hz–20 kHz.</div>
+<div class="info">Sentuh lalu geser garis vertikal pada grafik untuk membaca frekuensi dan level. Garis <b style="color:#fff">PUTIH PUTUS-PUTUS</b> = hasil sesudah Auto EQ. Garis <b style="color:#a78bfa">UNGU</b> = target yang dikejar.</div>
 <div class="capturebar">
  <label style="width:100%">PILIH SLOT TUJUAN (capture baru hanya mengganti slot ini)</label>
  <select id="targetslot"></select>
@@ -57,8 +61,37 @@ body.landscape-mode header h1{font-size:15px}
  <div id="slotlist" class="slotlist" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;width:100%;margin-top:6px"></div>
  <span id="capturestatus" class="info">Pilih slot tujuan. Centang slot yang ingin ditampilkan pada grafik. Slot lain tidak akan berubah.</span>
 </div>
-<div class="legend"><span><i class="dot" style="background:#55d9ed"></i>LIVE</span><span><i class="dot" style="background:#ffd16a"></i>PEAK HOLD</span><span><i class="dot" style="background:#ff6b6b"></i>CAPTURE 1</span><span><i class="dot" style="background:#b58cff"></i>CAPTURE 2</span><span><i class="dot" style="background:#67d69b"></i>CAPTURE 3</span></div>
-<div class="info">Capture menyimpan kurva magnitude saat itu. Kurva tersimpan akan ditampilkan sebagai overlay agar bisa dibandingkan dengan kondisi LIVE atau capture lain.</div></section>
+<div class="legend"><span><i class="dot" style="background:#55d9ed"></i>LIVE</span><span><i class="dot" style="background:#ffd16a"></i>PEAK HOLD</span><span><i class="dot" style="background:#ff6b6b"></i>CAPTURE 1</span><span><i class="dot" style="background:#b58cff"></i>CAPTURE 2</span><span><i class="dot" style="background:#67d69b"></i>CAPTURE 3</span><span><i class="dot" style="background:#fff"></i>SETELAH AUTO EQ</span><span><i class="dot" style="background:#a78bfa"></i>TARGET</span></div>
+</section>
+
+<!-- PANEL AUTO EQ BARU -->
+<section class="panel" style="border:2px solid #7c3aed">
+<div class="title"><b>🤖 AUTO EQ - OTOMATIS HITUNG BUAT DLMS</b><span id="eqScore">Skor: —</span></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<label style="flex:1;min-width:140px">SUMBER UKUR<br><select id="eqSource"><option value="live">LIVE sekarang</option><option value="capture">Capture Slot terpilih</option></select></label>
+<label style="flex:1;min-width:140px">TARGET<br><select id="eqTarget"><option value="flat">FLAT - Rata (Studio)</option><option value="house" selected>HOUSE CURVE - Bass +6dB (Hajatan)</option><option value="vocal">VOCAL JELAS - Mid naik</option><option value="dangdut">DANGDUT - Bass + Kendang</option></select></label>
+<label style="flex:1;min-width:140px">KELAKUAN EQ<br><select id="eqMode"><option value="cut">CUT SAJA - Aman, disarankan</option><option value="cutboost">CUT + BOOST dikit</option></select></label>
+</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+<button class="eqbtn" id="runAutoEQ" style="flex:2">🤖 JALANKAN AUTO EQ SEKARANG</button>
+<button id="toggleCorrect" style="flex:1">👁 LIHAT HASIL DI GRAFIK: ON</button>
+<button id="copyEQ" style="flex:1">📋 SALIN KE DLMS</button>
+<button id="resetEQ">RESET EQ</button>
+</div>
+<div class="info">Urutan bener mas: 1. START LIVE, puter Pink Noise 10 detik, 2. CAPTURE dulu biar stabil, 3. Pencet AUTO EQ, 4. Salin angka nya, masukin ke DLMS Output EQ. <b>Auto EQ ini TIDAK ngubah suara HP, dia cuma ngitung saran nya.</b> Suara beneran berubah kalo angka nya dimasukin ke DLMS.</div>
+
+<table class="eqtable" id="eqTableWrap" style="display:none">
+<thead><tr><th>BAND</th><th>FREQ</th><th>UKUR</th><th>TARGET</th><th>GAIN DLMS</th><th>Q / LEBAR</th><th>TIPE</th></tr></thead>
+<tbody id="eqBody"></tbody>
+</table>
+<div id="eqResult" style="display:none"></div>
+<div class="stats" style="margin-top:8px">
+<div class="stat"><small>SEBELUM EQ - SELISIH RATA2</small><strong id="errBefore">— dB</strong></div>
+<div class="stat"><small>SESUDAH EQ - SELISIH RATA2</small><strong id="errAfter">— dB</strong></div>
+<div class="stat"><small>BAND YANG PERLU DIUBAH</small><strong id="bandCount">— band</strong></div>
+</div>
+</section>
+
 <section class="panel"><div class="title"><b>LIVE SPECTROGRAM / WATERFALL</b><span>Waktu berjalan ↓</span></div><canvas id="waterfall" width="1200" height="300"></canvas><div class="info">Warna terang menunjukkan energi frekuensi lebih kuat. Waterfall bergerak saat mikrofon menerima suara.</div></section>
 <section class="panel"><div class="stats">
 <div class="stat"><small>PEAK LEVEL</small><strong id="peakdb">— dBFS</strong></div>
@@ -78,8 +111,104 @@ let selectedSlot=0;
 const captureColors=['#ff6b6b','#b58cff','#67d69b','#56cfe1','#f4a261','#a8dadc','#e9c46a','#cdb4db','#90be6d','#f28482'];
 let currentVals=[];let avgFrames=[];
 let cursorFreq=1000,cursorActive=false;
+let eqBands=[], showCorrection=true, eqAnalyzed=false;
 const minF=20,maxF=20000;
-// Piecewise log scale: give the important 1 kHz–10 kHz region half of the graph width.
+const EQ_FREQS=[31,62,125,250,500,1000,2000,4000,8000,16000];
+
+function targetCurve(f,mode){
+  let t=0;
+  if(mode==='flat') t=0;
+  if(mode==='house'){ // bass naik, treble turun dikit, enak buat hajatan
+    if(f<100) t=6; else if(f<250) t=3; else if(f<2000) t=0; else if(f<8000) t=-1; else t=-2;
+  }
+  if(mode==='vocal'){
+    if(f<100) t=2; else if(f<1000) t=0; else if(f<4000) t=3; else t=0;
+  }
+  if(mode==='dangdut'){
+    if(f<80) t=7; else if(f<200) t=4; else if(f<800) t=0; else if(f<3000) t=1; else t=-1;
+  }
+  return t;
+}
+function getMeasuredAt(f,data){
+  if(!data.length) return null;
+  let best=data[0];
+  data.forEach(o=>{ if(Math.abs(Math.log10(o.f/f))<Math.abs(Math.log10(best.f/f))) best=o; });
+  return best.v;
+}
+function runAutoEQ(){
+  let source=$('eqSource').value, targetMode=$('eqTarget').value, mode=$('eqMode').value;
+  let data=null;
+  if(source==='capture'){
+    let cap=captures[selectedSlot];
+    if(!cap){ alert('Slot '+ (selectedSlot+1) +' masih kosong mas. CAPTURE dulu, atau ganti Sumber ke LIVE.'); return; }
+    data=cap.data;
+  } else {
+    if(!currentVals.length){ alert('Belum ada LIVE mas. Pencet START LIVE dulu, puter Pink Noise 10 detik, baru Auto EQ.'); return; }
+    data=currentVals;
+  }
+  // normalisasi: rata-rata di 500-2000Hz jadi patokan 0
+  let refVals=data.filter(o=>o.f>=400&&o.f<=2000).map(o=>o.v);
+  let ref=refVals.reduce((a,b)=>a+b,0)/refVals.length;
+  eqBands=[]; let errB=0, errA=0, n=0;
+  EQ_FREQS.forEach(f=>{
+    let meas=getMeasuredAt(f,data); if(meas===null) return;
+    let measRel=meas-ref;
+    let tgt=targetCurve(f,targetMode);
+    let gain=tgt-measRel;
+    // Auto EQ yang aman: utamakan CUT, boost dibatasi
+    if(mode==='cut'){ gain=Math.min(gain, 1.5); }
+    gain=Math.max(-12, Math.min(6, gain));
+    // bulatkan ke 0.5 dB kayak di DLMS
+    gain=Math.round(gain*2)/2;
+    let q = f<125 ? 1.0 : (f<1000 ? 1.4 : 1.8);
+    let type = f===31 ? 'Low Shelf' : (f===16000 ? 'High Shelf' : 'Peak / Bell');
+    if(Math.abs(gain)>=1){
+      eqBands.push({f:f, meas:measRel, tgt:tgt, gain:gain, q:q, type:type});
+    }
+    errB+=Math.abs(tgt-measRel); errA+=Math.abs(tgt-(measRel+gain)); n++;
+  });
+  eqAnalyzed=true;
+  $('eqTableWrap').style.display='table'; $('eqResult').style.display='block';
+  let tbody=$('eqBody'); tbody.innerHTML='';
+  eqBands.forEach((b,i)=>{
+    let tr=document.createElement('tr');
+    let cls=b.gain<0?'cut':'boost';
+    tr.innerHTML=`<td>${i+1}</td><td><b>${b.f} Hz</b></td><td>${b.meas.toFixed(1)} dB</td><td>${b.tgt>=0?'+':''}${b.tgt} dB</td><td class="${cls}"><b>${b.gain>=0?'+':''}${b.gain.toFixed(1)} dB</b></td><td>${b.q}</td><td>${b.type}</td>`;
+    tbody.appendChild(tr);
+  });
+  if(!eqBands.length) tbody.innerHTML='<tr><td colspan="7">Sudah rata mas! Ga perlu EQ, selisih di bawah 1 dB semua. Simpen preset aja.</td></tr>';
+  let eb=errB/n, ea=errA/n;
+  $('errBefore').textContent=eb.toFixed(1)+' dB'; $('errAfter').textContent=ea.toFixed(1)+' dB'; $('bandCount').textContent=eqBands.length+' band';
+  $('eqScore').textContent='Skor: '+(ea<2?'BAGUS ✅':ea<4?'LUMAYAN':'MASIH PERLU CEK ULANG');
+  let txt='AUTO EQ - '+$('eqTarget').selectedOptions[0].text+'\nSumber: '+(source==='live'?'LIVE':'Capture Slot '+(selectedSlot+1))+'\nSelisih sebelum: '+eb.toFixed(1)+' dB -> sesudah: '+ea.toFixed(1)+' dB\n\nMASUKIN KE DLMS > OUTPUT EQ:\n';
+  eqBands.forEach((b,i)=>{ txt+=(i+1)+'. '+b.f+' Hz | Gain '+(b.gain>=0?'+':'')+b.gain.toFixed(1)+' dB | Q '+b.q+' | '+b.type+'\n'; });
+  txt+='\nCatatan: Masukkan ke SEMUA output dulu buat tes. Kalo masih ada yang aneh, ukur ulang per-output (Sub sendiri, Mid sendiri).\nJangan boost di atas +3 dB, mending potong yang lain.';
+  $('eqResult').textContent=txt;
+  window._eqText=txt;
+  redrawCurrentView();
+  alert('AUTO EQ SELESAI MAS!\n'+eqBands.length+' band perlu diubah.\nSelisih: '+eb.toFixed(1)+' dB jadi '+ea.toFixed(1)+' dB.\n\nTinggal pencet SALIN KE DLMS, terus masukin angka nya ke DLMS.');
+}
+function eqGainAt(f){
+  if(!eqAnalyzed||!eqBands.length) return 0;
+  // interpolasi antar band EQ buat gambar kurva hasil
+  let total=0, wsum=0;
+  eqBands.forEach(b=>{
+    let d=Math.abs(Math.log10(f/b.f)); let w=Math.max(0, 1-d*2.2);
+    total+=b.gain*w; wsum+=w;
+  });
+  return wsum? total/wsum : 0;
+}
+$('runAutoEQ').onclick=runAutoEQ;
+$('toggleCorrect').onclick=function(){ showCorrection=!showCorrection; this.textContent=showCorrection?'👁 LIHAT HASIL DI GRAFIK: ON':'👁 LIHAT HASIL DI GRAFIK: OFF'; redrawCurrentView(); };
+$('copyEQ').onclick=async()=>{
+  if(!window._eqText){ alert('Jalankan Auto EQ dulu mas, baru salin.'); return; }
+  try{ await navigator.clipboard.writeText(window._eqText); alert('KE-SALIN MAS! Tempel di catatan / WA, terus masukin ke DLMS satu-satu.'); }
+  catch(e){ $('eqResult').style.display='block'; alert('Clipboard ke-blok. Salin manual dari kotak hitam di bawah tabel ya mas, blok semua > Salin.'); }
+};
+$('resetEQ').onclick=()=>{ eqBands=[]; eqAnalyzed=false; $('eqTableWrap').style.display='none'; $('eqResult').style.display='none'; $('errBefore').textContent='— dB'; $('errAfter').textContent='— dB'; $('bandCount').textContent='— band'; $('eqScore').textContent='Skor: —'; redrawCurrentView(); };
+$('eqTarget').onchange=()=>{ if(eqAnalyzed) runAutoEQ(); };
+
+// === KODE ASLI MAS, DITAMBAH GAMBAR TARGET + HASIL EQ ===
 function xfreq(f,w){
  f=Math.max(minF,Math.min(maxF,f));
  const a=Math.log(1000/minF), b=Math.log(10), c=Math.log(maxF/10000);
@@ -100,11 +229,30 @@ function grid(){
  [20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000].forEach(f=>{let x=xfreq(f,w);sc.beginPath();sc.moveTo(x,0);sc.lineTo(x,plotH);sc.stroke();let label=f===20?'20 Hz':(f===20000?'20 kHz':(f>=1000?(f/1000)+'k':String(f)));sc.textAlign=f===20000?'right':(f===20?'left':'center');let tx=f===20000?w-4:(f===20?4:x);sc.fillText(label,tx,h-10)});sc.textAlign='left';
  let range=+$('range').value;for(let d=0;d<=range;d+=10){let y=d/range*plotH;sc.beginPath();sc.moveTo(0,y);sc.lineTo(w,y);sc.stroke();sc.fillText(-d+' dB',5,Math.max(13,y-3))}
 }
+function drawTargetAndCorrected(range,ph,yFunc,baseData){
+  // TARGET UNGU
+  let mode=$('eqTarget').value;
+  sc.beginPath(); sc.strokeStyle='#a78bfa'; sc.lineWidth=2; sc.setLineDash([8,6]);
+  for(let f=20;f<=20000;f*=1.05){
+    let ref=0; if(baseData.length){ let rv=baseData.filter(o=>o.f>=400&&o.f<=2000).map(o=>o.v); ref=rv.reduce((a,b)=>a+b,0)/rv.length; }
+    let Y=yFunc(ref - 20 + targetCurve(f,mode)); // digeser biar keliatan di tengah grafik
+    let X=xfreq(f,spec.width); if(f===20) sc.moveTo(X,Y); else sc.lineTo(X,Y);
+  }
+  sc.stroke(); sc.setLineDash([]);
+  // HASIL SETELAH EQ - PUTIH PUTUS
+  if(showCorrection && eqAnalyzed && baseData.length){
+    sc.beginPath(); sc.strokeStyle='#ffffff'; sc.lineWidth=2.5; sc.setLineDash([10,5]);
+    baseData.forEach((o,i)=>{ let X=xfreq(o.f,spec.width), Y=yFunc(o.v+eqGainAt(o.f)); if(i===0) sc.moveTo(X,Y); else sc.lineTo(X,Y); });
+    sc.stroke(); sc.setLineDash([]);
+  }
+}
 function colorFor(v){let t=Math.max(0,Math.min(1,(v+95)/75));let stops=[[20,16,48],[67,47,118],[170,76,137],[239,139,143],[255,218,142]];let p=t*4,i=Math.min(3,Math.floor(p)),a=p-i;let c=stops[i].map((n,k)=>Math.round(n*(1-a)+stops[i+1][k]*a));return `rgb(${c[0]},${c[1]},${c[2]})`}
 function drawFrozen(){
  grid();
  const w=spec.width,h=spec.height,ph=h-36,range=+$('range').value;
  const y=v=>Math.max(0,Math.min(range,-v))/range*ph;
+ let base=captures[selectedSlot]?captures[selectedSlot].data:(captures.find(c=>c)?captures.find(c=>c).data:[]);
+ if(base.length) drawTargetAndCorrected(range,ph,y,base);
  captures.forEach((cap,ci)=>{
   if(!cap||!visibleSlots[ci])return;
   sc.beginPath();sc.strokeStyle=captureColors[ci];sc.lineWidth=3;
@@ -113,16 +261,9 @@ function drawFrozen(){
  });
  if(cursorActive){
   const cx=xfreq(cursorFreq,w);
-  sc.save();sc.setLineDash([]);sc.strokeStyle='rgba(255,255,255,.22)';sc.lineWidth=14;
+  sc.save();sc.strokeStyle='rgba(255,255,255,.22)';sc.lineWidth=14;
   sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();
   sc.strokeStyle='#fff';sc.lineWidth=4;sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();sc.restore();
-  const available=captures.map((cap,i)=>({cap,i})).filter(x=>x.cap&&visibleSlots[x.i]);
-  const chosen=available.find(x=>x.i===selectedSlot)||available[available.length-1];
-  const data=chosen?chosen.cap.data:[];
-  if(data.length){
-   const nearest=data.reduce((best,o)=>Math.abs(o.f-cursorFreq)<Math.abs(best.f-cursorFreq)?o:best,data[0]);
-   $('cursorlevel').textContent=nearest.v.toFixed(1)+' dBFS (capture)';
-  } else $('cursorlevel').textContent='— dBFS';
  }
 }
 function draw(){
@@ -140,33 +281,29 @@ function draw(){
  else vals.forEach((o,i)=>{sm[i]=smoothing*sm[i]+(1-smoothing)*averaged[i];hold[i]=Math.max(averaged[i],hold[i]-.12)});
  grid();let w=spec.width,h=spec.height,ph=h-36;
  function y(v){return Math.max(0,Math.min(range, -v))/range*ph}
+ let liveData=vals.map((o,i)=>({f:o.f,v:sm[i]}));
+ drawTargetAndCorrected(range,ph,y,liveData);
  sc.beginPath();sc.strokeStyle='#55d9ed';sc.lineWidth=2.2;
  vals.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(sm[i]);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});sc.stroke();
  sc.beginPath();sc.strokeStyle='#ffd16a';sc.lineWidth=1.2;
  vals.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(hold[i]);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});sc.stroke();
  currentVals=vals.map((o,i)=>({f:o.f,v:sm[i]}));
- // Draw saved curves on top of the live trace for direct comparison.
  captures.forEach((cap,ci)=>{
   if(!cap||!visibleSlots[ci])return;
   sc.beginPath();sc.strokeStyle=captureColors[ci];sc.lineWidth=2.4;
   cap.data.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(o.v);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});
   sc.stroke();
  });
- // Movable frequency cursor and live readout.
  if(cursorActive){
   const cx=xfreq(cursorFreq,w);
-  sc.save();
-  sc.setLineDash([]);
-  sc.strokeStyle='rgba(255,255,255,.22)';sc.lineWidth=14;
+  sc.save();sc.strokeStyle='rgba(255,255,255,.22)';sc.lineWidth=14;
   sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();
   sc.strokeStyle='#ffffff';sc.lineWidth=4;
-  sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();
-  sc.restore();
+  sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();sc.restore();
   let nearest=vals.reduce((best,o)=>Math.abs(o.f-cursorFreq)<Math.abs(best.f-cursorFreq)?o:best,vals[0]);
   $('cursorfreq').textContent=cursorFreq>=1000?(cursorFreq/1000).toFixed(2)+' kHz':cursorFreq.toFixed(0)+' Hz';
   $('cursorlevel').textContent=(nearest?sm[vals.indexOf(nearest)]:-120).toFixed(1)+' dBFS';
  }
- // Scroll waterfall upwards, paint a new spectral row at the bottom.
  let image=wc.getImageData(0,0,water.width,water.height-1);wc.putImageData(image,0,0);
  let row=wc.createImageData(water.width,1);
  for(let x=0;x<water.width;x++){let f=freqAtX(x,water.width);let bin=Math.max(1,Math.min(n-1,Math.round(f*fft/audio.sampleRate)));let v=raw[bin];let col=colorFor(v);let m=col.match(/\d+/g).map(Number);let p=x*4;row.data[p]=m[0];row.data[p+1]=m[1];row.data[p+2]=m[2];row.data[p+3]=255}
@@ -177,13 +314,8 @@ $('landscape').onclick=async()=>{
  try{
   if(!document.fullscreenElement && document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
   if(screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape');
-  document.body.classList.add('landscape-mode');
-  $('landscape').textContent='↔ LANDSCAPE ON';
- }catch(e){
-  document.body.classList.toggle('landscape-mode');
-  $('landscape').textContent=document.body.classList.contains('landscape-mode')?'↔ LANDSCAPE LAYOUT':'↔ LANDSCAPE';
-  alert('Rotasi otomatis tidak didukung browser/perangkat ini. Putar HP secara manual ke posisi mendatar. Tampilan akan menyesuaikan.');
- }
+  document.body.classList.add('landscape-mode');$('landscape').textContent='↔ LANDSCAPE ON';
+ }catch(e){ document.body.classList.toggle('landscape-mode'); alert('Putar HP manual ke mendatar ya mas.'); }
 };
 document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement && screen.orientation?.unlock)screen.orientation.unlock()});
 $('start').onclick=async()=>{
@@ -204,16 +336,10 @@ function moveCursor(ev){
 }
 let draggingCursor=false;
 spec.style.touchAction='none';
-spec.addEventListener('pointerdown',ev=>{
- draggingCursor=true;
- try{spec.setPointerCapture(ev.pointerId)}catch(_){}
- moveCursor(ev);
-});
+spec.addEventListener('pointerdown',ev=>{ draggingCursor=true; try{spec.setPointerCapture(ev.pointerId)}catch(_){} moveCursor(ev); });
 spec.addEventListener('pointermove',ev=>{if(draggingCursor)moveCursor(ev)});
 function endCursorDrag(){draggingCursor=false}
-spec.addEventListener('pointerup',endCursorDrag);
-spec.addEventListener('pointercancel',endCursorDrag);
-spec.addEventListener('lostpointercapture',endCursorDrag);
+spec.addEventListener('pointerup',endCursorDrag);spec.addEventListener('pointercancel',endCursorDrag);spec.addEventListener('lostpointercapture',endCursorDrag);
 $('fft').onchange=()=>{if(an){fft=+$('fft').value;an.fftSize=fft;sm=[];hold=[];avgFrames=[]}};
 $('average').onchange=()=>{avgFrames=[];};
 $('range').onchange=()=>{if(an){cancelAnimationFrame(raf);draw()}else drawFrozen()};
@@ -221,9 +347,7 @@ function refreshSlotControls(){
  const target=$('targetslot');
  if(target.options.length!==SLOT_COUNT){
   target.innerHTML='';
-  for(let i=0;i<SLOT_COUNT;i++){
-   const opt=document.createElement('option');opt.value=i;opt.textContent='Slot '+(i+1);target.appendChild(opt);
-  }
+  for(let i=0;i<SLOT_COUNT;i++){ const opt=document.createElement('option');opt.value=i;opt.textContent='Slot '+(i+1);target.appendChild(opt); }
  }
  target.value=String(selectedSlot);
  const list=$('slotlist');list.innerHTML='';
@@ -239,9 +363,7 @@ function refreshSlotControls(){
   wrap.append(check,text);list.appendChild(wrap);
  }
 }
-function redrawCurrentView(){
- if(an){cancelAnimationFrame(raf);draw()}else drawFrozen();
-}
+function redrawCurrentView(){ if(an){cancelAnimationFrame(raf);draw()}else drawFrozen(); }
 $('targetslot').onchange=()=>{selectedSlot=Number($('targetslot').value);refreshSlotControls()};
 $('capture').onclick=()=>{
  if(!an||!currentVals.length){$('capturestatus').textContent='Tekan START LIVE dan tunggu grafik terbaca sebelum capture.';return}
@@ -249,11 +371,7 @@ $('capture').onclick=()=>{
  $('capturestatus').textContent='Slot '+(selectedSlot+1)+' berhasil disimpan/diganti. Slot lain tidak berubah.';
  refreshSlotControls();redrawCurrentView();
 };
-$('clearcaptures').onclick=()=>{
- captures[selectedSlot]=null;
- $('capturestatus').textContent='Slot '+(selectedSlot+1)+' dihapus.';
- refreshSlotControls();redrawCurrentView();
-};
+$('clearcaptures').onclick=()=>{ captures[selectedSlot]=null; $('capturestatus').textContent='Slot '+(selectedSlot+1)+' dihapus.'; refreshSlotControls();redrawCurrentView(); };
 $('showall').onclick=()=>{visibleSlots.fill(true);refreshSlotControls();redrawCurrentView()};
 $('hideall').onclick=()=>{visibleSlots.fill(false);refreshSlotControls();redrawCurrentView()};
 refreshSlotControls();
