@@ -33,6 +33,7 @@ canvas{display:block;width:100%;height:auto;background:#030507;border-radius:5px
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}
 .title{font-size:13px;color:#cbd3df;margin:0 0 7px;display:flex;justify-content:space-between}
 .info{font-size:11px;color:var(--muted);line-height:1.45;margin-top:7px}
+.warn{font-size:11px;color:#ffd16a;line-height:1.45;margin-top:7px;display:none}
 .stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.stat{background:#090d12;border-radius:7px;padding:8px 10px;min-width:105px;flex:1;overflow:hidden}.stat small{display:block;color:var(--muted);font-size:10px;white-space:nowrap}.stat strong{font-size:15px;white-space:nowrap}
 .status{font-size:12px;color:#7ee0ad;margin-left:auto}
 .cursorctl{display:flex;gap:8px;align-items:center;margin-top:10px;background:#090d12;border:1px solid #394553;border-radius:8px;padding:8px 10px}
@@ -72,6 +73,7 @@ body.landscape-mode header h1{font-size:15px}
 </section>
 
 <section class="panel"><div class="title"><b>MAGNITUDE / FREQUENCY RESPONSE</b><span>20 Hz — 20 kHz</span></div><canvas id="spectrum" width="1200" height="400"></canvas>
+<div id="fftwarn" class="warn">⚠ FFT 512 itu kasar, 1 titik nya 93 Hz. Kurva udah dihalusin biar ga ngambang, tapi buat ukur akurat balik ke 4096.</div>
 <div class="cursorctl">
  <button id="curleft" aria-label="geser kiri">◀</button>
  <input type="range" id="cursorslider" min="0" max="1000" value="660">
@@ -81,7 +83,7 @@ body.landscape-mode header h1{font-size:15px}
  <div class="stat"><small>CURSOR FREQUENCY</small><strong id="cursorfreq">4.72 kHz</strong></div>
  <div class="stat"><small>LEVEL DI TITIK</small><strong id="cursorlevel">— dBFS</strong></div>
 </div>
-<div class="info">Titik putih sekarang dihitung persis di garis kurva, bukan titik terdekat, jadi ga ngambang lagi.</div>
+<div class="info">Titik putih dihitung di garis layar nya persis, di semua FFT, jadi ga bisa melayang lagi.</div>
 <div class="capturebar">
  <label style="width:100%">PILIH SLOT TUJUAN (capture baru hanya mengganti slot ini)</label>
  <select id="targetslot"></select>
@@ -137,8 +139,8 @@ function freqAtX(x,w){
  return maxF;
 }
 function fmtFreq(f){return f>=1000?(f/1000).toFixed(2)+' kHz':f.toFixed(0)+' Hz'}
-// INTERPOLASI: level persis di garis, di antara 2 titik data. Ini yang bikin titik ga ngambang.
-function levelAt(data,f){
+// Interpolasi log-frekuensi, buat ngisi titik yang jarang di FFT 512
+function levelAtLog(data,f){
  if(!data||!data.length)return null;
  if(f<=data[0].f) return data[0].v;
  if(f>=data[data.length-1].f) return data[data.length-1].v;
@@ -147,6 +149,37 @@ function levelAt(data,f){
  const a=data[lo],b=data[hi];
  const t=(Math.log(f)-Math.log(a.f))/(Math.log(b.f)-Math.log(a.f));
  return a.v+(b.v-a.v)*t;
+}
+// BIKIN KURVA RAPET: dari titik FFT asli (jarang di 512) jadi 200 titik rata di layar.
+// Ini yang bikin garis ga loncat panjang dan titik cursor ga melayang.
+function densify(freqs,valsArr){
+ const out=[],W=spec.width;
+ for(let x=0;x<=W;x+=6){
+  const f=freqAtX(x,W);
+  const v=levelAtLog(freqs.map((o,i)=>({f:o.f,v:valsArr[i]})),f);
+  if(v!==null&&Number.isFinite(v)) out.push({f,v,x});
+ }
+ return out;
+}
+// TITIK PERSIS DI GARIS LAYAR: cari 2 titik gambar yang mengapit cursor, tarik lurus di layar.
+// Bukan di log-frekuensi lagi, jadi pasti nempel di garis yang keliatan.
+function pointOnLine(data,f){
+ if(!data||!data.length)return null;
+ const W=spec.width,cx=xfreq(f,W);
+ if(data.length===1) return {v:data[0].v,x:cx};
+ let pts=data;
+ // pastikan tiap titik punya x
+ pts=pts.map(o=>({f:o.f,v:o.v,x:o.x!==undefined?o.x:xfreq(o.f,W)}));
+ if(cx<=pts[0].x) return {v:pts[0].v,x:cx};
+ if(cx>=pts[pts.length-1].x) return {v:pts[pts.length-1].v,x:cx};
+ for(let i=0;i<pts.length-1;i++){
+  const a=pts[i],b=pts[i+1];
+  if(cx>=a.x&&cx<=b.x){
+   const t=b.x===a.x?0:(cx-a.x)/(b.x-a.x);
+   return {v:a.v+(b.v-a.v)*t,x:cx};
+  }
+ }
+ return {v:levelAtLog(data,f),x:cx};
 }
 function cursorData(){
  if(currentVals.length) return currentVals;
@@ -161,7 +194,6 @@ function makeNoiseBuffer(ctx,type){
  if(type==='white'){
   for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
  } else {
-  // Pink noise, filter Paul Kellet
   let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
   for(let i=0;i<len;i++){
    const w=Math.random()*2-1;
@@ -196,7 +228,6 @@ function stopNoise(silent){
  noiseType=null;
  $('noisestatus').textContent='OFF'; $('noisestatus').style.color='';
  $('pinkbtn').classList.remove('noise-on'); $('whitebtn').classList.remove('noise-on');
- if(!silent) $('noisestatus').textContent='OFF';
 }
 $('pinkbtn').onclick=()=>{ if(noiseType==='pink') stopNoise(); else startNoise('pink') };
 $('whitebtn').onclick=()=>{ if(noiseType==='white') stopNoise(); else startNoise('white') };
@@ -206,33 +237,34 @@ $('noisevol').oninput=()=>{
  if(noiseGain&&noiseCtx) noiseGain.gain.setTargetAtTime(($('noisevol').value/100)*0.5,noiseCtx.currentTime,.02);
 };
 // ===== CURSOR =====
-function drawCursor(ph,range,levelVal){
+function drawCursor(ph,range,data){
  if(!cursorActive)return;
  const w=spec.width;
  const cx=Math.max(6,Math.min(w-6,xfreq(cursorFreq,w)));
+ const pt=pointOnLine(data,cursorFreq);
+ if(!pt) return;
+ const levelVal=pt.v;
  const y=v=>Math.max(0,Math.min(range,-v))/range*ph;
+ const cy=y(levelVal);
  sc.save();
  sc.strokeStyle='#ffffff';sc.lineWidth=3;
  sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();
  sc.fillStyle='#ffffff';
  sc.beginPath();sc.moveTo(cx-12,0);sc.lineTo(cx+12,0);sc.lineTo(cx,17);sc.closePath();sc.fill();
- if(levelVal!==null&&Number.isFinite(levelVal)){
-  const cy=y(levelVal);
-  sc.strokeStyle='#ffffff';sc.lineWidth=3;
-  sc.beginPath();sc.moveTo(cx-16,cy);sc.lineTo(cx+16,cy);sc.stroke();
-  sc.beginPath();sc.arc(cx,cy,11,0,Math.PI*2);sc.fillStyle='#ffffff';sc.fill();
-  sc.beginPath();sc.arc(cx,cy,6,0,Math.PI*2);sc.fillStyle='#000000';sc.fill();
-  sc.beginPath();sc.arc(cx,cy,2.5,0,Math.PI*2);sc.fillStyle='#ffffff';sc.fill();
-  const txt=fmtFreq(cursorFreq)+'  •  '+levelVal.toFixed(1)+' dB';
-  sc.font='bold 17px Arial';
-  const tw=sc.measureText(txt).width+18;
-  let lx=Math.max(4,Math.min(w-tw-4,cx-tw/2));
-  let ly=Math.max(4,cy-52);
-  sc.fillStyle='#000000';sc.fillRect(lx,ly,tw,28);
-  sc.strokeStyle='#ffffff';sc.lineWidth=2;sc.strokeRect(lx,ly,tw,28);
-  sc.fillStyle='#ffffff';sc.textAlign='left';sc.fillText(txt,lx+9,ly+20);
-  sc.beginPath();sc.moveTo(cx,ly+28);sc.lineTo(cx,cy-11);sc.stroke();
- }
+ sc.strokeStyle='#ffffff';sc.lineWidth=3;
+ sc.beginPath();sc.moveTo(cx-16,cy);sc.lineTo(cx+16,cy);sc.stroke();
+ sc.beginPath();sc.arc(cx,cy,11,0,Math.PI*2);sc.fillStyle='#ffffff';sc.fill();
+ sc.beginPath();sc.arc(cx,cy,6,0,Math.PI*2);sc.fillStyle='#000000';sc.fill();
+ sc.beginPath();sc.arc(cx,cy,2.5,0,Math.PI*2);sc.fillStyle='#ffffff';sc.fill();
+ const txt=fmtFreq(cursorFreq)+'  •  '+levelVal.toFixed(1)+' dB';
+ sc.font='bold 17px Arial';
+ const tw=sc.measureText(txt).width+18;
+ let lx=Math.max(4,Math.min(w-tw-4,cx-tw/2));
+ let ly=Math.max(4,cy-52);
+ sc.fillStyle='#000000';sc.fillRect(lx,ly,tw,28);
+ sc.strokeStyle='#ffffff';sc.lineWidth=2;sc.strokeRect(lx,ly,tw,28);
+ sc.fillStyle='#ffffff';sc.textAlign='left';sc.fillText(txt,lx+9,ly+20);
+ sc.beginPath();sc.moveTo(cx,ly+28);sc.lineTo(cx,cy-11);sc.stroke();
  sc.restore();
 }
 function grid(){
@@ -259,8 +291,8 @@ function drawWaterfall(raw,n){
 }
 function syncCursorUI(){
  $('cursorfreq').textContent=fmtFreq(cursorFreq);
- const lv=levelAt(cursorData(),cursorFreq);
- $('cursorlevel').textContent=lv!==null?lv.toFixed(1)+' dBFS':'— dBFS';
+ const pt=pointOnLine(cursorData(),cursorFreq);
+ $('cursorlevel').textContent=pt?pt.v.toFixed(1)+' dBFS':'— dBFS';
  const s=$('cursorslider');
  const pos=Math.round(xfreq(cursorFreq,spec.width)/spec.width*1000);
  if(document.activeElement!==s) s.value=String(pos);
@@ -279,7 +311,7 @@ function drawFrozen(){
   cap.data.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(o.v);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});
   sc.stroke();
  });
- drawCursor(ph,range,levelAt(cursorData(),cursorFreq));
+ drawCursor(ph,range,cursorData());
  syncCursorUI();
 }
 function draw(){
@@ -295,20 +327,23 @@ function draw(){
  const averaged=target.map((_,i)=>avgFrames.reduce((sum,frame)=>sum+frame[i],0)/avgFrames.length);
  if(sm.length!==vals.length){sm=averaged.slice();hold=averaged.slice()}
  else vals.forEach((o,i)=>{sm[i]=smoothing*sm[i]+(1-smoothing)*averaged[i];hold[i]=Math.max(averaged[i],hold[i]-.12)});
+ // Kurva rapet, biar FFT 512 ga loncat-loncat
+ const denseLive=densify(vals,sm);
+ const denseHold=densify(vals,hold);
  grid();let w=spec.width,h=spec.height,ph=h-PLOT_BOTTOM;
  function y(v){return Math.max(0,Math.min(range, -v))/range*ph}
  sc.beginPath();sc.strokeStyle='#55d9ed';sc.lineWidth=2.5;
- vals.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(sm[i]);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});sc.stroke();
+ denseLive.forEach((o,i)=>{let X=o.x,Y=y(o.v);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});sc.stroke();
  sc.beginPath();sc.strokeStyle='#ffd16a';sc.lineWidth=1.2;
- vals.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(hold[i]);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});sc.stroke();
- currentVals=vals.map((o,i)=>({f:o.f,v:sm[i]}));
+ denseHold.forEach((o,i)=>{let X=o.x,Y=y(o.v);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});sc.stroke();
+ currentVals=denseLive;
  captures.forEach((cap,ci)=>{
   if(!cap||!visibleSlots[ci])return;
   sc.beginPath();sc.strokeStyle=captureColors[ci];sc.lineWidth=2.4;
   cap.data.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(o.v);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});
   sc.stroke();
  });
- drawCursor(ph,range,levelAt(currentVals,cursorFreq));
+ drawCursor(ph,range,currentVals);
  syncCursorUI();
  drawWaterfall(raw,n);
  $('peakdb').textContent=peak.toFixed(1)+' dBFS';$('peakfreq').textContent=(peakBin*audio.sampleRate/fft).toFixed(0)+' Hz';raf=requestAnimationFrame(draw);
@@ -362,7 +397,12 @@ function nudgeCursor(dir){
 }
 $('curleft').onclick=()=>nudgeCursor(-1);
 $('curright').onclick=()=>nudgeCursor(1);
-$('fft').onchange=()=>{if(an){fft=+$('fft').value;an.fftSize=fft;sm=[];hold=[];avgFrames=[]}};
+function updateFftWarn(){
+ const is512=+$('fft').value===512;
+ $('fftwarn').style.display=is512?'block':'none';
+ if(an){fft=+$('fft').value;an.fftSize=fft;sm=[];hold=[];avgFrames=[]}
+}
+$('fft').onchange=updateFftWarn;
 $('average').onchange=()=>{avgFrames=[];};
 $('range').onchange=()=>{if(an){cancelAnimationFrame(raf);draw()}else drawFrozen()};
 function refreshSlotControls(){
@@ -405,5 +445,6 @@ $('clearcaptures').onclick=()=>{
 $('showall').onclick=()=>{visibleSlots.fill(true);refreshSlotControls();redrawCurrentView()};
 $('hideall').onclick=()=>{visibleSlots.fill(false);refreshSlotControls();redrawCurrentView()};
 refreshSlotControls();
+updateFftWarn();
 drawFrozen();
 </script></body></html>
