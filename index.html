@@ -22,7 +22,7 @@ button.go{background:#087e91;border-color:#13b5c9}button:disabled{opacity:.45}
 label{font-size:11px;color:var(--muted)}
 canvas{display:block;width:100%;height:auto;background:#030507;border-radius:5px;max-width:100%;cursor:ew-resize;touch-action:none}
 #spectrum{aspect-ratio:1200/400}
-#waterfall{aspect-ratio:1200/140;height:auto}
+#waterfall{aspect-ratio:1200/140;height:auto;cursor:default}
 .capturebar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
 .capturebar button{padding:10px 14px}
 .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px}
@@ -75,7 +75,7 @@ body.landscape-mode header h1{font-size:15px}
 </div>
 <div class="legend"><span><i class="dot" style="background:#55d9ed"></i>LIVE</span><span><i class="dot" style="background:#ffd16a"></i>PEAK HOLD</span><span><i class="dot" style="background:#ff6b6b"></i>CAPTURE 1</span><span><i class="dot" style="background:#b58cff"></i>CAPTURE 2</span><span><i class="dot" style="background:#67d69b"></i>CAPTURE 3</span></div>
 <div class="info">Capture menyimpan kurva magnitude saat itu. Kurva tersimpan akan ditampilkan sebagai overlay agar bisa dibandingkan dengan kondisi LIVE atau capture lain.</div></section>
-<section class="panel"><div class="title"><b>LIVE SPECTROGRAM / WATERFALL</b><span>Waktu berjalan ↓</span></div><canvas id="waterfall" width="1200" height="140"></canvas><div class="info">Warna terang menunjukkan energi frekuensi lebih kuat. Waterfall bergerak saat mikrofon menerima suara.</div></section>
+<section class="panel"><div class="title"><b>LIVE SPECTROGRAM / WATERFALL</b><span>Waktu berjalan ↓</span></div><canvas id="waterfall" width="1200" height="140"></canvas><div class="info">Warna terang menunjukkan energi frekuensi lebih kuat. Waterfall bergerak ke bawah saat mikrofon menerima suara. Yang paling atas adalah suara terbaru.</div></section>
 <section class="panel"><div class="stats">
 <div class="stat"><small>PEAK LEVEL</small><strong id="peakdb">— dBFS</strong></div>
 <div class="stat"><small>PEAK FREQUENCY</small><strong id="peakfreq">— Hz</strong></div>
@@ -134,22 +134,17 @@ function drawCursor(ph,range,levelVal){
  const cx=Math.max(6,Math.min(w-6,xfreq(cursorFreq,w)));
  const y=v=>Math.max(0,Math.min(range,-v))/range*ph;
  sc.save();
- // garis tegas, tanpa halo blur
  sc.strokeStyle='#ffffff';sc.lineWidth=3;
  sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();
- // pegangan atas
  sc.fillStyle='#ffffff';
  sc.beginPath();sc.moveTo(cx-12,0);sc.lineTo(cx+12,0);sc.lineTo(cx,17);sc.closePath();sc.fill();
  if(levelVal!==null&&Number.isFinite(levelVal)){
   const cy=y(levelVal);
-  // garis pendek mendatar di titik, biar keliatan nempel
   sc.strokeStyle='#ffffff';sc.lineWidth=3;
   sc.beginPath();sc.moveTo(cx-16,cy);sc.lineTo(cx+16,cy);sc.stroke();
-  // titik nempel di kurva
   sc.beginPath();sc.arc(cx,cy,11,0,Math.PI*2);sc.fillStyle='#ffffff';sc.fill();
   sc.beginPath();sc.arc(cx,cy,6,0,Math.PI*2);sc.fillStyle='#000000';sc.fill();
   sc.beginPath();sc.arc(cx,cy,2.5,0,Math.PI*2);sc.fillStyle='#ffffff';sc.fill();
-  // label nempel di atas titik, bukan ngambang di atas grafik
   const txt=fmtFreq(cursorFreq)+'  •  '+levelVal.toFixed(1)+' dB';
   sc.font='bold 17px Arial';
   const tw=sc.measureText(txt).width+18;
@@ -158,7 +153,6 @@ function drawCursor(ph,range,levelVal){
   sc.fillStyle='#000000';sc.fillRect(lx,ly,tw,28);
   sc.strokeStyle='#ffffff';sc.lineWidth=2;sc.strokeRect(lx,ly,tw,28);
   sc.fillStyle='#ffffff';sc.textAlign='left';sc.fillText(txt,lx+9,ly+20);
-  // garis penghubung label ke titik
   sc.beginPath();sc.moveTo(cx,ly+28);sc.lineTo(cx,cy-11);sc.stroke();
  }
  sc.restore();
@@ -169,7 +163,33 @@ function grid(){
  [20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000].forEach(f=>{let x=xfreq(f,w);sc.beginPath();sc.moveTo(x,0);sc.lineTo(x,plotH);sc.stroke();if(f===50&&x<70)return;let label=f===20?'20 Hz':(f===20000?'20 kHz':(f>=1000?(f/1000)+'k':String(f)));sc.textAlign=f===20000?'right':(f===20?'left':'center');let tx=f===20000?w-4:(f===20?4:x);sc.fillText(label,tx,h-14)});sc.textAlign='left';
  let range=+$('range').value;for(let d=0;d<=range;d+=10){let y=d/range*plotH;sc.beginPath();sc.moveTo(0,y);sc.lineTo(w,y);sc.stroke();sc.fillText(-d+' dB',5,Math.max(14,y+14))}
 }
-function colorFor(v){let t=Math.max(0,Math.min(1,(v+95)/75));let stops=[[20,16,48],[67,47,118],[170,76,137],[239,139,143],[255,218,142]];let p=t*4,i=Math.min(3,Math.floor(p)),a=p-i;let c=stops[i].map((n,k)=>Math.round(n*(1-a)+stops[i+1][k]*a));return `rgb(${c[0]},${c[1]},${c[2]})`}
+// Warna waterfall: -90 dB gelap, -30 dB paling terang. Dibuat lebih terang dari sebelumnya.
+function colorFor(v){let t=Math.max(0,Math.min(1,(v+90)/60));let stops=[[20,16,48],[67,47,118],[170,76,137],[239,139,143],[255,218,142]];let p=t*4,i=Math.min(3,Math.floor(p)),a=p-i;let c=stops[i].map((n,k)=>Math.round(n*(1-a)+stops[i+1][k]*a));return [c[0],c[1],c[2]]}
+function drawWaterfall(raw,n){
+ const W=water.width,H=water.height,SHIFT=3;
+ // BUG LAMA: gambar lama ditempel di y=0 lagi, jadi ga geser. INI YANG BENER: geser turun SHIFT.
+ try{
+  const old=wc.getImageData(0,0,W,H-SHIFT);
+  wc.putImageData(old,0,SHIFT);
+ }catch(e){
+  wc.drawImage(water,0,0,W,H-SHIFT,0,SHIFT,W,H-SHIFT);
+ }
+ const row=wc.createImageData(W,SHIFT);
+ const gridXs=new Set([20,100,500,1000,2000,5000,10000,20000].map(f=>Math.round(xfreq(f,W))));
+ for(let x=0;x<W;x++){
+  const f=freqAtX(x,W);
+  const bin=Math.max(1,Math.min(n-1,Math.round(f*fft/audio.sampleRate)));
+  const v=Number.isFinite(raw[bin])?raw[bin]:-120;
+  let m=colorFor(v);
+  // garis grid vertikal tipis, biar sejajar sama magnitude di atas
+  if(gridXs.has(x)){m=[Math.max(0,m[0]-30),Math.max(0,m[1]-30),Math.max(0,m[2]-30)]}
+  for(let yy=0;yy<SHIFT;yy++){
+   const p=(yy*W+x)*4;
+   row.data[p]=m[0];row.data[p+1]=m[1];row.data[p+2]=m[2];row.data[p+3]=255;
+  }
+ }
+ wc.putImageData(row,0,0);
+}
 function syncCursorUI(){
  $('cursorfreq').textContent=fmtFreq(cursorFreq);
  const near=nearestIn(cursorData(),cursorFreq);
@@ -223,13 +243,9 @@ function draw(){
   sc.stroke();
  });
  const near=nearestIn(currentVals,cursorFreq);
- // cursor digambar PALING AKHIR, di atas kurva, biar titiknya nempel dan ga ketutup
  drawCursor(ph,range,near?near.v:null);
  syncCursorUI();
- let image=wc.getImageData(0,0,water.width,water.height-1);wc.putImageData(image,0,0);
- let row=wc.createImageData(water.width,1);
- for(let x=0;x<water.width;x++){let f=freqAtX(x,water.width);let bin=Math.max(1,Math.min(n-1,Math.round(f*fft/audio.sampleRate)));let v=raw[bin];let col=colorFor(v);let m=col.match(/\d+/g).map(Number);let p=x*4;row.data[p]=m[0];row.data[p+1]=m[1];row.data[p+2]=m[2];row.data[p+3]=255}
- wc.putImageData(row,0,water.height-1);
+ drawWaterfall(raw,n);
  $('peakdb').textContent=peak.toFixed(1)+' dBFS';$('peakfreq').textContent=(peakBin*audio.sampleRate/fft).toFixed(0)+' Hz';raf=requestAnimationFrame(draw);
 }
 $('landscape').onclick=async()=>{
@@ -250,7 +266,7 @@ $('start').onclick=async()=>{
   if(!navigator.mediaDevices?.getUserMedia)throw Error('Browser tidak mendukung akses mikrofon. Buka file melalui HTTPS.');
   stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
   audio=new(window.AudioContext||window.webkitAudioContext)();await audio.resume();src=audio.createMediaStreamSource(stream);an=audio.createAnalyser();fft=+$('fft').value;avgCount=+$('average').value;an.fftSize=fft;an.smoothingTimeConstant=0;src.connect(an);
-  sm=[];hold=[];avgFrames=[];currentVals=[];wc.clearRect(0,0,water.width,water.height);$('capture').disabled=false;$('status').textContent='LIVE';$('inputstate').textContent='MIC ON';$('samplerate').textContent=audio.sampleRate+' Hz';$('start').disabled=true;$('stop').disabled=false;draw();
+  sm=[];hold=[];avgFrames=[];currentVals=[];wc.fillStyle='#141030';wc.fillRect(0,0,water.width,water.height);$('capture').disabled=false;$('status').textContent='LIVE';$('inputstate').textContent='MIC ON';$('samplerate').textContent=audio.sampleRate+' Hz';$('start').disabled=true;$('stop').disabled=false;draw();
  }catch(e){$('status').textContent='MIC ERROR';alert('Tidak bisa membuka mikrofon: '+e.message+'. Izinkan akses mikrofon dan gunakan browser yang mendukung HTTPS.')}
 };
 $('stop').onclick=()=>{cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());if(audio)audio.close();audio=null;stream=null;an=null;currentVals=[];sm=[];hold=[];avgFrames=[];$('status').textContent='STOPPED • HANYA CAPTURE TERSIMPAN';$('inputstate').textContent='OFF';$('start').disabled=false;$('stop').disabled=true;$('capture').disabled=true;drawFrozen()};
