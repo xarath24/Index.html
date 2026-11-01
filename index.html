@@ -72,7 +72,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         <input type="range" id="noisevol" min="0" max="100" value="30">
       </label>
       <p style="color:#8b95a5;font-size:11px;line-height:1.6;margin:8px 0 0">
-        Pink OFF = RTA doang.<br>
+        Pink OFF = kurva terakhir tetep beku, ga mati.<br>
         Pink ON = Magnitude + Phase jalan.
       </p>
     </div>
@@ -82,7 +82,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <button id="capturebtn" class="cap" style="width:100%;padding:12px">📸 CAPTURE KURVA INI</button>
       <button id="clearcap" class="danger" style="width:100%;padding:8px;margin-top:6px">🗑 HAPUS SEMUA CAPTURE</button>
       <div id="caplist" style="margin-top:6px"></div>
-      <p style="color:#8b95a5;font-size:11px;line-height:1.6;margin:8px 0 0">Kotak besar di tengah, tombol BACK nya di dalam kotak.<br>STOP = kurva beku, ga ilang.</p>
+      <p style="color:#8b95a5;font-size:11px;line-height:1.6;margin:8px 0 0">Garis capture sekarang lurus padat, ga putus-putus.<br>Kotak besar di tengah, BACK nya di dalam kotak.</p>
     </div>
 
     <div class="panel" style="margin-top:8px">
@@ -164,7 +164,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
             <option value="500-4000">500 Hz — 4 kHz</option>
           </select>
         </label>
-        <span style="color:#8b95a5;font-size:11px">STOP = beku. START lagi = jalan lagi.</span>
+        <span style="color:#8b95a5;font-size:11px">STOP / OFF = beku. START lagi = jalan lagi.</span>
       </div>
       <canvas id="phase" width="1200" height="190"></canvas>
 
@@ -183,10 +183,10 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <div style="font-size:11px;color:#8b95a5;line-height:1.8">
         1. Putar HP landscape<br>
         2. START + PINK ON<br>
-        3. Pencet CAPTURE, kotak besar muncul di tengah<br>
-        4. Pencet tombol <b>◀ BACK yang di dalam kotak</b>, di tengah bawah kotak, buat balik ke capture sebelum nya<br>
-        5. Udah di Capture 1, pencet BACK lagi, kotak ketutup, balik live<br>
-        6. INFO: ON buat munculin kotak nya lagi<br><br>
+        3. Pencet CAPTURE, garis capture nya lurus, ga putus-putus<br>
+        4. Pencet OFF, kurva tetep ada, beku, ga mati<br>
+        5. Pencet BACK di dalam kotak besar di tengah, buat balik capture sebelum nya<br>
+        6. START + PINK ON lagi, kurva jalan lagi<br><br>
         Garis ijo tengah = 0 dB / 0°.
       </div>
     </div>
@@ -260,6 +260,15 @@ function cohAvgOf(coh){
   if(!coh.length)return null;
   return coh.reduce((s,o)=>s+o.v,0)/coh.length;
 }
+/* BEKUKAN KURVA TERAKHIR, DIPAKE PAS STOP DAN PAS PINK OFF, BIAR GA MATI */
+function freezeLast(){
+  if(!S.live.length)return;
+  S.frozenMag=S.live.map(o=>({...o}));
+  S.frozenPhase=S.phaseRaw.map(o=>({...o}));
+  S.frozenCoh=S.coh.map(o=>({...o}));
+  S.frozenPink=S.pink||S.frozenPink;
+  S.frozen=true;
+}
 
 function updateCenterLabel(){
   const el=$('centerlabel');
@@ -271,7 +280,6 @@ function updateCenterLabel(){
   $('infotoggle').textContent=S.centerInfo?'INFO: ON':'INFO: OFF';
   $('infotoggle').classList.toggle('phon',S.centerInfo);
 }
-/* BACK: KE CAPTURE SEBELUMNYA, KALO UDAH PALING AWAL, KOTAK KETUTUP */
 function goBack(){
   if(!S.captures.length)return;
   if(S.centerIdx<=0){S.centerInfo=false;updateCenterLabel();drawAll();return}
@@ -368,25 +376,32 @@ function pinkBuffer(c){
 }
 function resetAcc(){S.acc=null;S.accN=0;S.sm=null;S.magOffset=null}
 async function startPink(){
-  stopPink();await ensureCtx();const c=S.ctx;
+  /* PINK ON LAGI: HAPUS BEKU NYA, BIAR JALAN LAGI DARI AWAL */
+  const wasFrozen=S.frozen;
+  stopPink(true);
+  await ensureCtx();const c=S.ctx;
   S.noise=c.createBufferSource();S.noise.buffer=pinkBuffer(c);S.noise.loop=true;
   S.noiseGain=c.createGain();S.noiseGain.gain.value=($('noisevol').value/100)*0.5;
   S.refAn=c.createAnalyser();S.refAn.fftSize=S.fft;S.refAn.smoothingTimeConstant=0;
   S.noise.connect(S.noiseGain);S.noiseGain.connect(c.destination);S.noiseGain.connect(S.refAn);S.noise.start();
   S.pink=true;$('refstat').textContent='PINK NOISE';$('modetxt').textContent='TF';$('phasesub').textContent='Pink ON — Phase jalan';
-  $('pinkbtn').classList.add('on');resetAcc();
+  $('pinkbtn').classList.add('on');
+  if(wasFrozen){S.frozen=false;S.frozenMag=[];S.frozenPhase=[];S.frozenCoh=[];S.frozenPink=false}
+  resetAcc();drawAll();
 }
-function stopPink(){
+/* keepPink=true ARTINYA LAGI MAU NYALAIN LAGI, JANGAN LANGSUNG BEKUIN DULU DI SINI */
+function stopPink(keep){
+  freezeLast();
   if(S.noise){try{S.noise.stop()}catch(e){}try{S.noise.disconnect()}catch(e){}S.noise=null}
   if(S.noiseGain){try{S.noiseGain.disconnect()}catch(e){}S.noiseGain=null}
   S.refAn=null;S.pink=false;
-  $('refstat').textContent='OFF';$('modetxt').textContent='RTA';$('phasesub').textContent='Pink OFF — HIDUPKAN PINK';
+  $('refstat').textContent='OFF';$('modetxt').textContent='RTA';$('phasesub').textContent='Pink OFF — KURVA TERAKHIR BEKU, GA MATI';
   $('pinkbtn').classList.remove('on');
-  if(!S.frozen){S.phase=[];S.phaseRaw=[];S.coh=[]}
-  resetAcc();
+  /* JANGAN HAPUS LIVE / PHASE, BIAR GRAFIK GA MATI PAS OFF */
+  computeDelay();drawAll();
 }
 $('pinkbtn').onclick=()=>S.pink?stopPink():startPink();
-$('noiseoff').onclick=stopPink;
+$('noiseoff').onclick=()=>stopPink();
 $('noisevol').oninput=e=>{$('voltxt').textContent=e.target.value+'%';if(S.noiseGain&&S.ctx)S.noiseGain.gain.setTargetAtTime((e.target.value/100)*0.5,S.ctx.currentTime,.02)};
 
 function drawLabelOnCurve(c,cx,cy,W,H,txt,strokeCol){
@@ -424,7 +439,6 @@ function drawCaptureInfos(c,w,h){
   c.fillText(cp.delayMs==null?'Delay —':'Delay '+cp.delayMs.toFixed(3)+' ms',cx,ly+94);
   c.fillText(cp.peakDb==null?'Peak —':'Peak '+cp.peakDb.toFixed(1)+' dB',cx,ly+130);
   c.fillText(cp.peakFreq==null?'@ —':'@ '+fmtF2(cp.peakFreq),cx,ly+166);
-  /* TOMBOL BACK DI TENGAH-TENGAH KOTAK, DI BAWAH INFO NYA */
   const bw=240, bh=48, bx=cx-bw/2, by=ly+boxH-58;
   S.backRect={x:bx,y:by,w:bw,h:bh};
   c.fillStyle='#1e3a5f';
@@ -508,12 +522,13 @@ function drawAll(){
   const hasPhase=rawPhase.length&&((S.pink||S.frozenPink));
   gridMag(mg,w,h,range);
   $('cursorfreqbig').textContent=fmtF(S.cursor);
-  $('magstate').textContent=S.frozen?'❄ BEKU — STOP, KURVA DIEM, GA ILANG • 20 Hz — 20 kHz':'20 Hz — 20 kHz • GARIS TENGAH = 0 dB';
+  $('magstate').textContent=S.frozen?'❄ BEKU — OFF / STOP, KURVA DIEM, GA MATI • 20 Hz — 20 kHz':'20 Hz — 20 kHz • GARIS TENGAH = 0 dB';
   $('magstate').className=S.frozen?'frozen':'';
+  /* CAPTURE: GARIS LURUS PADAT, GA PAKE PUTUS-PUTUS LAGI */
   S.captures.forEach(cp=>{
     if(!cp.show||!cp.mag.length)return;
-    mg.beginPath();mg.strokeStyle=cp.color;mg.lineWidth=2;mg.setLineDash([6,4]);
-    cp.mag.forEach((o,i)=>{const Y=yMag(o.v,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke();mg.setLineDash([]);
+    mg.beginPath();mg.strokeStyle=cp.color;mg.lineWidth=2.5;mg.setLineDash([]);
+    cp.mag.forEach((o,i)=>{const Y=yMag(o.v,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke();
   });
   if(magData.length){
     mg.beginPath();mg.strokeStyle='#3fd4ec';mg.lineWidth=2.5;
@@ -552,11 +567,12 @@ function drawAll(){
   pg.fillStyle='#22ff88';pg.font='bold 11px Arial';pg.fillText(S.unwrap?'0° (unwrap)':'0°',10,Math.max(11,Math.min(phH-2,yPh(0)+12)));
   const pp=pointOn(disp,S.cursor);
   if(hasPhase&&disp.length){
+    /* PHASE CAPTURE JUGA LURUS PADAT */
     S.captures.forEach(cp=>{
       if(!cp.show||!cp.phaseRaw.length)return;
       let carr=phaseDisplayRaw(cp.phaseRaw);
-      pg.beginPath();pg.strokeStyle=cp.color;pg.lineWidth=1.5;pg.setLineDash([6,4]);
-      carr.forEach((o,i)=>{const Y=yPh(Math.max(minPh,Math.min(maxPh,o.v)));if(i===0)pg.moveTo(o.x,Y);else pg.lineTo(o.x,Y)});pg.stroke();pg.setLineDash([]);
+      pg.beginPath();pg.strokeStyle=cp.color;pg.lineWidth=2;pg.setLineDash([]);
+      carr.forEach((o,i)=>{const Y=yPh(Math.max(minPh,Math.min(maxPh,o.v)));if(i===0)pg.moveTo(o.x,Y);else pg.lineTo(o.x,Y)});pg.stroke();
     });
     pg.beginPath();pg.strokeStyle='#3fd4ec';pg.lineWidth=2.5;let pen=false;
     disp.forEach((o,i)=>{
@@ -574,9 +590,9 @@ function drawAll(){
       if(pt)$('cursorread').textContent=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB • Phase '+pp.v.toFixed(0)+'°';
     }
   }else{
-    if(!S.frozen)$('phasecursor').textContent='—';
     pg.fillStyle='#8b95a5';pg.font='bold 14px Arial';pg.textAlign='center';
-    pg.fillText('NO REFERENCE — HIDUPKAN PINK NOISE',pw/2,phH/2);pg.textAlign='left';
+    pg.fillText(S.frozen?'BEKU — PHASE TERAKHIR TETEP DI ATAS':'NO REFERENCE — HIDUPKAN PINK NOISE',pw/2,phH/2);pg.textAlign='left';
+    if(!S.frozen)$('phasecursor').textContent='—';
   }
 }
 function computeTF(){
@@ -649,7 +665,7 @@ $('start').onclick=async()=>{
     S.an=S.ctx.createAnalyser();S.fft=+$('fft').value;S.an.fftSize=S.fft;S.an.smoothingTimeConstant=0;S.an.minDecibels=-120;S.an.maxDecibels=0;
     S.src.connect(S.an);
     if(S.refAn)S.refAn.fftSize=S.fft;
-    S.frozen=false;S.frozenMag=[];S.frozenPhase=[];S.frozenCoh=[];
+    S.frozen=false;S.frozenMag=[];S.frozenPhase=[];S.frozenCoh=[];S.frozenPink=false;
     resetAcc();S.running=true;
     $('start').disabled=true;$('stop').disabled=false;$('status').textContent='LIVE';$('liveind').textContent='● LIVE';$('liveind').style.color='#7ee0ad';
     $('samplerate').textContent=S.ctx.sampleRate+' Hz';$('fftstat').textContent=S.fft;
@@ -657,7 +673,7 @@ $('start').onclick=async()=>{
   }catch(e){alert('Mic ga bisa dibuka: '+e.message)}
 };
 $('stop').onclick=()=>{
-  if(S.live.length){S.frozenMag=S.live.map(o=>({...o}));S.frozenPhase=S.phaseRaw.map(o=>({...o}));S.frozenCoh=S.coh.map(o=>({...o}));S.frozenPink=S.pink;S.frozen=true}
+  freezeLast();
   S.running=false;cancelAnimationFrame(S.raf);
   if(S.stream)S.stream.getTracks().forEach(t=>t.stop());
   S.stream=null;S.an=null;$('start').disabled=false;$('stop').disabled=true;
