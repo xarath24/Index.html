@@ -6,17 +6,21 @@
 <title>SMART LIVE — LIKE SMAART • FFT 8192</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#0a0c10;color:#e8eaf0;font:12px system-ui,Arial;overflow-x:hidden}
+html,body{margin:0;background:#0a0c10;color:#e8eaf0;font:12px system-ui,Arial}
+body{overflow-x:auto}
 button,select{font:inherit}
-.topbar{height:48px;background:#10141a;border-bottom:2px solid #3fd4ec;display:flex;align-items:center;gap:14px;padding:0 12px;position:sticky;top:0;z-index:20;overflow-x:auto;white-space:nowrap}
-.logo{font-weight:900;font-size:18px;line-height:1}.logo b{color:#3fd4ec}.logo span{color:#8b95a5;font-weight:400;font-size:9px;display:block;letter-spacing:3px;margin-top:2px}
+.page{min-width:1120px}
+.topbar{height:48px;background:#10141a;border-bottom:2px solid #3fd4ec;display:flex;align-items:center;gap:14px;padding:0 12px;position:sticky;top:0;z-index:20;white-space:nowrap}
+.logo{font-weight:900;font-size:18px;line-height:1;flex:0 0 auto}.logo b{color:#3fd4ec}.logo span{color:#8b95a5;font-weight:400;font-size:9px;display:block;letter-spacing:3px;margin-top:2px}
 .topbar nav{display:flex;gap:16px;color:#8b95a5}.topbar nav b{color:#fff}
 .topbtns{margin-left:auto;display:flex;gap:6px;align-items:center}
 button{background:#222b37;color:#e8eaf0;border:1px solid #4a5566;border-radius:6px;padding:7px 10px;cursor:pointer;white-space:nowrap}
 button.go{background:#087e91;border-color:#13b5c9}button.on{background:#c2410c!important;border-color:#fb923c!important;color:#fff}
 button:disabled{opacity:.45}
 select{background:#222b37;color:#e8eaf0;border:1px solid #4a5566;border-radius:6px;padding:6px}
-.layout{display:grid;grid-template-columns:218px 1fr 190px;gap:8px;padding:8px;max-width:1560px;margin:auto}
+.rotatehint{display:none;background:#422006;color:#fde68a;text-align:center;padding:8px;font-weight:700;font-size:12px}
+@media (orientation:portrait) and (max-width:900px){.rotatehint{display:block}}
+.layout{display:grid;grid-template-columns:218px minmax(0,1fr) 190px;gap:8px;padding:8px;max-width:1560px;margin:auto}
 .panel{background:#14181f;border:1px solid #2b323e;border-radius:8px;padding:9px;overflow:hidden}
 h3{margin:0 0 8px;font-size:11px;letter-spacing:1px;color:#8b95a5}
 .meas{display:flex;align-items:center;gap:7px;padding:8px;border:1px solid #2b323e;border-radius:6px;margin-bottom:6px;background:#1a1f28}
@@ -25,13 +29,13 @@ h3{margin:0 0 8px;font-size:11px;letter-spacing:1px;color:#8b95a5}
 .meas input{accent-color:#3fd4ec;width:16px;height:16px}
 canvas{display:block;width:100%;background:#05070a;cursor:ew-resize;touch-action:none}
 #mag{aspect-ratio:1200/300;border-radius:4px 4px 0 0}
-#freqscale{aspect-ratio:1200/40;border-radius:0 0 4px 4px;background:#0b0f14;border-top:1px solid #2b323e;cursor:ew-resize}
+#freqscale{aspect-ratio:1200/56;border-radius:0 0 4px 4px;background:#0b0f14;border-top:1px solid #2b323e;cursor:ew-resize}
 #phase{aspect-ratio:1200/210;border-radius:4px;margin-top:8px}
 #spec{aspect-ratio:1200/150;cursor:default;border-radius:4px}
-.graphtitle{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#8b95a5;margin:8px 0 4px}.graphtitle b{color:#dbe2ec}
+.graphtitle{display:flex;justify-content:space-between;gap:10px;font-size:11px;color:#8b95a5;margin:8px 0 4px;flex-wrap:nowrap;align-items:baseline}.graphtitle b{color:#dbe2ec;flex:0 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.graphtitle span{flex:0 0 auto;white-space:nowrap}
 .ctl{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:8px}.ctl label{font-size:10px;color:#8b95a5;display:flex;flex-direction:column;gap:3px}
-.tabs{display:flex;gap:4px;flex-wrap:wrap}.tabs button{padding:8px 14px;font-weight:700}
-.modebar{color:#ffd16a;font-size:11px;font-weight:700;text-align:right;flex:1;min-width:200px}
+.tabs{display:flex;gap:4px;flex-wrap:nowrap}.tabs button{padding:8px 14px;font-weight:700;white-space:nowrap}
+.modebar{color:#ffd16a;font-size:11px;font-weight:700;text-align:right;flex:1;min-width:0;white-space:normal}
 .spl{height:150px;background:#05070a;border:1px solid #2b323e;border-radius:6px;position:relative;overflow:hidden;margin-bottom:8px}
 .splbar{position:absolute;bottom:0;left:18px;right:18px;background:linear-gradient(to top,#22c55e,#eab308 65%,#ef4444);width:calc(100% - 36px);transition:height .08s}
 .splnum{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;padding-top:10px;text-shadow:0 1px 4px #000}
@@ -40,7 +44,7 @@ canvas{display:block;width:100%;background:#05070a;cursor:ew-resize;touch-action
 .cursorctl{display:flex;gap:6px;align-items:center;margin-top:7px;background:#090d12;border:1px solid #2b323e;border-radius:6px;padding:6px}
 .cursorctl input{flex:1;accent-color:#fff}
 .legend{display:flex;gap:10px;flex-wrap:wrap;color:#8b95a5;font-size:11px;margin-top:7px}.legend i{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:4px}
-.statusbar{background:#10141a;border-top:1px solid #2b323e;padding:7px 12px;display:flex;gap:16px;flex-wrap:wrap;color:#8b95a5;font-size:11px;position:sticky;bottom:0}
+.statusbar{background:#10141a;border-top:1px solid #2b323e;padding:7px 12px;display:flex;gap:16px;flex-wrap:nowrap;color:#8b95a5;font-size:11px;position:sticky;bottom:0;white-space:nowrap;overflow-x:auto}
 .statusbar b{color:#7ee0ad}
 .noisebar{display:grid;grid-template-columns:1fr 1fr;gap:6px}.noisebar button{padding:10px}.noisebar .off{grid-column:1/3}
 input[type=range]{width:100%;accent-color:#3fd4ec}
@@ -51,10 +55,11 @@ input[type=range].vol{accent-color:#fb923c}
 .polbadge.inverted{border-color:#ef4444;background:#450a0a}.polbadge.inverted b{color:#f87171}
 .delayrow{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}.delayrow b{color:#fff}
 .checkline{display:flex;gap:7px;align-items:center;font-size:11px;color:#cbd5e1;margin:6px 0}.checkline input{accent-color:#3fd4ec;width:16px;height:16px}
-@media(max-width:900px){.layout{grid-template-columns:1fr}.spl{height:110px}}
 </style>
 </head>
 <body>
+<div class="page">
+<div class="rotatehint">↻ PUTAR HP KE LANDSCAPE (MIRING) — BIAR TAMPILAN NYA SAMA KAYAK SCREENSHOT, GA NUMPUK KE BAWAH</div>
 <div class="topbar">
 <div class="logo"><b>SMART</b> LIVE <span>MEASUREMENT • LIKE SMAART</span></div>
 <nav><span><b>Measurement</b></span><span>Config</span><span>View</span><span>Trace</span><span>Delay</span></nav>
@@ -101,7 +106,7 @@ input[type=range].vol{accent-color:#fb923c}
 
 <main>
 <div class="panel">
-<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+<div style="display:flex;gap:8px;flex-wrap:nowrap;align-items:center">
 <div class="tabs"><button id="tabTF" class="on">TRANSFER FUNCTION</button><button id="tabRTA">RTA</button><button id="tabSPEC">SPECTROGRAPH</button></div>
 <div class="modebar" id="modetxt">MODE: RTA — HIDUPKAN PINK NOISE UNTUK TF + POLARITY</div>
 </div>
@@ -115,7 +120,7 @@ input[type=range].vol{accent-color:#fb923c}
 </div>
 <div class="graphtitle"><b>MAGNITUDE — TRANSFER / RTA</b><span>20 Hz — 20 kHz • dBFS rel.</span></div>
 <canvas id="mag" width="1200" height="300"></canvas>
-<canvas id="freqscale" width="1200" height="40"></canvas>
+<canvas id="freqscale" width="1200" height="56"></canvas>
 <div class="graphtitle"><b>PHASE — 0° = NORMAL, ±180° = TERBALIK</b><span id="phasesub">Pink OFF</span></div>
 <canvas id="phase" width="1200" height="210"></canvas>
 <div class="cursorctl"><button id="curleft">◀</button><input type="range" id="cursorslider" min="0" max="1000" value="980"><button id="curright">▶</button><b id="cursorread" style="white-space:nowrap">14.99 kHz • — dB</b></div>
@@ -150,6 +155,7 @@ input[type=range].vol{accent-color:#fb923c}
 </div>
 
 <div class="statusbar"><span>● <b id="status">STANDBY</b></span><span>Input: <b>Mic 1</b></span><span>Reference: <b id="refstat">OFF</b></span><span>FFT: <b id="fftstat">8192</b></span><span>Delay: <b id="delaystat">0.0 ms</b></span><span>Sync: <b>1 CONTEXT • 48000 Hz</b></span><span>Polarity: <b id="polstat">—</b></span><span style="margin-left:auto">SMART LIVE • dBFS rel, bukan SPL terkalibrasi</span></div>
+</div>
 
 <script>
 const $=id=>document.getElementById(id);
@@ -237,7 +243,7 @@ $('checkpol').onclick=async()=>{
 };
 function drawScale(){
   const c=fg,W=fsc.width,H=fsc.height;c.clearRect(0,0,W,H);c.fillStyle='#0b0f14';c.fillRect(0,0,W,H);
-  FREQS.forEach(f=>{const x=xfreq(f,W),maj=MAJORS.has(f);c.strokeStyle=maj?'#7ee0ad':'#3a4452';c.lineWidth=maj?2:1;c.beginPath();c.moveTo(x,0);c.lineTo(x,maj?11:7);c.stroke();c.textAlign=f===20000?'right':f===20?'left':'center';if(maj){c.fillStyle='#fff';c.font='bold 14px Arial';c.fillText(f===20?'20':f===20000?'20 kHz':fmtLab(f),f===20000?W-4:f===20?4:x,30)}else{c.fillStyle='#8b95a5';c.font='11px Arial';c.fillText(fmtLab(f),x,24)}});
+  FREQS.forEach(f=>{const x=xfreq(f,W),maj=MAJORS.has(f);c.strokeStyle=maj?'#7ee0ad':'#3a4452';c.lineWidth=maj?2:1;c.beginPath();c.moveTo(x,0);c.lineTo(x,maj?14:9);c.stroke();c.textAlign=f===20000?'right':f===20?'left':'center';if(maj){c.fillStyle='#fff';c.font='bold 15px Arial';c.fillText(f===20?'20':f===20000?'20 kHz':fmtLab(f),f===20000?W-4:f===20?4:x,38)}else{c.fillStyle='#8b95a5';c.font='12px Arial';c.fillText(fmtLab(f),x,30)}});
   const cx=xfreq(S.cursor,W);c.strokeStyle='#fff';c.lineWidth=3;c.beginPath();c.moveTo(cx,0);c.lineTo(cx,H);c.stroke();c.fillStyle='#3fd4ec';c.beginPath();c.moveTo(cx-7,0);c.lineTo(cx+7,0);c.lineTo(cx,9);c.closePath();c.fill();c.textAlign='left';
 }
 function densify(freqs,pArr,phArr,cohArr){
@@ -283,8 +289,8 @@ function drawAll(){
   const pw=phc.width,phH=phc.height,yFor=d=>((180-d)/360)*phH;
   pg.clearRect(0,0,pw,phH);pg.fillStyle='#05070a';pg.fillRect(0,0,pw,phH);pg.strokeStyle='#232a35';pg.lineWidth=1;
   FREQS.forEach(f=>{const x=xfreq(f,pw);pg.beginPath();pg.moveTo(x,0);pg.lineTo(x,phH);pg.stroke()});
-  [[180,'±180° TERBALIK','#ff6b6b'],[0,'0° NORMAL','#5fd68a'],[-180,'±180° TERBALIK','#ff6b6b']].forEach(([d,lab,col])=>{const y=yFor(d);pg.strokeStyle=col;pg.beginPath();pg.moveTo(0,y);pg.lineTo(pw,y);pg.stroke();pg.fillStyle=col;pg.font='bold 11px Arial';pg.fillText(lab,4,d===180?12:y+12)});
-  pg.fillStyle='#8b95a5';pg.font='11px Arial';pg.fillText('90°',4,yFor(90)+4);pg.fillText('-90°',4,yFor(-90)+4);
+  [[180,'±180° TERBALIK','#ff6b6b'],[0,'0° NORMAL','#5fd68a'],[-180,'±180° TERBALIK','#ff6b6b']].forEach(([d,lab,col])=>{const y=yFor(d);pg.strokeStyle=col;pg.beginPath();pg.moveTo(0,y);pg.lineTo(pw,y);pg.stroke();pg.fillStyle=col;pg.font='bold 11px Arial';pg.fillText(lab,10,d===180?12:y+12)});
+  pg.fillStyle='#8b95a5';pg.font='11px Arial';pg.fillText('90°',10,yFor(90)+4);pg.fillText('-90°',10,yFor(-90)+4);
   if(S.phase.length&&S.noiseType){
     pg.beginPath();pg.strokeStyle='#3fd4ec';pg.lineWidth=2.5;
     S.phase.forEach((o,i)=>{const X=o.x,Y=yFor(Math.max(-180,Math.min(180,o.v)));if(i===0)pg.moveTo(X,Y);else pg.lineTo(X,Y)});pg.stroke();
