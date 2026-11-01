@@ -78,7 +78,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <button id="capturebtn" class="cap" style="width:100%;padding:12px">📸 CAPTURE KURVA INI</button>
       <button id="clearcap" class="danger" style="width:100%;padding:8px;margin-top:6px">🗑 HAPUS SEMUA CAPTURE</button>
       <div id="caplist" style="margin-top:6px"></div>
-      <p style="color:#8b95a5;font-size:11px;line-height:1.6;margin:8px 0 0">Info capture juga tampil di tengah grafik.<br>STOP = kurva beku, ga ilang.</p>
+      <p style="color:#8b95a5;font-size:11px;line-height:1.6;margin:8px 0 0">Kotak info nya di tengah grafik.<br>STOP = kurva beku, ga ilang.</p>
     </div>
 
     <div class="panel" style="margin-top:8px">
@@ -173,9 +173,9 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         1. Putar HP landscape<br>
         2. START + PINK ON<br>
         3. Tunggu 5 detik<br>
-        4. Pencet CAPTURE, kotak info nya muncul di tengah grafik, ada delay + peak + coh nya<br>
-        5. Ubah EQ, capture lagi, bandingin kotak nya<br>
-        6. STOP, kurva beku, kotak capture tetep ada<br><br>
+        4. Pencet CAPTURE, kotak info nya muncul di tengah, bentuk nya berdiri, Delay / Peak / @ frekuensi nya ke bawah<br>
+        5. Ubah EQ, capture lagi<br>
+        6. STOP, kurva beku, kotak tetep ada<br><br>
         Garis ijo tengah = 0 dB / 0°.
       </div>
     </div>
@@ -210,6 +210,7 @@ const S={ctx:null,stream:null,src:null,an:null,refAn:null,noise:null,noiseGain:n
 function xfreq(f,w){f=Math.max(MINF,Math.min(MAXF,f));let s=0;for(const[a,b,p]of SEGS){if(f<=b||a===15000)return(s+Math.log(f/a)/Math.log(b/a)*p)*w;s+=p}return w}
 function freqAtX(x,w){const r=Math.max(0,Math.min(1,x/w));let s=0;for(const[a,b,p]of SEGS){if(r<=s+p||a===15000)return a*Math.exp(((r-s)/p)*Math.log(b/a));s+=p}return MAXF}
 function fmtF(f){return f>=1000?(f/1000).toFixed(2).replace(/0+$/,'').replace(/\.$/,'')+' kHz':Math.round(f)+' Hz'}
+function fmtF2(f){return f>=1000?(f/1000).toFixed(2)+' kHz':Math.round(f)+' Hz'}
 function fmtLab(f){return f>=1000?(f/1000).toString().replace(/\.0$/,'')+'k':(''+f)}
 function yMag(v,range,h){return Math.max(0,Math.min(h,(range/2-v)/range*h))}
 function db2p(v){return Math.pow(10,Math.max(-120,v)/10)}
@@ -227,7 +228,6 @@ function smoothPhase(arr,perOct){
   for(let i=0;i<arr.length;i++){let s=0,n=0;const lf=Math.log(arr[i].f);for(let j=0;j<arr.length;j++){if(Math.abs(Math.log(arr[j].f)-lf)<=half*Math.LN2){s+=arr[j].v;n++}}out.push({f:arr[i].f,v:s/Math.max(1,n),x:arr[i].x})}
   return out;
 }
-/* DELAY DARI PHASE + COH, BISA DIPAKE BUAT LIVE MAUPUN BUAT CAPTURE */
 function calcDelay(raw,coh){
   if(!raw.length||!coh.length)return null;
   const [lo,hi]=($('delayrange')?$('delayrange').value:'200-2000').split('-').map(Number);
@@ -248,12 +248,6 @@ function cohAvgOf(coh){
   if(!coh.length)return null;
   return coh.reduce((s,o)=>s+o.v,0)/coh.length;
 }
-function captureInfoText(cp){
-  const d=cp.delayMs==null?'Delay —':('Delay '+cp.delayMs.toFixed(2)+' ms');
-  const p=cp.peakDb==null?'Peak —':('Peak '+cp.peakDb.toFixed(1)+' dB @ '+fmtF(cp.peakFreq));
-  const c=cp.cohAvg==null?'Coh —':('Coh '+cp.cohAvg.toFixed(2));
-  return cp.name+'  •  '+d+'  •  '+p+'  •  '+c;
-}
 
 function renderCaptures(){
   const el=$('caplist');$('capcount').textContent=S.captures.length;
@@ -261,10 +255,10 @@ function renderCaptures(){
   el.innerHTML='';
   S.captures.forEach((cp,idx)=>{
     const row=document.createElement('div');row.className='capitem';
-    const d=cp.delayMs==null?'Delay —':'Delay '+cp.delayMs.toFixed(2)+' ms';
-    const p=cp.peakDb==null?'':' • '+cp.peakDb.toFixed(1)+' dB @ '+fmtF(cp.peakFreq);
-    const c=cp.cohAvg==null?'':' • Coh '+cp.cohAvg.toFixed(2);
-    row.innerHTML='<span class="dot" style="background:'+cp.color+'"></span><label style="display:flex;align-items:center;gap:4px"><input type="checkbox" '+(cp.show?'checked':'')+' style="accent-color:'+cp.color+'"></label><div class="nm"><b>'+cp.name+'</b><span>'+cp.time+' • '+(cp.mode||'RTA')+'</span><span style="color:'+cp.color+'">'+d+p+'</span><span>'+c.replace(' • ','')+'</span></div><button>Hapus</button>';
+    const d=cp.delayMs==null?'Delay —':'Delay '+cp.delayMs.toFixed(3)+' ms';
+    const p=cp.peakDb==null?'':'Peak '+cp.peakDb.toFixed(1)+' dB';
+    const at=cp.peakFreq==null?'':'@ '+fmtF2(cp.peakFreq);
+    row.innerHTML='<span class="dot" style="background:'+cp.color+'"></span><label style="display:flex;align-items:center;gap:4px"><input type="checkbox" '+(cp.show?'checked':'')+' style="accent-color:'+cp.color+'"></label><div class="nm"><b>'+cp.name+'</b><span>'+d+'</span><span>'+p+'</span><span>'+at+'</span></div><button>Hapus</button>';
     row.querySelector('input').onchange=e=>{cp.show=e.target.checked;drawAll()};
     row.querySelector('button').onclick=()=>{S.captures.splice(idx,1);renderCaptures();drawAll()};
     el.appendChild(row);
@@ -279,7 +273,6 @@ $('capturebtn').onclick=()=>{
   S.capN++;
   const now=new Date(),hh=String(now.getHours()).padStart(2,'0'),mm=String(now.getMinutes()).padStart(2,'0'),ss=String(now.getSeconds()).padStart(2,'0');
   const vp=visiblePhaseRaw(),vc=visibleCoh(),pk=peakOf(vm);
-  /* INFO NYA DIKUNCI PAS DETIK INI, GA IKUT BERUBAH LAGI */
   const dly=(S.pink||S.frozenPink)?calcDelay(vp,vc):null;
   S.captures.push({id:Date.now()+Math.random(),name:'Capture '+S.capN,color:CAPCOLORS[(S.capN-1)%CAPCOLORS.length],show:true,
     time:hh+':'+mm+':'+ss,mode:(S.pink||S.frozenPink)?'TF':'RTA',
@@ -297,7 +290,7 @@ $('delayrange').onchange=()=>{computeDelay();drawAll()};
 function computeDelay(){
   const d=calcDelay(visiblePhaseRaw(),visibleCoh());
   S.delayMs=d;
-  $('delaytxt').textContent=d==null?'—':d.toFixed(2)+' ms';
+  $('delaytxt').textContent=d==null?'—':d.toFixed(3)+' ms';
 }
 
 async function ensureCtx(){
@@ -366,26 +359,31 @@ function drawLabelOnCurve(c,cx,cy,W,H,txt,strokeCol){
   c.fillText(txt,centerX,centerY);
   c.textAlign='left';c.textBaseline='alphabetic';
 }
-/* KOTAK INFO CAPTURE DI TENGAH LAYAR */
+/* KOTAK INFO DI TENGAH, BERDIRI, 1 INFO 1 BARIS, PERSIS CONTOH */
 function drawCaptureInfos(c,w,h){
   const shown=S.captures.filter(cp=>cp.show&&cp.mag.length);
   if(!shown.length)return;
-  c.font='bold 17px Arial';
+  const boxW=300, boxH=132, gap=10;
+  const totalH=shown.length*boxH+(shown.length-1)*gap;
+  let topY=(h-totalH)/2;
   const cx=w/2;
-  let y=h/2-(shown.length*46)/2+20;
   shown.forEach(cp=>{
-    const txt=captureInfoText(cp);
-    const tw=Math.min(w-20,c.measureText(txt).width+28);
-    const lx=cx-tw/2, ly=y-19;
-    c.fillStyle='rgba(0,0,0,0.88)';
-    c.beginPath();c.roundRect(lx,ly,tw,38,8);c.fill();
+    const lx=cx-boxW/2, ly=topY;
+    c.fillStyle='rgba(0,0,0,0.90)';
+    c.beginPath();c.roundRect(lx,ly,boxW,boxH,10);c.fill();
     c.strokeStyle=cp.color;c.lineWidth=3;
-    c.beginPath();c.roundRect(lx,ly,tw,38,8);c.stroke();
-    c.fillStyle=cp.color;c.beginPath();c.arc(lx+16,ly+19,6,0,Math.PI*2);c.fill();
-    c.fillStyle='#fff';c.textAlign='center';c.textBaseline='middle';
-    c.fillText(txt,cx+6,y);
+    c.beginPath();c.roundRect(lx,ly,boxW,boxH,10);c.stroke();
+    c.textAlign='center';c.textBaseline='middle';
+    c.fillStyle=cp.color;c.font='bold 15px Arial';
+    c.fillText(cp.name.toUpperCase(),cx,ly+16);
+    c.fillStyle='#8b95a5';c.font='11px Arial';
+    c.fillText('INFORMATION',cx,ly+34);
+    c.fillStyle='#fff';c.font='bold 19px Arial';
+    c.fillText(cp.delayMs==null?'Delay —':'Delay '+cp.delayMs.toFixed(3)+' ms',cx,ly+60);
+    c.fillText(cp.peakDb==null?'Peak —':'Peak '+cp.peakDb.toFixed(1)+' dB',cx,ly+84);
+    c.fillText(cp.peakFreq==null?'@ —':'@ '+fmtF2(cp.peakFreq),cx,ly+108);
     c.textAlign='left';c.textBaseline='alphabetic';
-    y+=46;
+    topY+=boxH+gap;
   });
 }
 function drawZeroLine(c,w,h,range){
@@ -477,7 +475,6 @@ function drawAll(){
     cohData.forEach((o,i)=>{const Y=h-Math.max(0,Math.min(1,o.v))*22-4;if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke();
   }
   drawZeroLine(mg,w,h,range);
-  /* INFO CAPTURE DI TENGAH, DI ATAS KURVA BIAR KEBACA */
   drawCaptureInfos(mg,w,h);
   const pt=pointOn(magData,S.cursor),cx=Math.max(6,Math.min(w-6,xfreq(S.cursor,w)));
   mg.strokeStyle='#fff';mg.lineWidth=3;mg.beginPath();mg.moveTo(cx,0);mg.lineTo(cx,h);mg.stroke();
