@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>SMART RTA</title>
+<title>SMART RTA LIVE</title>
 <style>
 :root{color-scheme:dark;--bg:#050608;--panel:#101319;--grid:#333943;--txt:#e8eaf0;--muted:#9ca4b1;--cyan:#55d9ed;--gold:#ffd16a;--pink:#e76a91}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:14px system-ui,Arial}
@@ -65,11 +65,25 @@ let audio=null,stream=null,an=null,src=null,raf=0,sm=[],hold=[],frame=0,fft=4096
 let captures=[];const captureColors=['#ff6b6b','#b58cff','#67d69b'];let currentVals=[];
 let cursorFreq=1000,cursorActive=false;
 const minF=20,maxF=20000;
-function xfreq(f,w){return Math.log(f/minF)/Math.log(maxF/minF)*w}
+// Piecewise log scale: give the important 1 kHz–10 kHz region half of the graph width.
+function xfreq(f,w){
+ f=Math.max(minF,Math.min(maxF,f));
+ const a=Math.log(1000/minF), b=Math.log(10), c=Math.log(maxF/10000);
+ const p1=.35, p2=.50;
+ if(f<=1000) return (Math.log(f/minF)/a)*p1*w;
+ if(f<=10000) return (p1+Math.log(f/1000)/b*p2)*w;
+ return (p1+p2+Math.log(f/10000)/c*(1-p1-p2))*w;
+}
+function freqAtX(x,w){
+ const r=Math.max(0,Math.min(1,x/w)),p1=.35,p2=.50;
+ if(r<=p1) return minF*Math.exp((r/p1)*Math.log(1000/minF));
+ if(r<=p1+p2) return 1000*Math.exp(((r-p1)/p2)*Math.log(10));
+ return 10000*Math.exp(((r-p1-p2)/(1-p1-p2))*Math.log(2));
+}
 function grid(){
  const w=spec.width,h=spec.height,plotH=h-36;sc.clearRect(0,0,w,h);sc.fillStyle='#030507';sc.fillRect(0,0,w,h);
  sc.strokeStyle='#303640';sc.lineWidth=1;sc.fillStyle='#aab2bf';sc.font='17px Arial';
- [20,50,100,200,500,1000,2000,5000,10000,20000].forEach(f=>{let x=xfreq(f,w);sc.beginPath();sc.moveTo(x,0);sc.lineTo(x,plotH);sc.stroke();sc.fillText(f>=1000?(f/1000)+'k':f,x+3,h-10)});
+ [20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000].forEach(f=>{let x=xfreq(f,w);sc.beginPath();sc.moveTo(x,0);sc.lineTo(x,plotH);sc.stroke();sc.fillText(f>=1000?(f/1000)+'k':f,x+3,h-10)});
  let range=+$('range').value;for(let d=0;d<=range;d+=10){let y=d/range*plotH;sc.beginPath();sc.moveTo(0,y);sc.lineTo(w,y);sc.stroke();sc.fillText(-d+' dB',5,Math.max(13,y-3))}
 }
 function colorFor(v){let t=Math.max(0,Math.min(1,(v+95)/75));let stops=[[20,16,48],[67,47,118],[170,76,137],[239,139,143],[255,218,142]];let p=t*4,i=Math.min(3,Math.floor(p)),a=p-i;let c=stops[i].map((n,k)=>Math.round(n*(1-a)+stops[i+1][k]*a));return `rgb(${c[0]},${c[1]},${c[2]})`}
@@ -140,12 +154,22 @@ $('stop').onclick=()=>{cancelAnimationFrame(raf);if(stream)stream.getTracks().fo
 function moveCursor(ev){
  const rect=spec.getBoundingClientRect();
  const px=Math.max(0,Math.min(spec.width,(ev.clientX-rect.left)/rect.width*spec.width));
- cursorFreq=minF*Math.pow(maxF/minF,px/spec.width);cursorActive=true;
+ cursorFreq=freqAtX(px,spec.width);cursorActive=true;
  $('cursorfreq').textContent=cursorFreq>=1000?(cursorFreq/1000).toFixed(2)+' kHz':cursorFreq.toFixed(0)+' Hz';
  if(an){cancelAnimationFrame(raf);draw()}else{grid();const cx=xfreq(cursorFreq,spec.width);sc.save();sc.setLineDash([]);sc.strokeStyle='rgba(255,255,255,.22)';sc.lineWidth=14;sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,spec.height-36);sc.stroke();sc.strokeStyle='#fff';sc.lineWidth=4;sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,spec.height-36);sc.stroke();sc.restore()}
 }
-spec.addEventListener('pointerdown',ev=>{spec.setPointerCapture(ev.pointerId);moveCursor(ev)});
-spec.addEventListener('pointermove',ev=>{if(ev.buttons||ev.pressure>0)moveCursor(ev)});
+let draggingCursor=false;
+spec.style.touchAction='none';
+spec.addEventListener('pointerdown',ev=>{
+ draggingCursor=true;
+ try{spec.setPointerCapture(ev.pointerId)}catch(_){}
+ moveCursor(ev);
+});
+spec.addEventListener('pointermove',ev=>{if(draggingCursor)moveCursor(ev)});
+function endCursorDrag(){draggingCursor=false}
+spec.addEventListener('pointerup',endCursorDrag);
+spec.addEventListener('pointercancel',endCursorDrag);
+spec.addEventListener('lostpointercapture',endCursorDrag);
 $('fft').onchange=()=>{if(an){fft=+$('fft').value;an.fftSize=fft;sm=[];hold=[]}};
 $('range').onchange=()=>{if(an){cancelAnimationFrame(raf);draw()}else grid()};
 $('capture').onclick=()=>{
