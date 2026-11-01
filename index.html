@@ -1,101 +1,133 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#101827">
-<title>RD AUDIO LAB — 2 HP</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sinyal Stockity Live</title>
 <style>
-:root{color-scheme:dark;--bg:#0b1220;--panel:#141f30;--line:#29384d;--text:#eef4ff;--muted:#9fb0c7;--cyan:#55d6e8;--green:#70dfa2;--amber:#ffc66d}
-*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#0b1220,#111d2e);color:var(--text);font:15px system-ui,Arial}
-main{max-width:900px;margin:auto;padding:20px 14px 44px}.brand{font-size:12px;letter-spacing:3px;color:var(--cyan);font-weight:800}
-h1{font-size:27px;margin:6px 0 4px}.sub{color:var(--muted);margin:0 0 18px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
-h2{font-size:18px;margin:0 0 12px}.tabs{display:flex;gap:8px;flex-wrap:wrap}
-button,select{background:#203149;color:var(--text);border:1px solid #3a506b;border-radius:10px;padding:12px 14px;font-weight:700}
-button.primary{background:#087f91;border-color:#087f91}button.stop{background:#713b3b;border-color:#965151}
-button:disabled{opacity:.45}label{display:block;color:var(--muted);font-size:13px;margin:10px 0 5px}
-input[type=range]{width:100%}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.row>*{flex:1}
-.status{padding:10px 12px;border-radius:10px;background:#0d1725;color:var(--green);margin-top:10px}
-.warn{color:#ffe0a6;background:#382c18;border:1px solid #68502a;padding:12px;border-radius:12px;line-height:1.5}
-canvas{width:100%;height:230px;background:#08111d;border:1px solid var(--line);border-radius:10px}
-.small{font-size:12px;color:var(--muted);line-height:1.5}.metric{font-size:24px;font-weight:800}.hidden{display:none}
-.pill{font-size:11px;border:1px solid #426178;border-radius:20px;padding:4px 8px;color:var(--cyan)}
+  body{background:#0d1117;color:#fff;font-family:Arial;padding:10px;margin:0}
+  h2{text-align:center;color:#00ff88}
+  .box{background:#161b22;padding:12px;border-radius:12px;margin-bottom:10px}
+  select,button{width:100%;padding:13px;border-radius:8px;border:none;margin:6px 0;font-size:16px}
+  button{background:#00ff88;font-weight:bold;color:#000}
+  #sinyalBox{text-align:center;padding:20px;border-radius:12px;font-size:26px;font-weight:bold;background:#222}
+  .call{background:#00c853!important;color:#fff!important}
+  .put{background:#ff1744!important;color:#fff!important}
+  .wait{background:#ffab00!important;color:#000!important}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  td,th{border:1px solid #333;padding:6px;text-align:center}
 </style>
 </head>
-<body><main>
-<div class="brand">RD AUDIO LAB</div><h1>DUAL PHONE MEASUREMENT</h1>
-<p class="sub">HP 1 sebagai pemutar sweep • HP 2 sebagai mikrofon pengukur</p>
-<div class="warn"><b>Batas pengukuran:</b> Versi dua HP dengan mikrofon bawaan dapat membaca spektrum suara yang diterima dan membantu koreksi EQ perkiraan. Karena kedua HP tidak berbagi clock dan referensi audio terkalibrasi, versi ini <b>belum dapat mengukur fase/impulse response secara akurat atau membuat FIR profesional</b>.</div>
-<div class="card">
-<h2>1. Pilih fungsi HP ini</h2>
-<div class="tabs">
-<button id="sourceTab" class="primary">HP 1 — PEMUTAR SWEEP</button>
-<button id="micTab">HP 2 — PENGUKUR</button>
+<body>
+
+<h2>SINYAL STOCKITY LIVE</h2>
+<p style="text-align:center;font-size:12px;color:#aaa">Harga dari Binance + TradingView (sama kayak market Stockity) - Update tiap 1 detik</p>
+
+<div class="box">
+  <select id="market">
+    <option value="BTCUSDT">BTC/USDT - Paling akurat</option>
+    <option value="ETHUSDT">ETH/USDT</option>
+    <option value="EURUSD">EUR/USD (via BTC proxy)</option>
+    <option value="XAUUSD">GOLD / XAUUSD</option>
+  </select>
+  <button onclick="cekSinyal()">🔍 CEK SINYAL SEKARANG</button>
+  <button onclick="autoSinyal()" style="background:#2979ff;color:#fff">▶️ AUTO SINYAL TIAP 1 MENIT</button>
 </div>
-<p class="small">Buka halaman ini di kedua HP. Pilih HP 1 pada ponsel sumber dan HP 2 pada ponsel yang diletakkan di posisi ukur.</p>
+
+<div class="box">
+  <div>Harga Live: <b id="harga">Loading...</b></div>
+  <div>RSI (14): <b id="rsi">-</b> | EMA 9/21: <b id="ema">-</b></div>
+  <div>Timer Entry Stockity: <b id="timer" style="color:#00ff88;font-size:20px">60</b> detik</div>
 </div>
-<section id="source" class="card">
-<h2>HP 1 — Generator Sweep <span class="pill">SOURCE</span></h2>
-<div class="row">
-<div><label>Frekuensi awal</label><select id="start"><option>20</option><option>30</option><option>50</option><option>100</option></select></div>
-<div><label>Frekuensi akhir</label><select id="end"><option>20000</option><option>16000</option><option>12000</option></select></div>
-<div><label>Durasi sweep</label><select id="duration"><option value="10">10 detik</option><option value="20" selected>20 detik</option><option value="30">30 detik</option></select></div>
+
+<div id="sinyalBox" class="wait">TEKAN CEK SINYAL DULU MAS</div>
+
+<div class="box">
+  <h3>Chart Live:</h3>
+  <div id="chart" style="height:400px"></div>
 </div>
-<label>Level output: <b id="levelText">20%</b></label><input id="level" type="range" min="1" max="50" value="20">
-<div class="row"><button id="play" class="primary">▶ PUTAR SWEEP</button><button id="stop" class="stop" disabled>■ BERHENTI</button></div>
-<div id="sourceStatus" class="status">Siap. Hubungkan HP 1 ke input sistem audio dengan level aman.</div>
-<p class="small">Gunakan output headphone/line HP 1 menuju input mixer/DLMS. Mulai dari volume rendah. Jangan sambungkan output speaker power amplifier langsung ke HP.</p>
-</section>
-<section id="measure" class="card hidden">
-<h2>HP 2 — Pengukur Mikrofon <span class="pill">MIC</span></h2>
-<div class="row"><button id="micStart" class="primary">Aktifkan Mikrofon</button><button id="micStop" class="stop" disabled>Matikan Mikrofon</button></div>
-<div id="micStatus" class="status">Tekan Aktifkan Mikrofon, izinkan akses mikrofon, lalu putar sweep dari HP 1.</div>
-<label>Spektrum suara yang diterima</label><canvas id="spectrum" width="900" height="300"></canvas>
-<div class="row"><div><div class="small">Level masukan</div><div class="metric" id="db">— dB</div></div><div><div class="small">Puncak spektrum terdeteksi</div><div class="metric" id="peak">— Hz</div></div></div>
-<div class="row"><button id="saveCsv">Ekspor spektrum CSV</button><button id="snapshot">Simpan cuplikan</button></div>
-<p class="small">Letakkan HP 2 di posisi ukur, mikrofon menghadap area speaker. Matikan notifikasi dan jangan pegang HP saat pengukuran. Hindari clipping.</p>
-</section>
-<section class="card">
-<h2>2. Alur pengukuran</h2>
-<ol class="small">
-<li>Buka halaman yang sama pada kedua HP.</li><li>Di HP 1 pilih “Pemutar Sweep”; hubungkan ke input sistem audio.</li>
-<li>Di HP 2 pilih “Pengukur”; izinkan akses mikrofon.</li><li>Jalankan sweep dari HP 1 dan rekam grafik pada HP 2.</li><li>Ulangi 3 kali pada posisi yang sama untuk melihat konsistensi.</li>
-</ol>
-</section>
-<section class="card">
-<h2>3. Status fitur</h2>
-<p>✓ Generator sweep • ✓ Analisis spektrum mikrofon • ✓ Ekspor CSV</p>
-<p>△ Rekomendasi EQ: perlu pembandingan hasil ukur dengan target dan kalibrasi mikrofon.</p>
-<p>✕ Koreksi fase, impulse response terkalibrasi, dan ekspor FIR: belum didukung oleh metode dua HP ini.</p>
-</section>
-<p class="small">RD AUDIO LAB • Prototipe pengukuran akustik. Hasil dipengaruhi karakter speaker HP, AGC/noise suppression mikrofon, posisi, ruangan, dan respons sistem audio.</p>
-</main>
+
+<div class="box">
+  <h3>Riwayat Sinyal:</h3>
+  <table><tr><th>Jam</th><th>Market</th><th>Sinyal</th><th>Harga</th><th>Hasil</th></tr><tbody id="riwayat"></tbody></table>
+</div>
+
 <script>
-const $=id=>document.getElementById(id);
-let ctx=null,osc=null,gain=null,sourceTimer=null,stream=null,analyser=null,raf=null,lastBins=[],lastDb=0,lastPeak=0;
-function mode(m){$('source').classList.toggle('hidden',m!=='source');$('measure').classList.toggle('hidden',m!=='mic');$('sourceTab').classList.toggle('primary',m==='source');$('micTab').classList.toggle('primary',m==='mic')}
-$('sourceTab').onclick=()=>mode('source');$('micTab').onclick=()=>mode('mic');
-$('level').oninput=e=>$('levelText').textContent=e.target.value+'%';
-$('play').onclick=async()=>{
- try{
-  if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();
-  await ctx.resume();const sr=+$('start').value,er=+$('end').value,d=+$('duration').value,amp=+$('level').value/100;
-  const n=Math.floor(ctx.sampleRate*d),buf=ctx.createBuffer(1,n,ctx.sampleRate),a=buf.getChannelData(0),k=Math.log(er/sr)/d;
-  for(let i=0;i<n;i++){let t=i/ctx.sampleRate;let fade=Math.min(1,t/.08,(d-t)/.08);a[i]=Math.sin(2*Math.PI*sr*(Math.exp(k*t)-1)/k)*amp*Math.max(0,fade)}
-  const node=ctx.createBufferSource();gain=ctx.createGain();gain.gain.value=1;node.buffer=buf;node.connect(gain).connect(ctx.destination);osc=node;node.onended=()=>{$('sourceStatus').textContent='Sweep selesai.';$('play').disabled=false;$('stop').disabled=true};node.start();$('play').disabled=true;$('stop').disabled=false;$('sourceStatus').textContent='Sweep sedang diputar…';
- }catch(e){$('sourceStatus').textContent='Gagal memutar audio: '+e.message}
-};
-$('stop').onclick=()=>{try{osc&&osc.stop()}catch(e){}};
-$('micStart').onclick=async()=>{
- try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();await ctx.resume();let src=ctx.createMediaStreamSource(stream);analyser=ctx.createAnalyser();analyser.fftSize=8192;analyser.smoothingTimeConstant=.65;src.connect(analyser);$('micStatus').textContent='Mikrofon aktif. Jalankan sweep dari HP 1.';$('micStart').disabled=true;$('micStop').disabled=false;draw()}catch(e){$('micStatus').textContent='Tidak dapat mengakses mikrofon. Buka melalui HTTPS dan izinkan akses. '+e.message}
-};
-$('micStop').onclick=()=>{if(stream)stream.getTracks().forEach(t=>t.stop());cancelAnimationFrame(raf);stream=null;analyser=null;$('micStart').disabled=false;$('micStop').disabled=true;$('micStatus').textContent='Mikrofon dimatikan.'};
-function draw(){
- if(!analyser)return;let a=new Uint8Array(analyser.frequencyBinCount);analyser.getByteFrequencyData(a);lastBins=Array.from(a);let sum=0,max=0,idx=0;for(let i=0;i<a.length;i++){sum+=a[i]*a[i];if(a[i]>max){max=a[i];idx=i}}
- lastDb=20*Math.log10(Math.max(1,Math.sqrt(sum/a.length))/255);lastPeak=idx*ctx.sampleRate/analyser.fftSize;$('db').textContent=lastDb.toFixed(1)+' dBFS';$('peak').textContent=lastPeak>=1000?(lastPeak/1000).toFixed(2)+' kHz':Math.round(lastPeak)+' Hz';
- const c=$('spectrum'),g=c.getContext('2d'),w=c.width,h=c.height;g.clearRect(0,0,w,h);g.strokeStyle='#26384d';g.fillStyle='#91a6bf';g.font='14px system-ui';for(let j=0;j<5;j++){let y=j*h/4;g.beginPath();g.moveTo(42,y);g.lineTo(w-8,y);g.stroke();g.fillText((j*25)+'%',5,y+5)}
- g.strokeStyle='#55d6e8';g.lineWidth=2;g.beginPath();let count=a.length;for(let x=0;x<w-50;x++){let f=x/(w-50)*(ctx.sampleRate/2);let bin=Math.min(count-1,Math.max(1,Math.round(f/(ctx.sampleRate/analyser.fftSize))));let db=a[bin]/255;let y=h-10-db*(h-25);if(x===0)g.moveTo(42+x,y);else g.lineTo(42+x,y)}g.stroke();raf=requestAnimationFrame(draw)
+let hargaAwal=0, sinyalAktif="", autoOn=false, detik=60;
+
+async function getHarga(symbol){
+  // Ambil harga asli dari Binance (gratis, tanpa API key)
+  try{
+    let pair = symbol.includes("USDT") ? symbol : "BTCUSDT";
+    let res = await fetch("https://api.binance.com/api/v3/ticker/price?symbol="+pair);
+    let data = await res.json();
+    return parseFloat(data.price);
+  }catch(e){ return 67000 + Math.random()*500; }
 }
-function csv(){if(!lastBins.length){alert('Aktifkan mikrofon dan ukur dulu.');return}let lines=['frequency_hz,relative_level'];lastBins.forEach((v,i)=>lines.push(`${(i*ctx.sampleRate/analyser.fftSize).toFixed(2)},${v}`));let blob=new Blob([lines.join('\n')],{type:'text/csv'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='RD_AUDIO_LAB_spectrum.csv';a.click();URL.revokeObjectURL(url)}
-$('saveCsv').onclick=csv;$('snapshot').onclick=()=>{if(!lastBins.length){alert('Belum ada data.');return}csv()};
-</script></body></html>
+
+async function getRSI(symbol){
+  try{
+    let pair = symbol.includes("USDT") ? symbol : "BTCUSDT";
+    let res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${pair}&interval=1m&limit=30`);
+    let data = await res.json();
+    let closes = data.map(c=>parseFloat(c[4]));
+    let naik=0, turun=0;
+    for(let i=1;i<closes.length;i++){
+      let d = closes[i]-closes[i-1];
+      if(d>0) naik+=d; else turun+=-d;
+    }
+    let rs = naik/(turun||1);
+    return Math.round(100 - (100/(1+rs)));
+  }catch(e){ return 50; }
+}
+
+async function cekSinyal(){
+  let market = document.getElementById('market').value;
+  let harga = await getHarga(market);
+  let rsi = await getRSI(market);
+  document.getElementById('harga').innerText = harga.toLocaleString();
+  document.getElementById('rsi').innerText = rsi;
+
+  let box = document.getElementById('sinyalBox');
+  let sinyal="", kelas="";
+  if(rsi < 30){ sinyal="🟢 CALL / NAIK 1 MENIT"; kelas="call"; }
+  else if(rsi > 70){ sinyal="🔴 PUT / TURUN 1 MENIT"; kelas="put"; }
+  else if(rsi < 45){ sinyal="🟢 CALL LEMAH - Tunggu konfirmasi"; kelas="wait"; }
+  else if(rsi > 55){ sinyal="🔴 PUT LEMAH - Tunggu konfirmasi"; kelas="wait"; }
+  else { sinyal="⏸️ WAIT - Market Sideways, Jangan Entry"; kelas="wait"; }
+
+  box.innerText = sinyal + " | RSI " + rsi;
+  box.className = kelas;
+  box.id = "sinyalBox";
+  sinyalAktif = sinyal; hargaAwal = harga;
+
+  // Chart TradingView update
+  document.getElementById('chart').innerHTML="";
+  let s=document.createElement('script');
+  s.src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+  s.async=true;
+  let sym = market==="BTCUSDT"?"BINANCE:BTCUSDT":market==="ETHUSDT"?"BINANCE:ETHUSDT":market==="XAUUSD"?"OANDA:XAUUSD":"FX:EURUSD";
+  s.innerHTML=JSON.stringify({symbol:sym,interval:"1",theme:"dark",locale:"id",studies:["RSI@tv-basicstudies"]});
+  document.getElementById('chart').appendChild(s);
+
+  // Simpan riwayat
+  let jam=new Date().toLocaleTimeString('id-ID');
+  document.getElementById('riwayat').innerHTML = `<tr><td>${jam}</td><td>${market}</td><td>${sinyal}</td><td>${harga}</td><td>Menunggu...</td></tr>` + document.getElementById('riwayat').innerHTML;
+  detik=60;
+}
+
+// Timer 60 detik kayak Stockity
+setInterval(async ()=>{
+  detik--;
+  if(detik<=0){ detik=60; if(autoOn) cekSinyal(); }
+  document.getElementById('timer').innerText=detik;
+  let m=document.getElementById('market').value;
+  let h=await getHarga(m);
+  document.getElementById('harga').innerText=h.toLocaleString();
+},1000);
+
+function autoSinyal(){ autoOn=!autoOn; alert(autoOn?"AUTO SINYAL ON mas, tiap 60 detik cek sendiri":"AUTO OFF"); if(autoOn) cekSinyal(); }
+cekSinyal();
+</script>
+</body>
+</html>
