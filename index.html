@@ -8,7 +8,7 @@
 *{box-sizing:border-box}
 body{margin:0;background:#0a0c10;color:#e8eaf0;font:12px system-ui,Arial;overflow-x:auto}
 button,select{font:inherit;cursor:pointer}
-.topbar{height:46px;background:#10141a;border-bottom:2px solid #3fd4ec;display:flex;align-items:center;gap:14px;padding:0 12px;position:sticky;top:0;z-index:20;white-space:nowrap;min-width:900px}
+.topbar{height:46px;background:#10141a;border-bottom:2px solid #3fd4ec;display:flex;align-items:center;gap:8px;padding:0 12px;position:sticky;top:0;z-index:20;white-space:nowrap;min-width:900px}
 .logo{font-weight:900;font-size:17px}.logo b{color:#3fd4ec}.logo span{color:#8b95a5;font-weight:400;font-size:10px;display:block;letter-spacing:2px}
 .topbtns{margin-left:auto;display:flex;gap:6px;align-items:center}
 button{background:#222b37;color:#e8eaf0;border:1px solid #4a5566;border-radius:6px;padding:7px 12px}
@@ -17,6 +17,7 @@ button.on{background:#c2410c!important;border-color:#fb923c!important;color:#fff
 button.cap{background:#7c3aed;border-color:#a78bfa;font-weight:800}
 button.danger{background:#7f1d1d;border-color:#ef4444}
 button.phon{background:#065f46!important;border-color:#34d399!important;color:#fff}
+button.backbtn{background:#1e3a5f;border-color:#60a5fa;font-weight:800}
 select{background:#222b37;color:#e8eaf0;border:1px solid #4a5566;border-radius:6px;padding:6px}
 .layout{display:grid;grid-template-columns:250px minmax(640px,1fr) 170px;gap:8px;padding:8px;max-width:1600px;margin:auto;min-width:900px}
 .panel{background:#14181f;border:1px solid #2b323e;border-radius:8px;padding:9px}
@@ -33,6 +34,8 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
 .kv b{color:#fff}.kv span{color:#8b95a5}
 .cursor{display:flex;gap:6px;align-items:center;margin-top:7px;background:#090d12;border:1px solid #2b323e;border-radius:6px;padding:6px}
 .cursor input{flex:1;accent-color:#fff}
+.centerctl{display:flex;gap:6px;align-items:center;background:#090d12;border:1px solid #2b323e;border-radius:6px;padding:6px;margin-bottom:8px}
+.centerctl b{flex:1;text-align:center;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .statusbar{background:#10141a;border-top:1px solid #2b323e;padding:7px 12px;display:flex;gap:16px;flex-wrap:wrap;color:#8b95a5;font-size:11px;position:sticky;bottom:0;min-width:900px}
 .statusbar b{color:#7ee0ad}
 input[type=range]{width:100%;accent-color:#3fd4ec}
@@ -49,6 +52,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 <body>
 
 <div class="topbar">
+  <button id="backtop" class="backbtn">← BACK</button>
   <div class="logo"><b>SMART</b> LIVE <span>MEASUREMENT • LIKE SMAART</span></div>
   <div class="topbtns">
     <button id="start" class="go">▶ START</button>
@@ -78,7 +82,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <button id="capturebtn" class="cap" style="width:100%;padding:12px">📸 CAPTURE KURVA INI</button>
       <button id="clearcap" class="danger" style="width:100%;padding:8px;margin-top:6px">🗑 HAPUS SEMUA CAPTURE</button>
       <div id="caplist" style="margin-top:6px"></div>
-      <p style="color:#8b95a5;font-size:11px;line-height:1.6;margin:8px 0 0">Kotak info nya di tengah grafik.<br>STOP = kurva beku, ga ilang.</p>
+      <p style="color:#8b95a5;font-size:11px;line-height:1.6;margin:8px 0 0">Kotak info 1 aja di tengah, BACK / NEXT buat pindah.<br>STOP = kurva beku, ga ilang.</p>
     </div>
 
     <div class="panel" style="margin-top:8px">
@@ -132,6 +136,14 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         </label>
       </div>
 
+      <!-- TOMBOL BACK / NEXT KAYAK DI LAPTOP -->
+      <div class="centerctl">
+        <button id="backcap" class="backbtn">◀ BACK</button>
+        <b id="centerlabel">KOTAK TENGAH: BELUM ADA CAPTURE</b>
+        <button id="infotoggle">INFO: OFF</button>
+        <button id="nextcap">NEXT ▶</button>
+      </div>
+
       <div class="title"><b>MAGNITUDE</b><span id="magstate">20 Hz — 20 kHz • GARIS TENGAH = 0 dB</span></div>
       <canvas id="mag" width="1200" height="300"></canvas>
       <canvas id="freqscale" width="1200" height="56"></canvas>
@@ -170,12 +182,12 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
     <div class="panel">
       <h3>CARA PAKAI</h3>
       <div style="font-size:11px;color:#8b95a5;line-height:1.8">
-        1. Putar HP landscape<br>
-        2. START + PINK ON<br>
-        3. Tunggu 5 detik<br>
-        4. Pencet CAPTURE, kotak info nya muncul di tengah, bentuk nya berdiri, Delay / Peak / @ frekuensi nya ke bawah<br>
-        5. Ubah EQ, capture lagi<br>
-        6. STOP, kurva beku, kotak tetep ada<br><br>
+                1. Putar HP landscape<br>
+                2. START + PINK ON<br>
+                3. Pencet CAPTURE, kotak nya di tengah terus<br>
+                4. BACK = capture sebelum nya, NEXT = sesudah nya<br>
+                5. ← BACK di atas = sembunyiin kotak, balik ke live doang<br>
+                6. INFO: ON = kotak nya balik lagi di tengah<br><br>
         Garis ijo tengah = 0 dB / 0°.
       </div>
     </div>
@@ -205,7 +217,8 @@ const CAPCOLORS=['#fb923c','#facc15','#f472b6','#a78bfa','#34d399','#f87171','#9
 
 const S={ctx:null,stream:null,src:null,an:null,refAn:null,noise:null,noiseGain:null,pink:false,running:false,fft:8192,raf:0,
   cursor:4190,live:[],phase:[],phaseRaw:[],coh:[],sm:null,acc:null,accN:0,magOffset:null,captures:[],capN:0,unwrap:false,delayMs:null,
-  frozen:false,frozenMag:[],frozenPhase:[],frozenCoh:[],frozenPink:false,lastPeakDb:null,lastPeakFreq:null,lastCohAvg:null};
+  frozen:false,frozenMag:[],frozenPhase:[],frozenCoh:[],frozenPink:false,lastPeakDb:null,lastPeakFreq:null,lastCohAvg:null,
+  centerIdx:-1,centerInfo:false};
 
 function xfreq(f,w){f=Math.max(MINF,Math.min(MAXF,f));let s=0;for(const[a,b,p]of SEGS){if(f<=b||a===15000)return(s+Math.log(f/a)/Math.log(b/a)*p)*w;s+=p}return w}
 function freqAtX(x,w){const r=Math.max(0,Math.min(1,x/w));let s=0;for(const[a,b,p]of SEGS){if(r<=s+p||a===15000)return a*Math.exp(((r-s)/p)*Math.log(b/a));s+=p}return MAXF}
@@ -249,20 +262,56 @@ function cohAvgOf(coh){
   return coh.reduce((s,o)=>s+o.v,0)/coh.length;
 }
 
+/* KOTAK TENGAH: 1 CAPTURE AJA, BACK / NEXT, BACK ATAS */
+function updateCenterLabel(){
+  const el=$('centerlabel');
+  if(!S.captures.length){el.textContent='KOTAK TENGAH: BELUM ADA CAPTURE';$('infotoggle').textContent='INFO: OFF';return}
+  if(S.centerIdx<0)S.centerIdx=0;
+  if(S.centerIdx>=S.captures.length)S.centerIdx=S.captures.length-1;
+  const cp=S.captures[S.centerIdx];
+  el.textContent=(S.centerInfo?'● ':'○ ')+cp.name.toUpperCase()+'  •  '+(S.centerIdx+1)+' / '+S.captures.length+'  •  '+(cp.delayMs==null?'Delay —':'Delay '+cp.delayMs.toFixed(3)+' ms');
+  $('infotoggle').textContent=S.centerInfo?'INFO: ON':'INFO: OFF';
+  $('infotoggle').classList.toggle('phon',S.centerInfo);
+}
+function showCenter(){if(S.captures.length){S.centerInfo=true;updateCenterLabel();drawAll()}}
+function hideCenter(){S.centerInfo=false;updateCenterLabel();drawAll()}
+$('backcap').onclick=()=>{
+  if(!S.captures.length)return;
+  S.centerInfo=true;
+  S.centerIdx=(S.centerIdx-1+S.captures.length)%S.captures.length;
+  updateCenterLabel();drawAll();
+};
+$('nextcap').onclick=()=>{
+  if(!S.captures.length)return;
+  S.centerInfo=true;
+  S.centerIdx=(S.centerIdx+1)%S.captures.length;
+  updateCenterLabel();drawAll();
+};
+$('infotoggle').onclick=()=>{if(!S.captures.length)return;S.centerInfo=!S.centerInfo;updateCenterLabel();drawAll()};
+$('backtop').onclick=()=>{
+  /* BACK KAYAK DI LAPTOP: BALIK KE TAMPILAN LIVE DOANG, KOTAK TENGAH DISEMBUNYIIN */
+  hideCenter();
+  $('status').textContent=S.running?'LIVE':'BEKU — FROZEN';
+};
+
 function renderCaptures(){
   const el=$('caplist');$('capcount').textContent=S.captures.length;
-  if(!S.captures.length){el.innerHTML='<div class="capempty">Belum ada capture.<br>Pencet CAPTURE pas kurva nya lagi bagus.</div>';return}
+  if(!S.captures.length){el.innerHTML='<div class="capempty">Belum ada capture.<br>Pencet CAPTURE pas kurva nya lagi bagus.</div>';S.centerIdx=-1;updateCenterLabel();return}
   el.innerHTML='';
   S.captures.forEach((cp,idx)=>{
     const row=document.createElement('div');row.className='capitem';
     const d=cp.delayMs==null?'Delay —':'Delay '+cp.delayMs.toFixed(3)+' ms';
     const p=cp.peakDb==null?'':'Peak '+cp.peakDb.toFixed(1)+' dB';
     const at=cp.peakFreq==null?'':'@ '+fmtF2(cp.peakFreq);
-    row.innerHTML='<span class="dot" style="background:'+cp.color+'"></span><label style="display:flex;align-items:center;gap:4px"><input type="checkbox" '+(cp.show?'checked':'')+' style="accent-color:'+cp.color+'"></label><div class="nm"><b>'+cp.name+'</b><span>'+d+'</span><span>'+p+'</span><span>'+at+'</span></div><button>Hapus</button>';
+    const mark=idx===S.centerIdx&&S.centerInfo?' ● TENGAH':'';
+    row.innerHTML='<span class="dot" style="background:'+cp.color+'"></span><label style="display:flex;align-items:center;gap:4px"><input type="checkbox" '+(cp.show?'checked':'')+' style="accent-color:'+cp.color+'"></label><div class="nm"><b>'+cp.name+mark+'</b><span>'+d+'</span><span>'+p+'</span><span>'+at+'</span></div><button>Hapus</button>';
+    row.querySelector('.nm').style.cursor='pointer';
+    row.querySelector('.nm').onclick=()=>{S.centerIdx=idx;S.centerInfo=true;updateCenterLabel();drawAll()};
     row.querySelector('input').onchange=e=>{cp.show=e.target.checked;drawAll()};
-    row.querySelector('button').onclick=()=>{S.captures.splice(idx,1);renderCaptures();drawAll()};
+    row.querySelector('button').onclick=()=>{S.captures.splice(idx,1);if(S.centerIdx>=S.captures.length)S.centerIdx=S.captures.length-1;if(!S.captures.length)S.centerInfo=false;renderCaptures();drawAll()};
     el.appendChild(row);
   });
+  updateCenterLabel();
 }
 function visibleMag(){return S.frozen?S.frozenMag:S.live}
 function visiblePhaseRaw(){return S.frozen?S.frozenPhase:S.phaseRaw}
@@ -278,10 +327,11 @@ $('capturebtn').onclick=()=>{
     time:hh+':'+mm+':'+ss,mode:(S.pink||S.frozenPink)?'TF':'RTA',
     delayMs:dly,peakDb:pk.db,peakFreq:pk.f,cohAvg:cohAvgOf(vc),
     mag:vm.map(o=>({f:o.f,v:o.v,x:o.x})),phase:vp.map(o=>({f:o.f,v:o.v,x:o.x})),phaseRaw:vp.map(o=>({f:o.f,v:o.v,x:o.x}))});
+  S.centerIdx=S.captures.length-1;S.centerInfo=true;
   renderCaptures();drawAll();
 };
-$('clearcap').onclick=()=>{if(!S.captures.length)return;if(confirm('Hapus semua '+S.captures.length+' capture?')){S.captures=[];renderCaptures();drawAll()}};
-renderCaptures();
+$('clearcap').onclick=()=>{if(!S.captures.length)return;if(confirm('Hapus semua '+S.captures.length+' capture?')){S.captures=[];S.centerIdx=-1;S.centerInfo=false;renderCaptures();drawAll()}};
+renderCaptures();updateCenterLabel();
 
 $('unwrapbtn').onclick=()=>{S.unwrap=!S.unwrap;$('unwrapbtn').textContent=S.unwrap?'↗ UNWRAP: ON':'↗ UNWRAP: OFF';$('unwrapbtn').classList.toggle('phon',S.unwrap);drawAll()};
 $('phsmooth').onchange=drawAll;
@@ -359,32 +409,29 @@ function drawLabelOnCurve(c,cx,cy,W,H,txt,strokeCol){
   c.fillText(txt,centerX,centerY);
   c.textAlign='left';c.textBaseline='alphabetic';
 }
-/* KOTAK INFO DI TENGAH, BERDIRI, 1 INFO 1 BARIS, PERSIS CONTOH */
+/* 1 KOTAK AJA, TETEP DI TENGAH-TENGAH TERUS */
 function drawCaptureInfos(c,w,h){
-  const shown=S.captures.filter(cp=>cp.show&&cp.mag.length);
-  if(!shown.length)return;
-  const boxW=300, boxH=132, gap=10;
-  const totalH=shown.length*boxH+(shown.length-1)*gap;
-  let topY=(h-totalH)/2;
-  const cx=w/2;
-  shown.forEach(cp=>{
-    const lx=cx-boxW/2, ly=topY;
-    c.fillStyle='rgba(0,0,0,0.90)';
-    c.beginPath();c.roundRect(lx,ly,boxW,boxH,10);c.fill();
-    c.strokeStyle=cp.color;c.lineWidth=3;
-    c.beginPath();c.roundRect(lx,ly,boxW,boxH,10);c.stroke();
-    c.textAlign='center';c.textBaseline='middle';
-    c.fillStyle=cp.color;c.font='bold 15px Arial';
-    c.fillText(cp.name.toUpperCase(),cx,ly+16);
-    c.fillStyle='#8b95a5';c.font='11px Arial';
-    c.fillText('INFORMATION',cx,ly+34);
-    c.fillStyle='#fff';c.font='bold 19px Arial';
-    c.fillText(cp.delayMs==null?'Delay —':'Delay '+cp.delayMs.toFixed(3)+' ms',cx,ly+60);
-    c.fillText(cp.peakDb==null?'Peak —':'Peak '+cp.peakDb.toFixed(1)+' dB',cx,ly+84);
-    c.fillText(cp.peakFreq==null?'@ —':'@ '+fmtF2(cp.peakFreq),cx,ly+108);
-    c.textAlign='left';c.textBaseline='alphabetic';
-    topY+=boxH+gap;
-  });
+  if(!S.centerInfo||!S.captures.length||S.centerIdx<0||S.centerIdx>=S.captures.length)return;
+  const cp=S.captures[S.centerIdx];
+  if(!cp.show)return;
+  const boxW=300, boxH=132;
+  const cx=w/2, lx=cx-boxW/2, ly=(h-boxH)/2;
+  c.fillStyle='rgba(0,0,0,0.90)';
+  c.beginPath();c.roundRect(lx,ly,boxW,boxH,10);c.fill();
+  c.strokeStyle=cp.color;c.lineWidth=3;
+  c.beginPath();c.roundRect(lx,ly,boxW,boxH,10);c.stroke();
+  c.textAlign='center';c.textBaseline='middle';
+  c.fillStyle=cp.color;c.font='bold 15px Arial';
+  c.fillText(cp.name.toUpperCase(),cx,ly+16);
+  c.fillStyle='#8b95a5';c.font='11px Arial';
+  c.fillText('INFORMATION',cx,ly+34);
+  c.fillStyle='#fff';c.font='bold 19px Arial';
+  c.fillText(cp.delayMs==null?'Delay —':'Delay '+cp.delayMs.toFixed(3)+' ms',cx,ly+60);
+  c.fillText(cp.peakDb==null?'Peak —':'Peak '+cp.peakDb.toFixed(1)+' dB',cx,ly+84);
+  c.fillText(cp.peakFreq==null?'@ —':'@ '+fmtF2(cp.peakFreq),cx,ly+108);
+  c.fillStyle='#8b95a5';c.font='11px Arial';
+  c.fillText((cp.cohAvg==null?'':'Coh '+cp.cohAvg.toFixed(2)+'  •  ')+cp.time,cx,ly+124);
+  c.textAlign='left';c.textBaseline='alphabetic';
 }
 function drawZeroLine(c,w,h,range){
   const y=yMag(0,range,h);
