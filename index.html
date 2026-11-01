@@ -9,7 +9,14 @@
 header{padding:12px 14px;background:#101319;border-bottom:1px solid #303640;display:flex;align-items:center;justify-content:space-between;gap:8px}
 h1{font-size:17px;margin:0;letter-spacing:.5px}.sub{font-size:11px;color:var(--muted);margin-top:3px}
 main{padding:10px;max-width:1100px;margin:auto;overflow-x:hidden}.toolbar,.panel{background:var(--panel);border:1px solid #303640;border-radius:10px;padding:10px;margin-bottom:10px;overflow:hidden}
-.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.toolbar{display:flex;flex-wrap:nowrap;gap:0;align-items:stretch;padding:0;overflow-x:auto;border-bottom:3px solid #55d9ed}
+.toolbar button,.toolbar select{flex:0 0 auto}
+.toolbar .tb{display:flex;flex-direction:column;justify-content:center;gap:4px;padding:9px 10px;border-right:1px solid #303640;white-space:nowrap}
+.toolbar .tb:last-child{border-right:0}
+.toolbar .tb label{font-size:10px;color:var(--muted);letter-spacing:.5px;text-align:center}
+.toolbar button{border-radius:0;border:0}
+.toolbar select{border-radius:7px;padding:8px 8px}
+.toolbar .tb-btn{padding:9px 10px;border-right:1px solid #303640;display:flex;align-items:center}
 button,select{background:#222b37;color:var(--txt);border:1px solid #566171;border-radius:7px;padding:9px 11px;font-size:13px}
 button.go{background:#087e91;border-color:#13b5c9}button:disabled{opacity:.45}
 label{font-size:11px;color:var(--muted)}
@@ -24,9 +31,9 @@ canvas{display:block;width:100%;height:auto;background:#030507;border-radius:5px
 .info{font-size:11px;color:var(--muted);line-height:1.45;margin-top:7px}
 .stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.stat{background:#090d12;border-radius:7px;padding:8px 10px;min-width:105px;flex:1;overflow:hidden}.stat small{display:block;color:var(--muted);font-size:10px;white-space:nowrap}.stat strong{font-size:15px;white-space:nowrap}
 .status{font-size:12px;color:#7ee0ad;margin-left:auto}
-@media(max-width:520px){header{align-items:flex-start}}
+@media(max-width:520px){header{align-items:flex-start}.toolbar .tb{padding:8px 7px}}
 body.landscape-mode main{max-width:none;padding:8px}
-body.landscape-mode #spectrum{aspect-ratio:1200/420}
+body.landscape-mode #spectrum{aspect-ratio:1200/360}
 body.landscape-mode #waterfall{aspect-ratio:1200/240}
 body.landscape-mode .toolbar{position:sticky;top:0;z-index:5}
 body.landscape-mode header h1{font-size:15px}
@@ -35,13 +42,14 @@ body.landscape-mode header h1{font-size:15px}
 <header><div><h1>SMART RTA LIVE</h1><div class="sub">REAL-TIME SPECTRUM • WATERFALL • AUDIO ANALYZER</div></div><div style="display:flex;align-items:center;gap:8px"><button id="landscape">↔ LANDSCAPE</button><div id="status" class="status">STANDBY</div></div></header>
 <main>
 <section class="toolbar">
-<button class="go" id="start">▶ START LIVE</button><button id="stop" disabled>■ STOP</button>
-<label>FFT<br><select id="fft"><option value="512">512</option><option value="2048">2048</option><option value="4096" selected>4096</option><option value="8192">8192</option></select></label>
-<label>AVERAGE<br><select id="average"><option value="1">1x</option><option value="4" selected>4x</option><option value="8">8x</option><option value="16">16x</option></select></label>
-<label>RANGE<br><select id="range"><option value="60">60 dB</option><option value="90" selected>90 dB</option><option value="120">120 dB</option></select></label>
-<label>SMOOTH<br><select id="smooth"><option value="0">OFF</option><option value=".55">LOW</option><option value=".8" selected>MED</option><option value=".93">HIGH</option></select></label>
+<div class="tb tb-btn"><button class="go" id="start">▶ START LIVE</button></div>
+<div class="tb tb-btn"><button id="stop" disabled>■ STOP</button></div>
+<div class="tb"><label>FFT</label><select id="fft"><option value="512">512</option><option value="2048">2048</option><option value="4096" selected>4096</option><option value="8192">8192</option></select></div>
+<div class="tb"><label>AVERAGE</label><select id="average"><option value="1">1x</option><option value="4" selected>4x</option><option value="8">8x</option><option value="16">16x</option></select></div>
+<div class="tb"><label>RANGE</label><select id="range"><option value="60">60 dB</option><option value="90" selected>90 dB</option><option value="120">120 dB</option></select></div>
+<div class="tb"><label>SMOOTH</label><select id="smooth"><option value="0">OFF</option><option value=".55">LOW</option><option value=".8" selected>MED</option><option value=".93">HIGH</option></select></div>
 </section>
-<section class="panel"><div class="title"><b>MAGNITUDE / FREQUENCY RESPONSE</b><span>20 Hz — 20 kHz</span></div><canvas id="spectrum" width="1200" height="560"></canvas>
+<section class="panel"><div class="title"><b>MAGNITUDE / FREQUENCY RESPONSE</b><span>20 Hz — 20 kHz</span></div><canvas id="spectrum" width="1200" height="400"></canvas>
 <div class="stats">
  <div class="stat"><small>CURSOR FREQUENCY</small><strong id="cursorfreq">Geser garis pada grafik</strong></div>
  <div class="stat"><small>LEVEL DI TITIK</small><strong id="cursorlevel">— dBFS</strong></div>
@@ -97,7 +105,7 @@ function freqAtX(x,w){
 function grid(){
  const w=spec.width,h=spec.height,plotH=h-PLOT_BOTTOM;sc.clearRect(0,0,w,h);sc.fillStyle='#030507';sc.fillRect(0,0,w,h);
  sc.strokeStyle='#303640';sc.lineWidth=1;sc.fillStyle='#aab2bf';sc.font='17px Arial';
- [20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000].forEach(f=>{let x=xfreq(f,w);sc.beginPath();sc.moveTo(x,0);sc.lineTo(x,plotH);sc.stroke();let label=f===20?'20 Hz':(f===20000?'20 kHz':(f>=1000?(f/1000)+'k':String(f)));sc.textAlign=f===20000?'right':(f===20?'left':'center');let tx=f===20000?w-4:(f===20?4:x);sc.fillText(label,tx,h-14)});sc.textAlign='left';
+ [20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000].forEach(f=>{let x=xfreq(f,w);sc.beginPath();sc.moveTo(x,0);sc.lineTo(x,plotH);sc.stroke();if(f===50&&x<70)return;let label=f===20?'20 Hz':(f===20000?'20 kHz':(f>=1000?(f/1000)+'k':String(f)));sc.textAlign=f===20000?'right':(f===20?'left':'center');let tx=f===20000?w-4:(f===20?4:x);sc.fillText(label,tx,h-14)});sc.textAlign='left';
  let range=+$('range').value;for(let d=0;d<=range;d+=10){let y=d/range*plotH;sc.beginPath();sc.moveTo(0,y);sc.lineTo(w,y);sc.stroke();sc.fillText(-d+' dB',5,Math.max(14,y+14))}
 }
 function colorFor(v){let t=Math.max(0,Math.min(1,(v+95)/75));let stops=[[20,16,48],[67,47,118],[170,76,137],[239,139,143],[255,218,142]];let p=t*4,i=Math.min(3,Math.floor(p)),a=p-i;let c=stops[i].map((n,k)=>Math.round(n*(1-a)+stops[i+1][k]*a));return `rgb(${c[0]},${c[1]},${c[2]})`}
