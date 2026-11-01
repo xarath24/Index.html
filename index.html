@@ -150,6 +150,9 @@ async function ensureCtx(){ if(!ctx){ ctx=new(window.AudioContext||window.webkit
 function xfreq(f,w){f=Math.max(minF,Math.min(maxF,f));let s=0;for(let i=0;i<SEGS.length;i++){let[a,b,pw]=SEGS[i];if(f<=b||i===SEGS.length-1)return(s+Math.log(f/a)/Math.log(b/a)*pw)*w;s+=pw}return w}
 function freqAtX(x,w){const r=Math.max(0,Math.min(1,x/w));let s=0;for(let i=0;i<SEGS.length;i++){let[a,b,pw]=SEGS[i];if(r<=s+pw||i===SEGS.length-1)return a*Math.exp(((r-s)/pw)*Math.log(b/a));s+=pw}return maxF}
 function fmtF(f){return f>=1000?(f/1000).toFixed(2)+' kHz':f.toFixed(0)+' Hz'}
+// FIX CURSOR: slider <-> frekuensi harus 1 arah, dicari x nya dari frekuensi
+function sliderForFreq(f){let lo=0,hi=mag.width;for(let i=0;i<24;i++){const mid=(lo+hi)/2;if(freqAtX(mid,mag.width)<f)lo=mid;else hi=mid}return Math.round(lo/mag.width*1000)}
+function syncCursorUI(){ $('cursorslider').value=sliderForFreq(cursorFreq); $('cursorfreq').textContent=fmtF(cursorFreq); }
 function fftCalc(re,im){const n=re.length;for(let i=1,j=0;i<n;i++){let bit=n>>1;for(;j&bit;bit>>=1)j^=bit;j^=bit;if(i<j){let t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t}}for(let len=2;len<=n;len<<=1){const ang=-2*Math.PI/len,wr=Math.cos(ang),wi=Math.sin(ang);for(let i=0;i<n;i+=len){let cwr=1,cwi=0;for(let j=0;j<len/2;j++){const ur=re[i+j],ui=im[i+j],vr=re[i+j+len/2]*cwr-im[i+j+len/2]*cwi,vi=re[i+j+len/2]*cwi+im[i+j+len/2]*cwr;re[i+j]=ur+vr;im[i+j]=ui+vi;re[i+j+len/2]=ur-vr;im[i+j+len/2]=ui-vi;const t=cwr*wr-cwi*wi;cwi=cwr*wi+cwi*wr;cwr=t}}}}
 function ifftCalc(re,im){for(let i=0;i<re.length;i++)im[i]=-im[i];fftCalc(re,im);const n=re.length;for(let i=0;i<n;i++){re[i]/=n;im[i]=-im[i]/n}}
 let TF={Sxx:null,Syy:null,SxyR:null,SxyI:null,count:0};
@@ -290,7 +293,7 @@ function setPolBadge(res,corr){
 }
 function livePolarity(tf){
  if(!tf||noiseType!=='pink'){ if(!checkingPol) setPolBadge(null,null); return }
- const res=polarityFromTF(tf); const corr=corrSign();
+ const res=polarityFromTF(tf); const corr=corrSign(); dbg.corr=corr||0;
  if(res&&res.state!=='unknown'&&corr!==null){
   if(res.state==='inverted'&&corr>0.25) res.conf=Math.round(res.conf*0.5);
   if(res.state==='normal'&&corr<-0.25) res.conf=Math.round(res.conf*0.5);
@@ -301,7 +304,7 @@ function livePolarity(tf){
 }
 function updateDebug(){
  const el=$('debugbox');
- if(!an){ el.textContent='DEBUG: belum LIVE. START dulu, terus PINK, tunggu 5 detik.'; return; }
+ if(!an){ el.textContent='DEBUG: belum LIVE. START dulu, terus PINK, tunggu 5 detik. Frozen trace tetap bisa di-cursor.'; return; }
  el.textContent=
   'DEBUG  noise='+ (noiseType||'OFF') +'  vol='+$('noisevol').value+'%  delay='+$('delayms').value+'ms  TFcount='+dbg.tfCount+'\n'+
   'RefRMS='+dbg.refRMS.toFixed(4)+'  MicRMS='+dbg.micRMS.toFixed(4)+'\n'+
@@ -312,6 +315,14 @@ function powerAtLog(freqs,pArr,f){if(!freqs.length)return null;if(f<=freqs[0].f)
 function octaveSmooth(dense,perOct){if(!perOct||!dense.length)return dense;const half=1/(2*perOct);return dense.map(o=>{const lo=o.f*Math.pow(2,-half),hi=o.f*Math.pow(2,half);let s=0,c=0;for(const d of dense){if(d.f>=lo&&d.f<=hi){s+=db2p(d.v);c++}}return{f:o.f,v:p2db(c?s/c:db2p(o.v)),x:o.x,phase:o.phase,coh:o.coh}})}
 function densifyPower(freqs,pArr){const out=[],W=mag.width;for(let x=0;x<=W;x+=6){const f=freqAtX(x,W);const p=powerAtLog(freqs,pArr,f);if(p===null)continue;out.push({f,v:p2db(p),x})}return octaveSmooth(out,+$('detail').value||0)}
 function pointOnLine(data,f){if(!data||!data.length)return null;const cx=xfreq(f,mag.width);const pts=data.map(o=>({f:o.f,v:o.v,x:o.x??xfreq(o.f,mag.width),phase:o.phase,coh:o.coh}));if(cx<=pts[0].x)return pts[0];if(cx>=pts[pts.length-1].x)return pts[pts.length-1];for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1];if(cx>=a.x&&cx<=b.x){const t=b.x===a.x?0:(cx-a.x)/(b.x-a.x);return{f,v:a.v+(b.v-a.v)*t,x:cx,phase:a.phase+(b.phase-a.phase)*t,coh:a.coh+(b.coh-a.coh)*t}}}return pts[0]}
+// FIX CURSOR: data buat cursor = LIVE dulu, kalo kosong ambil capture yang dicentang
+function cursorSourceData(liveData){
+ if(liveData&&liveData.length) return liveData;
+ if(currentVals.length) return currentVals;
+ for(let i=0;i<3;i++){ if(captures[i]&&captures[i].data&&captures[i].data.length&&$('show'+'ABC'[i]).checked) return captures[i].data; }
+ for(let i=0;i<3;i++){ if(captures[i]&&captures[i].data&&captures[i].data.length) return captures[i].data; }
+ return [];
+}
 let noiseSrc=null,noiseGain=null,noiseType=null;
 function makePinkBuffer(c){
  const N=65536, re=new Float32Array(N), im=new Float32Array(N);
@@ -387,11 +398,15 @@ function drawAll(){
  const tf=tfData(); const showTF=tf&&noiseType==='pink';
  const dataToShow=showTF?tf:currentVals;
  if(tf){mg.beginPath();mg.strokeStyle='#5fd68a';mg.lineWidth=1.6;tf.forEach((o,i)=>{const X=xfreq(o.f,w),Y=plotH-4-o.coh*18;if(i===0)mg.moveTo(X,Y);else mg.lineTo(X,Y)});mg.stroke();mg.fillStyle='#5fd68a';mg.font='11px Arial';mg.fillText('COHERENCE',6,plotH-24)}
+ // Gambar LIVE / frozen dulu, baru capture di atasnya, biar cursor nempel ke yang keliatan
  if($('showlive').checked) drawTrace(mg,dataToShow,w,plotH,range,'#3fd4ec',2.5);
  captures.forEach((cap,i)=>{if(!cap||!$('show'+'ABC'[i]).checked)return;drawTrace(mg,cap.data,w,plotH,range,['#ff6b6b','#b58cff','#5fd68a'][i],2)});
- const pt=pointOnLine(dataToShow,cursorFreq); const cx=Math.max(6,Math.min(w-6,xfreq(cursorFreq,w)));
+ const cursorData=cursorSourceData(dataToShow);
+ const pt=pointOnLine(cursorData,cursorFreq); const cx=Math.max(6,Math.min(w-6,xfreq(cursorFreq,w)));
  mg.save();mg.strokeStyle='#fff';mg.lineWidth=3;mg.beginPath();mg.moveTo(cx,0);mg.lineTo(cx,plotH);mg.stroke();mg.restore();
- if(pt){const Y=Math.max(0,Math.min(range,-pt.v))/range*plotH;mg.beginPath();mg.arc(cx,Y,10,0,Math.PI*2);mg.fillStyle='#fff';mg.fill();mg.beginPath();mg.arc(cx,Y,5,0,Math.PI*2);mg.fillStyle='#000';mg.fill();const txt=fmtF(cursorFreq)+' • '+pt.v.toFixed(1)+' dB'+(pt.phase!==undefined?' • '+pt.phase.toFixed(0)+'°':'');mg.font='bold 13px Arial';const tw=mg.measureText(txt).width+14;let lx=Math.max(4,Math.min(w-tw-4,cx-tw/2)),ly=Math.max(4,Y-46);mg.fillStyle='#000';mg.fillRect(lx,ly,tw,24);mg.strokeStyle='#fff';mg.strokeRect(lx,ly,tw,24);mg.fillStyle='#fff';mg.fillText(txt,lx+7,ly+16);$('cursorread').textContent=fmtF(cursorFreq)+' • '+pt.v.toFixed(1)+' dB'+(pt.phase!==undefined?' • '+pt.phase.toFixed(0)+'° • coh '+(pt.coh??0).toFixed(2):'');$('cursorfreq').textContent=fmtF(cursorFreq)}
+ syncCursorUI();
+ if(pt){const Y=Math.max(0,Math.min(range,-pt.v))/range*plotH;mg.beginPath();mg.arc(cx,Y,10,0,Math.PI*2);mg.fillStyle='#fff';mg.fill();mg.beginPath();mg.arc(cx,Y,5,0,Math.PI*2);mg.fillStyle='#000';mg.fill();const txt=fmtF(cursorFreq)+' • '+pt.v.toFixed(1)+' dB'+(pt.phase!==undefined?' • '+pt.phase.toFixed(0)+'°':'');mg.font='bold 13px Arial';const tw=mg.measureText(txt).width+14;let lx=Math.max(4,Math.min(w-tw-4,cx-tw/2)),ly=Math.max(4,Y-46);mg.fillStyle='#000';mg.fillRect(lx,ly,tw,24);mg.strokeStyle='#fff';mg.strokeRect(lx,ly,tw,24);mg.fillStyle='#fff';mg.fillText(txt,lx+7,ly+16);$('cursorread').textContent=fmtF(cursorFreq)+' • '+pt.v.toFixed(1)+' dB'+(pt.phase!==undefined?' • '+pt.phase.toFixed(0)+'° • coh '+(pt.coh??0).toFixed(2):'')}
+ else { $('cursorread').textContent=fmtF(cursorFreq)+' • — dB'; }
  const pw=phc.width,ph2=phc.height-18;
  pg.clearRect(0,0,pw,phc.height);pg.fillStyle='#05070a';pg.fillRect(0,0,pw,phc.height);
  [20,100,500,1000,5000,10000,20000].forEach(f=>{const x=xfreq(f,pw);pg.strokeStyle='#232a35';pg.beginPath();pg.moveTo(x,0);pg.lineTo(x,ph2);pg.stroke()});
@@ -451,7 +466,7 @@ $('start').onclick=async()=>{
   an=ctx.createAnalyser();fft=+$('fft').value;an.fftSize=fft;an.smoothingTimeConstant=0;an.minDecibels=-120;an.maxDecibels=0;
   tfAn=ctx.createAnalyser();tfAn.fftSize=BIG_N;tfAn.smoothingTimeConstant=0;
   src.connect(an); src.connect(tfAn);
-  smP=[];holdP=[];avgFramesP=[];currentVals=[];resetTF();sg.fillStyle='#141030';sg.fillRect(0,0,sp.width,sp.height);
+  smP=[];holdP=[];avgFramesP=[];resetTF();sg.fillStyle='#141030';sg.fillRect(0,0,sp.width,sp.height);
   $('start').disabled=true;$('stop').disabled=false;$('status').textContent='LIVE';$('liveind').textContent='● LIVE';$('samplerate').textContent=ctx.sampleRate+' Hz';$('binwidth').textContent=(ctx.sampleRate/fft).toFixed(1)+' Hz';$('fftstat').textContent=fft;draw();
  }catch(e){
   if(stream)stream.getTracks().forEach(t=>t.stop());
@@ -459,7 +474,8 @@ $('start').onclick=async()=>{
   alert('Tidak bisa membuka mikrofon: '+e.message);
  }
 };
-$('stop').onclick=()=>{cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;src=null;an=null;tfAn=null;currentVals=[];$('start').disabled=false;$('stop').disabled=true;$('status').textContent='STOPPED';$('liveind').textContent='● STANDBY';drawAll()};
+// FIX STOP: jangan hapus currentVals, biar trace + cursor nya beku di frame terakhir
+$('stop').onclick=()=>{cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;src=null;an=null;tfAn=null;$('start').disabled=false;$('stop').disabled=true;$('status').textContent='STOPPED • FROZEN';$('liveind').textContent='● STANDBY';drawAll()};
 $('finddelay').onclick=()=>{
  const best=findBestLag(); if(!best){alert('START dulu + PINK NOISE dulu');return}
  const useMs=Math.max(0,best.ms);
@@ -468,7 +484,7 @@ $('finddelay').onclick=()=>{
 $('delayms').oninput=()=>{$('delaytxt').textContent=(+$('delayms').value).toFixed(1)+' ms';$('delaystat').textContent=(+$('delayms').value).toFixed(1)+' ms';resetTF()};
 $('fft').onchange=()=>{if(an){fft=+$('fft').value;an.fftSize=fft;smP=[];holdP=[];avgFramesP=[];$('binwidth').textContent=(audio.sampleRate/fft).toFixed(1)+' Hz';$('fftstat').textContent=fft}resetTF()};
 $('average').onchange=()=>{avgFramesP=[]};
-$('detail').onchange=()=>{if(!an)drawAll()};
+$('detail').onchange=()=>{drawAll()};
 function moveCursor(ev){const r=mag.getBoundingClientRect();const px=Math.max(0,Math.min(mag.width,(ev.clientX-r.left)/r.width*mag.width));cursorFreq=freqAtX(px,mag.width);if(an){cancelAnimationFrame(raf);draw()}else drawAll()}
 let drag=false;mag.addEventListener('pointerdown',e=>{drag=true;try{mag.setPointerCapture(e.pointerId)}catch(_){}moveCursor(e)});mag.addEventListener('pointermove',e=>{if(drag)moveCursor(e)});mag.addEventListener('pointerup',()=>drag=false);mag.addEventListener('pointercancel',()=>drag=false);
 $('cursorslider').addEventListener('input',e=>{cursorFreq=freqAtX(Number(e.target.value)/1000*mag.width,mag.width);if(an){cancelAnimationFrame(raf);draw()}else drawAll()});
@@ -480,5 +496,6 @@ $('tabTF').onclick=()=>{$('tabTF').classList.add('on');$('tabRTA').classList.rem
 $('tabRTA').onclick=()=>{stopNoise();$('tabRTA').classList.add('on');$('tabTF').classList.remove('on');drawAll()};
 $('tabSPEC').onclick=()=>{sp.scrollIntoView({behavior:'smooth'})};
 $('landscape').onclick=async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();if(screen.orientation?.lock)await screen.orientation.lock('landscape');document.body.classList.add('landscape-mode')}catch(e){document.body.classList.toggle('landscape-mode')}};
+['showlive','showA','showB','showC'].forEach(id=>$(id).addEventListener('change',()=>drawAll()));
 drawAll();
 </script></body></html>
