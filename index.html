@@ -69,13 +69,13 @@ const minF=20,maxF=20000;
 function xfreq(f,w){
  f=Math.max(minF,Math.min(maxF,f));
  const a=Math.log(1000/minF), b=Math.log(10), c=Math.log(maxF/10000);
- const p1=.35, p2=.50;
+ const p1=.15, p2=.70;
  if(f<=1000) return (Math.log(f/minF)/a)*p1*w;
  if(f<=10000) return (p1+Math.log(f/1000)/b*p2)*w;
  return (p1+p2+Math.log(f/10000)/c*(1-p1-p2))*w;
 }
 function freqAtX(x,w){
- const r=Math.max(0,Math.min(1,x/w)),p1=.35,p2=.50;
+ const r=Math.max(0,Math.min(1,x/w)),p1=.15,p2=.70;
  if(r<=p1) return minF*Math.exp((r/p1)*Math.log(1000/minF));
  if(r<=p1+p2) return 1000*Math.exp(((r-p1)/p2)*Math.log(10));
  return 10000*Math.exp(((r-p1-p2)/(1-p1-p2))*Math.log(2));
@@ -87,6 +87,29 @@ function grid(){
  let range=+$('range').value;for(let d=0;d<=range;d+=10){let y=d/range*plotH;sc.beginPath();sc.moveTo(0,y);sc.lineTo(w,y);sc.stroke();sc.fillText(-d+' dB',5,Math.max(13,y-3))}
 }
 function colorFor(v){let t=Math.max(0,Math.min(1,(v+95)/75));let stops=[[20,16,48],[67,47,118],[170,76,137],[239,139,143],[255,218,142]];let p=t*4,i=Math.min(3,Math.floor(p)),a=p-i;let c=stops[i].map((n,k)=>Math.round(n*(1-a)+stops[i+1][k]*a));return `rgb(${c[0]},${c[1]},${c[2]})`}
+function drawFrozen(){
+ grid();
+ const w=spec.width,h=spec.height,ph=h-36,range=+$('range').value;
+ const y=v=>Math.max(0,Math.min(range,-v))/range*ph;
+ if(currentVals.length){
+  sc.beginPath();sc.strokeStyle='#55d9ed';sc.lineWidth=2.2;
+  currentVals.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(o.v);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});sc.stroke();
+ }
+ captures.forEach((cap,ci)=>{
+  sc.beginPath();sc.strokeStyle=captureColors[ci%captureColors.length];sc.lineWidth=2.8;
+  cap.data.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(o.v);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});sc.stroke();
+ });
+ if(cursorActive){
+  const cx=xfreq(cursorFreq,w);
+  sc.save();sc.setLineDash([]);sc.strokeStyle='rgba(255,255,255,.22)';sc.lineWidth=14;
+  sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();
+  sc.strokeStyle='#fff';sc.lineWidth=4;sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();sc.restore();
+  if(currentVals.length){
+   const nearest=currentVals.reduce((best,o)=>Math.abs(o.f-cursorFreq)<Math.abs(best.f-cursorFreq)?o:best,currentVals[0]);
+   $('cursorlevel').textContent=nearest.v.toFixed(1)+' dBFS';
+  }
+ }
+}
 function draw(){
  if(!an)return;
  let n=an.frequencyBinCount,raw=new Float32Array(n);an.getFloatFrequencyData(raw);
@@ -125,7 +148,7 @@ function draw(){
  // Scroll waterfall upwards, paint a new spectral row at the bottom.
  let image=wc.getImageData(0,0,water.width,water.height-1);wc.putImageData(image,0,0);
  let row=wc.createImageData(water.width,1);
- for(let x=0;x<water.width;x++){let f=minF*Math.pow(maxF/minF,x/(water.width-1));let bin=Math.max(1,Math.min(n-1,Math.round(f*fft/audio.sampleRate)));let v=raw[bin];let col=colorFor(v);let m=col.match(/\d+/g).map(Number);let p=x*4;row.data[p]=m[0];row.data[p+1]=m[1];row.data[p+2]=m[2];row.data[p+3]=255}
+ for(let x=0;x<water.width;x++){let f=freqAtX(x,water.width);let bin=Math.max(1,Math.min(n-1,Math.round(f*fft/audio.sampleRate)));let v=raw[bin];let col=colorFor(v);let m=col.match(/\d+/g).map(Number);let p=x*4;row.data[p]=m[0];row.data[p+1]=m[1];row.data[p+2]=m[2];row.data[p+3]=255}
  wc.putImageData(row,0,water.height-1);
  $('peakdb').textContent=peak.toFixed(1)+' dBFS';$('peakfreq').textContent=(peakBin*audio.sampleRate/fft).toFixed(0)+' Hz';raf=requestAnimationFrame(draw);
 }
@@ -150,13 +173,13 @@ $('start').onclick=async()=>{
   sm=[];hold=[];wc.clearRect(0,0,water.width,water.height);$('status').textContent='LIVE';$('inputstate').textContent='MIC ON';$('samplerate').textContent=audio.sampleRate+' Hz';$('start').disabled=true;$('stop').disabled=false;draw();
  }catch(e){$('status').textContent='MIC ERROR';alert('Tidak bisa membuka mikrofon: '+e.message+'. Izinkan akses mikrofon dan gunakan browser yang mendukung HTTPS.')}
 };
-$('stop').onclick=()=>{cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());if(audio)audio.close();audio=null;stream=null;an=null;$('status').textContent='STANDBY';$('inputstate').textContent='OFF';$('start').disabled=false;$('stop').disabled=true};
+$('stop').onclick=()=>{cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());if(audio)audio.close();audio=null;stream=null;an=null;$('status').textContent='STOPPED • CAPTURE TETAP TAMPIL';$('inputstate').textContent='OFF';$('start').disabled=false;$('stop').disabled=true;drawFrozen()};
 function moveCursor(ev){
  const rect=spec.getBoundingClientRect();
  const px=Math.max(0,Math.min(spec.width,(ev.clientX-rect.left)/rect.width*spec.width));
  cursorFreq=freqAtX(px,spec.width);cursorActive=true;
  $('cursorfreq').textContent=cursorFreq>=1000?(cursorFreq/1000).toFixed(2)+' kHz':cursorFreq.toFixed(0)+' Hz';
- if(an){cancelAnimationFrame(raf);draw()}else{grid();const cx=xfreq(cursorFreq,spec.width);sc.save();sc.setLineDash([]);sc.strokeStyle='rgba(255,255,255,.22)';sc.lineWidth=14;sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,spec.height-36);sc.stroke();sc.strokeStyle='#fff';sc.lineWidth=4;sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,spec.height-36);sc.stroke();sc.restore()}
+ if(an){cancelAnimationFrame(raf);draw()}else{drawFrozen()}
 }
 let draggingCursor=false;
 spec.style.touchAction='none';
@@ -171,14 +194,14 @@ spec.addEventListener('pointerup',endCursorDrag);
 spec.addEventListener('pointercancel',endCursorDrag);
 spec.addEventListener('lostpointercapture',endCursorDrag);
 $('fft').onchange=()=>{if(an){fft=+$('fft').value;an.fftSize=fft;sm=[];hold=[]}};
-$('range').onchange=()=>{if(an){cancelAnimationFrame(raf);draw()}else grid()};
+$('range').onchange=()=>{if(an){cancelAnimationFrame(raf);draw()}else drawFrozen()};
 $('capture').onclick=()=>{
- if(!an||!currentVals.length){$('capturestatus').textContent='Mulai LIVE terlebih dahulu sebelum capture.';return}
+ if(!currentVals.length){$('capturestatus').textContent='Belum ada data. Jalankan LIVE untuk mengambil pengukuran.';return}
  if(captures.length>=3){$('capturestatus').textContent='Maksimal 3 capture. Hapus capture lama untuk mengambil yang baru.';return}
  captures.push({name:'Capture '+(captures.length+1),data:currentVals.map(o=>({...o}))});
  $('capturestatus').textContent=captures.length+' kurva tersimpan — bandingkan overlay dengan LIVE.';
- cancelAnimationFrame(raf);draw();
+ if(an){cancelAnimationFrame(raf);draw()}else drawFrozen();
 };
-$('clearcaptures').onclick=()=>{captures=[];$('capturestatus').textContent='Semua capture dihapus.';if(an){cancelAnimationFrame(raf);draw()}};
+$('clearcaptures').onclick=()=>{captures=[];$('capturestatus').textContent='Semua capture dihapus.';if(an){cancelAnimationFrame(raf);draw()}else drawFrozen()};
 grid();
 </script></body></html>
