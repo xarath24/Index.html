@@ -82,7 +82,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <button id="capturebtn" class="cap" style="width:100%;padding:12px">📸 CAPTURE KURVA INI</button>
       <button id="clearcap" class="danger" style="width:100%;padding:8px;margin-top:6px">🗑 HAPUS SEMUA CAPTURE</button>
       <div id="caplist" style="margin-top:6px"></div>
-      <p style="color:#8b95a5;font-size:11px;line-height:1.6;margin:8px 0 0">Kotak info 1 aja di tengah, BACK / NEXT buat pindah.<br>STOP = kurva beku, ga ilang.</p>
+      <p style="color:#8b95a5;font-size:11px;line-height:1.6;margin:8px 0 0">Kotak besar di tengah, tombol BACK nya di dalam kotak.<br>STOP = kurva beku, ga ilang.</p>
     </div>
 
     <div class="panel" style="margin-top:8px">
@@ -136,7 +136,6 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         </label>
       </div>
 
-      <!-- TOMBOL BACK / NEXT KAYAK DI LAPTOP -->
       <div class="centerctl">
         <button id="backcap" class="backbtn">◀ BACK</button>
         <b id="centerlabel">KOTAK TENGAH: BELUM ADA CAPTURE</b>
@@ -182,12 +181,12 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
     <div class="panel">
       <h3>CARA PAKAI</h3>
       <div style="font-size:11px;color:#8b95a5;line-height:1.8">
-                1. Putar HP landscape<br>
-                2. START + PINK ON<br>
-                3. Pencet CAPTURE, kotak nya di tengah terus<br>
-                4. BACK = capture sebelum nya, NEXT = sesudah nya<br>
-                5. ← BACK di atas = sembunyiin kotak, balik ke live doang<br>
-                6. INFO: ON = kotak nya balik lagi di tengah<br><br>
+        1. Putar HP landscape<br>
+        2. START + PINK ON<br>
+        3. Pencet CAPTURE, kotak besar muncul di tengah<br>
+        4. Pencet tombol <b>◀ BACK yang di dalam kotak</b>, di tengah bawah kotak, buat balik ke capture sebelum nya<br>
+        5. Udah di Capture 1, pencet BACK lagi, kotak ketutup, balik live<br>
+        6. INFO: ON buat munculin kotak nya lagi<br><br>
         Garis ijo tengah = 0 dB / 0°.
       </div>
     </div>
@@ -218,7 +217,7 @@ const CAPCOLORS=['#fb923c','#facc15','#f472b6','#a78bfa','#34d399','#f87171','#9
 const S={ctx:null,stream:null,src:null,an:null,refAn:null,noise:null,noiseGain:null,pink:false,running:false,fft:8192,raf:0,
   cursor:4190,live:[],phase:[],phaseRaw:[],coh:[],sm:null,acc:null,accN:0,magOffset:null,captures:[],capN:0,unwrap:false,delayMs:null,
   frozen:false,frozenMag:[],frozenPhase:[],frozenCoh:[],frozenPink:false,lastPeakDb:null,lastPeakFreq:null,lastCohAvg:null,
-  centerIdx:-1,centerInfo:false};
+  centerIdx:-1,centerInfo:false,backRect:null};
 
 function xfreq(f,w){f=Math.max(MINF,Math.min(MAXF,f));let s=0;for(const[a,b,p]of SEGS){if(f<=b||a===15000)return(s+Math.log(f/a)/Math.log(b/a)*p)*w;s+=p}return w}
 function freqAtX(x,w){const r=Math.max(0,Math.min(1,x/w));let s=0;for(const[a,b,p]of SEGS){if(r<=s+p||a===15000)return a*Math.exp(((r-s)/p)*Math.log(b/a));s+=p}return MAXF}
@@ -262,7 +261,6 @@ function cohAvgOf(coh){
   return coh.reduce((s,o)=>s+o.v,0)/coh.length;
 }
 
-/* KOTAK TENGAH: 1 CAPTURE AJA, BACK / NEXT, BACK ATAS */
 function updateCenterLabel(){
   const el=$('centerlabel');
   if(!S.captures.length){el.textContent='KOTAK TENGAH: BELUM ADA CAPTURE';$('infotoggle').textContent='INFO: OFF';return}
@@ -273,26 +271,22 @@ function updateCenterLabel(){
   $('infotoggle').textContent=S.centerInfo?'INFO: ON':'INFO: OFF';
   $('infotoggle').classList.toggle('phon',S.centerInfo);
 }
-function showCenter(){if(S.captures.length){S.centerInfo=true;updateCenterLabel();drawAll()}}
-function hideCenter(){S.centerInfo=false;updateCenterLabel();drawAll()}
-$('backcap').onclick=()=>{
+/* BACK: KE CAPTURE SEBELUMNYA, KALO UDAH PALING AWAL, KOTAK KETUTUP */
+function goBack(){
   if(!S.captures.length)return;
-  S.centerInfo=true;
-  S.centerIdx=(S.centerIdx-1+S.captures.length)%S.captures.length;
-  updateCenterLabel();drawAll();
-};
-$('nextcap').onclick=()=>{
+  if(S.centerIdx<=0){S.centerInfo=false;updateCenterLabel();drawAll();return}
+  S.centerIdx--;S.centerInfo=true;updateCenterLabel();drawAll();
+}
+function goNext(){
   if(!S.captures.length)return;
   S.centerInfo=true;
   S.centerIdx=(S.centerIdx+1)%S.captures.length;
   updateCenterLabel();drawAll();
-};
+}
+$('backcap').onclick=goBack;
+$('nextcap').onclick=goNext;
 $('infotoggle').onclick=()=>{if(!S.captures.length)return;S.centerInfo=!S.centerInfo;updateCenterLabel();drawAll()};
-$('backtop').onclick=()=>{
-  /* BACK KAYAK DI LAPTOP: BALIK KE TAMPILAN LIVE DOANG, KOTAK TENGAH DISEMBUNYIIN */
-  hideCenter();
-  $('status').textContent=S.running?'LIVE':'BEKU — FROZEN';
-};
+$('backtop').onclick=()=>{S.centerInfo=false;updateCenterLabel();drawAll()};
 
 function renderCaptures(){
   const el=$('caplist');$('capcount').textContent=S.captures.length;
@@ -409,28 +403,36 @@ function drawLabelOnCurve(c,cx,cy,W,H,txt,strokeCol){
   c.fillText(txt,centerX,centerY);
   c.textAlign='left';c.textBaseline='alphabetic';
 }
-/* 1 KOTAK AJA, TETEP DI TENGAH-TENGAH TERUS */
+/* KOTAK BESAR DI TENGAH, TOMBOL BACK DI TENGAH-TENGAH DALAM KOTAK */
 function drawCaptureInfos(c,w,h){
+  S.backRect=null;
   if(!S.centerInfo||!S.captures.length||S.centerIdx<0||S.centerIdx>=S.captures.length)return;
   const cp=S.captures[S.centerIdx];
   if(!cp.show)return;
-  const boxW=300, boxH=132;
+  const boxW=560, boxH=260;
   const cx=w/2, lx=cx-boxW/2, ly=(h-boxH)/2;
-  c.fillStyle='rgba(0,0,0,0.90)';
-  c.beginPath();c.roundRect(lx,ly,boxW,boxH,10);c.fill();
-  c.strokeStyle=cp.color;c.lineWidth=3;
-  c.beginPath();c.roundRect(lx,ly,boxW,boxH,10);c.stroke();
+  c.fillStyle='rgba(0,0,0,0.92)';
+  c.beginPath();c.roundRect(lx,ly,boxW,boxH,14);c.fill();
+  c.strokeStyle=cp.color;c.lineWidth=4;
+  c.beginPath();c.roundRect(lx,ly,boxW,boxH,14);c.stroke();
   c.textAlign='center';c.textBaseline='middle';
-  c.fillStyle=cp.color;c.font='bold 15px Arial';
-  c.fillText(cp.name.toUpperCase(),cx,ly+16);
-  c.fillStyle='#8b95a5';c.font='11px Arial';
-  c.fillText('INFORMATION',cx,ly+34);
-  c.fillStyle='#fff';c.font='bold 19px Arial';
-  c.fillText(cp.delayMs==null?'Delay —':'Delay '+cp.delayMs.toFixed(3)+' ms',cx,ly+60);
-  c.fillText(cp.peakDb==null?'Peak —':'Peak '+cp.peakDb.toFixed(1)+' dB',cx,ly+84);
-  c.fillText(cp.peakFreq==null?'@ —':'@ '+fmtF2(cp.peakFreq),cx,ly+108);
-  c.fillStyle='#8b95a5';c.font='11px Arial';
-  c.fillText((cp.cohAvg==null?'':'Coh '+cp.cohAvg.toFixed(2)+'  •  ')+cp.time,cx,ly+124);
+  c.fillStyle=cp.color;c.font='bold 24px Arial';
+  c.fillText(cp.name.toUpperCase(),cx,ly+28);
+  c.fillStyle='#8b95a5';c.font='16px Arial';
+  c.fillText('INFORMATION',cx,ly+54);
+  c.fillStyle='#fff';c.font='bold 30px Arial';
+  c.fillText(cp.delayMs==null?'Delay —':'Delay '+cp.delayMs.toFixed(3)+' ms',cx,ly+94);
+  c.fillText(cp.peakDb==null?'Peak —':'Peak '+cp.peakDb.toFixed(1)+' dB',cx,ly+130);
+  c.fillText(cp.peakFreq==null?'@ —':'@ '+fmtF2(cp.peakFreq),cx,ly+166);
+  /* TOMBOL BACK DI TENGAH-TENGAH KOTAK, DI BAWAH INFO NYA */
+  const bw=240, bh=48, bx=cx-bw/2, by=ly+boxH-58;
+  S.backRect={x:bx,y:by,w:bw,h:bh};
+  c.fillStyle='#1e3a5f';
+  c.beginPath();c.roundRect(bx,by,bw,bh,10);c.fill();
+  c.strokeStyle='#60a5fa';c.lineWidth=3;
+  c.beginPath();c.roundRect(bx,by,bw,bh,10);c.stroke();
+  c.fillStyle='#fff';c.font='bold 22px Arial';
+  c.fillText('◀  BACK',cx,by+bh/2+1);
   c.textAlign='left';c.textBaseline='alphabetic';
 }
 function drawZeroLine(c,w,h,range){
@@ -665,6 +667,15 @@ $('stop').onclick=()=>{
 $('fft').onchange=()=>{if(S.an&&S.ctx){S.fft=+$('fft').value;S.an.fftSize=S.fft;if(S.refAn)S.refAn.fftSize=S.fft;resetAcc();$('fftstat').textContent=S.fft}};
 $('average').onchange=resetAcc;
 $('detail').onchange=drawAll;
+function canvasXY(e,el){
+  const r=el.getBoundingClientRect();
+  return{x:(e.clientX-r.left)/r.width*mag.width,y:(e.clientY-r.top)/r.height*mag.height};
+}
+function hitBackButton(e){
+  if(!S.backRect)return false;
+  const p=canvasXY(e,mag);
+  return p.x>=S.backRect.x&&p.x<=S.backRect.x+S.backRect.w&&p.y>=S.backRect.y&&p.y<=S.backRect.y+S.backRect.h;
+}
 function moveFromX(x,el){
   const r=el.getBoundingClientRect();
   const px=Math.max(0,Math.min(mag.width,(x-r.left)/r.width*mag.width));
@@ -672,7 +683,10 @@ function moveFromX(x,el){
 }
 let drag=false;
 [mag,fsc,phc].forEach(el=>{
-  el.addEventListener('pointerdown',e=>{drag=true;try{el.setPointerCapture(e.pointerId)}catch(err){}moveFromX(e.clientX,el)});
+  el.addEventListener('pointerdown',e=>{
+    if(el===mag&&hitBackButton(e)){goBack();return}
+    drag=true;try{el.setPointerCapture(e.pointerId)}catch(err){}moveFromX(e.clientX,el);
+  });
   el.addEventListener('pointermove',e=>{if(drag)moveFromX(e.clientX,el)});
   el.addEventListener('pointerup',()=>drag=false);
   el.addEventListener('pointercancel',()=>drag=false);
