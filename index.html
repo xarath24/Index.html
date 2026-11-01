@@ -45,6 +45,7 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
 .polbadge.inverted{border-color:#ef4444;background:#450a0a}.polbadge.inverted b{color:#f87171}
 .polbadge.unknown{border-color:#eab308;background:#292524}.polbadge.unknown b{color:#facc15}
 .warnbox{font-size:11px;color:#ffd16a;line-height:1.5;margin-top:6px;display:none}
+.debug{background:#000;border:1px solid #eab308;border-radius:6px;padding:7px;font-family:monospace;font-size:11px;line-height:1.6;color:#fde68a;white-space:pre-wrap;word-break:break-word;margin-top:7px}
 @media(max-width:900px){.layout{grid-template-columns:1fr}.spl{height:110px}}
 body.landscape-mode .layout{max-width:none}
 </style></head>
@@ -58,7 +59,7 @@ body.landscape-mode .layout{max-width:none}
 <aside>
 <div class="panel"><h3>MEASUREMENT LIST</h3>
 <div class="meas"><span class="sw" style="background:var(--cyan)"></span><b>Mic 1 — LIVE<small>Measurement • RTA / TF</small></b><input type="checkbox" id="showlive" checked></div>
-<div class="meas"><span class="sw" style="background:#fb923c"></span><b>Ref — Pink Noise<small>Reference • 1 jam dgn mic • pink baru</small></b><input type="checkbox" id="showref" checked></div>
+<div class="meas"><span class="sw" style="background:#fb923c"></span><b>Ref — Pink Noise<small>Reference • 1 jam • pink 20Hz+</small></b><input type="checkbox" id="showref" checked></div>
 <div class="meas"><span class="sw" style="background:var(--red)"></span><b>Trace A<small id="capAinfo">Empty</small></b><input type="checkbox" id="showA" checked></div>
 <div class="meas"><span class="sw" style="background:var(--purple)"></span><b>Trace B<small id="capBinfo">Empty</small></b><input type="checkbox" id="showB" checked></div>
 <div class="meas"><span class="sw" style="background:var(--green)"></span><b>Trace C<small id="capCinfo">Empty</small></b><input type="checkbox" id="showC" checked></div>
@@ -67,18 +68,18 @@ body.landscape-mode .layout{max-width:none}
 </div>
 <div class="panel" style="margin-top:8px"><h3>🔊 REFERENCE GENERATOR</h3>
 <div class="noisebar"><button id="pinkbtn">🩷 PINK</button><button id="whitebtn">🤍 WHITE</button><button id="noiseoff">■ OFF</button></div>
-<label style="display:block;margin-top:8px;color:var(--mut);font-size:11px">VOLUME <b id="noisevoltxt" style="color:#fff">25%</b><input type="range" id="noisevol" min="0" max="100" value="25" style="width:100%;accent-color:#fb923c"></label>
-<div style="font-size:11px;color:var(--mut);line-height:1.5">Pink baru = dibikin dari spektrum 1/f, loop mulus tanpa patahan. White tetep seperti kemarin.</div>
+<label style="display:block;margin-top:8px;color:var(--mut);font-size:11px">VOLUME <b id="noisevoltxt" style="color:#fff">30%</b><input type="range" id="noisevol" min="0" max="100" value="30" style="width:100%;accent-color:#fb923c"></label>
+<div style="font-size:11px;color:var(--mut);line-height:1.5">Pink baru: dipotong 20 Hz, energi ga kebuang ke subsonic. Volume default tak naikin ke 30% biar SNR nya naik.</div>
 </div>
 <div class="panel" style="margin-top:8px"><h3>DELAY FINDER</h3>
 <div class="kv"><span>Delay</span><b id="delaytxt">0.0 ms</b></div>
 <input type="range" id="delayms" min="0" max="20" step="0.1" value="0" style="width:100%;accent-color:var(--cyan)">
-<label style="font-size:11px;color:var(--mut);display:flex;gap:6px;align-items:center;margin-top:6px"><input type="checkbox" id="autodelay" checked> AUTO DELAY (cari sendiri tiap 1 detik)</label>
+<label style="font-size:11px;color:var(--mut);display:flex;gap:6px;align-items:center;margin-top:6px"><input type="checkbox" id="autodelay" checked> AUTO DELAY</label>
 <button id="finddelay" style="width:100%;margin-top:6px">◎ FIND DELAY OTOMATIS</button>
-<div id="delaywarn" class="warnbox">⚠ Coherence rendah. Delay belum pas / mic kejauhan. Pencet FIND DELAY.</div>
+<div id="delaywarn" class="warnbox">⚠ Coherence rendah. Delay belum pas / mic kejauhan.</div>
 </div>
 <div class="panel" style="margin-top:8px"><h3>⚡ POLARITY — CEK KEBALIK</h3>
-<div class="polbadge unknown" id="polbadge"><b id="poltitle">? UNKNOWN</b><span id="poldetail">Hidupkan PINK NOISE dulu, baru polarity bisa dibaca.</span></div>
+<div class="polbadge unknown" id="polbadge"><b id="poltitle">? UNKNOWN</b><span id="poldetail">Hidupkan PINK NOISE dulu.</span></div>
 <button id="checkpol" class="go" style="width:100%;padding:10px">◎ CHECK POLARITY — 1 DETIK</button>
 <button id="invertbtn" style="width:100%;margin-top:6px">⇅ INVERT PHASE (TES) : OFF</button>
 <div class="kv"><span>Phase rata-rata</span><b id="phaseavg">—°</b></div>
@@ -89,7 +90,7 @@ body.landscape-mode .layout{max-width:none}
 </aside>
 <main>
 <div class="panel">
-<div class="tabs"><button class="on" id="tabTF">TRANSFER FUNCTION</button><button id="tabRTA">RTA</button><button id="tabSPEC">SPECTROGRAPH</button><b id="modetxt" style="margin-left:auto;color:var(--gold)">MODE: RTA — HIDUPKAN PINK NOISE UNTUK TF</b></div>
+<div class="tabs"><button class="on" id="tabTF">TRANSFER FUNCTION</button><button id="tabRTA">RTA</button><button id="tabSPEC">SPECTROGRAPH</button><b id="modetxt" style="margin-left:auto;color:var(--gold)">MODE: RTA</b></div>
 <div class="ctl">
 <label>FFT<select id="fft"><option value="2048">2048</option><option value="4096">4096</option><option value="8192" selected>8192</option><option value="16384">16384</option></select></label>
 <label>AVERAGE<select id="average"><option value="1">1</option><option value="4">4</option><option value="8" selected>8</option><option value="16">16</option></select></label>
@@ -98,14 +99,15 @@ body.landscape-mode .layout{max-width:none}
 <label>RANGE<select id="range"><option value="60">60</option><option value="90" selected>90</option><option value="120">120</option></select></label>
 <label>COH. MIN<select id="cohmin"><option value="0.3">0.30</option><option value="0.5" selected>0.50</option><option value="0.7">0.70</option></select></label>
 </div>
-<div class="graphtitle"><b>MAGNITUDE — TRANSFER / RTA</b><span>20 Hz — 20 kHz • TF pink: averaging pelan + 1/6 oktaf</span></div>
+<div class="graphtitle"><b>MAGNITUDE — TRANSFER / RTA</b><span>20 Hz — 20 kHz</span></div>
 <canvas id="mag" width="1200" height="300"></canvas>
 <div class="graphtitle"><b>PHASE — 0° = NORMAL, ±180° = TERBALIK</b><span id="cohwarn" style="color:#ffd16a"></span></div>
 <canvas id="phase" width="1200" height="190"></canvas>
 <div class="cursorctl"><button id="curleft">◀</button><input type="range" id="cursorslider" min="0" max="1000" value="660"><button id="curright">▶</button><b id="cursorread" style="white-space:nowrap">4.72 kHz • — dB • —°</b></div>
 <div class="legend"><span><i style="background:var(--cyan)"></i>LIVE / TF</span><span><i style="background:var(--gold)"></i>PEAK HOLD</span><span><i style="background:var(--green)"></i>COHERENCE</span><span><i style="background:var(--red)"></i>TRACE A</span><span><i style="background:var(--purple)"></i>TRACE B</span></div>
+<div class="debug" id="debugbox">DEBUG: belum LIVE. START dulu, terus PINK, tunggu 5 detik, screenshot kotak ini kalo masih bug.</div>
 </div>
-<div class="panel" style="margin-top:8px"><div class="graphtitle"><b>LIVE SPECTROGRAPH</b><span>Terbaru di atas • jalan ke bawah</span></div>
+<div class="panel" style="margin-top:8px"><div class="graphtitle"><b>LIVE SPECTROGRAPH</b><span>Terbaru di atas</span></div>
 <canvas id="spec" width="1200" height="150"></canvas></div>
 </main>
 <aside>
@@ -119,13 +121,16 @@ body.landscape-mode .layout{max-width:none}
 <div class="kv"><span>Bin Width</span><b id="binwidth">— Hz</b></div>
 <div class="kv"><span>Cursor</span><b id="cursorfreq">4.72 kHz</b></div>
 </div>
-<div class="panel" style="margin-top:8px"><h3>KENAPA PINK BEDA SAMA WHITE?</h3>
+<div class="panel" style="margin-top:8px"><h3>KALO MASIH BUG, CEK INI</h3>
 <div style="font-size:11px;color:var(--mut);line-height:1.6">
-Pink turun -3dB/oktaf, di atas 10k energi nya kecil, jadi coherence di high wajar lebih rendah dari white. Yang penting 100 Hz - 8 kHz coherence nya 0.7+, kurva nya halus kayak white. Di atas 12k yang masih agak bergerigi itu normal, jangan dibaca.
+1. Mic RMS di debug harus -30 s/d -15, kalo -60 berarti mic ga denger pink nya<br>
+2. Coh 1k-8k harus 0.6+, kalo 0.1 berarti delay / sync masih ngaco<br>
+3. Kalo Ref RMS 0.00, berarti pink nya ga jalan, padahal tombol nya ON<br>
+4. Screenshot DEBUG nya, jangan cuma grafik nya
 </div></div>
 </aside>
 </div>
-<div class="statusbar"><span>● <b id="status">STANDBY</b></span><span>Input: Mic 1</span><span>Reference: <b id="refstat">OFF</b></span><span>FFT: <b id="fftstat">8192</b></span><span>Delay: <b id="delaystat">0.0 ms</b></span><span>Sync: <b id="syncstat">1 CONTEXT</b></span><span>Polarity: <b id="polstat">—</b></span><span style="margin-left:auto">SMART LIVE • dBFS rel, bukan SPL terkalibrasi</span></div>
+<div class="statusbar"><span>● <b id="status">STANDBY</b></span><span>Input: Mic 1</span><span>Reference: <b id="refstat">OFF</b></span><span>FFT: <b id="fftstat">8192</b></span><span>Delay: <b id="delaystat">0.0 ms</b></span><span>Sync: <b id="syncstat">1 CONTEXT</b></span><span>Polarity: <b id="polstat">—</b></span><span style="margin-left:auto">SMART LIVE • dBFS rel</span></div>
 <script>
 const $=id=>document.getElementById(id);
 const mag=$('mag'),mg=mag.getContext('2d'),phc=$('phase'),pg=phc.getContext('2d'),sp=$('spec'),sg=sp.getContext('2d');
@@ -133,6 +138,7 @@ let ctx=null,audio=null,stream=null,an=null,tfAn=null,refAn=null,src=null,raf=0,
 let smP=[],holdP=[],avgFramesP=[],currentVals=[];
 let captures=[null,null,null],selectedSlot=0;
 let cursorFreq=4720, invertPhase=false, checkingPol=false, polResult=null;
+let dbg={refRMS:0,micRMS:0,cohLow:0,cohMid:0,cohHigh:0,corr:0,tfCount:0};
 const minF=20,maxF=20000,PLOTB=34;
 const SEGS=[[20,1000,.26],[1000,3000,.14],[3000,7000,.16],[7000,10000,.10],[10000,15000,.08],[15000,20000,.26]];
 const db2p=v=>Math.pow(10,Math.max(-120,v)/10), p2db=p=>10*Math.log10(Math.max(1e-12,p));
@@ -144,10 +150,12 @@ function fftCalc(re,im){const n=re.length;for(let i=1,j=0;i<n;i++){let bit=n>>1;
 function ifftCalc(re,im){for(let i=0;i<re.length;i++)im[i]=-im[i];fftCalc(re,im);const n=re.length;for(let i=0;i<n;i++){re[i]/=n;im[i]=-im[i]/n}}
 let TF={Sxx:null,Syy:null,SxyR:null,SxyI:null,count:0};
 function resetTF(){TF={Sxx:null,Syy:null,SxyR:null,SxyI:null,count:0}}
+function rmsOf(arr){let s=0;for(let i=0;i<arr.length;i++)s+=arr[i]*arr[i];return Math.sqrt(s/arr.length)}
 function updateTF(){
  if(!tfAn||!refAn||noiseType!=='pink'||!audio) return;
- const N=4096, tdM=new Float32Array(N), tdR=new Float32Array(N);
+ const N=8192, tdM=new Float32Array(N), tdR=new Float32Array(N);
  tfAn.getFloatTimeDomainData(tdM); refAn.getFloatTimeDomainData(tdR);
+ dbg.micRMS=rmsOf(tdM); dbg.refRMS=rmsOf(tdR);
  const delaySamp=Math.round((+$('delayms').value/1000)*audio.sampleRate);
  const rShift=new Float32Array(N); for(let i=0;i<N;i++)rShift[i]=tdR[(i+delaySamp)%N];
  const reM=new Float32Array(N),imM=new Float32Array(N),reR=new Float32Array(N),imR=new Float32Array(N);
@@ -155,13 +163,11 @@ function updateTF(){
  fftCalc(reM,imM); fftCalc(reR,imR);
  const H=N/2;
  if(!TF.Sxx){TF.Sxx=new Float64Array(H);TF.Syy=new Float64Array(H);TF.SxyR=new Float64Array(H);TF.SxyI=new Float64Array(H)}
- // pink: averaging lebih pelan lagi, 0.04, biar high yang energi kecil ga loncat
- const a=noiseType==='pink'?0.04:0.08;
+ const a=0.04;
  for(let k=1;k<H;k++){const f=k*audio.sampleRate/N; if(f<minF||f>maxF) continue;const xx=reR[k]*reR[k]+imR[k]*imR[k], yy=reM[k]*reM[k]+imM[k]*imM[k];const xr=reR[k]*reM[k]+imR[k]*imM[k], xi=reR[k]*imM[k]-imR[k]*reM[k]; TF.Sxx[k]=TF.Sxx[k]*(1-a)+xx*a; TF.Syy[k]=TF.Syy[k]*(1-a)+yy*a; TF.SxyR[k]=TF.SxyR[k]*(1-a)+xr*a; TF.SxyI[k]=TF.SxyI[k]*(1-a)+xi*a}
- TF.count++;
+ TF.count++; dbg.tfCount=TF.count;
 }
 function smoothTF(raw){
- // pink: paksa minimal 1/6 oktaf, walau user pilih RAW, biar ga bergerigi
  let perOct=+$('detail').value||0;
  if(noiseType==='pink'&&perOct!==0&&perOct>6) perOct=6;
  if(!perOct) perOct=6;
@@ -175,14 +181,17 @@ function smoothTF(raw){
 }
 function tfData(){
  if(!TF.Sxx||TF.count<5||!audio) return null;
- const out=[];
- for(let k=1;k<TF.Sxx.length;k++){const f=k*audio.sampleRate/4096; if(f<minF||f>maxF)continue;const coh=(TF.SxyR[k]*TF.SxyR[k]+TF.SxyI[k]*TF.SxyI[k])/Math.max(1e-18,TF.Sxx[k]*TF.Syy[k]);const mag=Math.sqrt(TF.SxyR[k]*TF.SxyR[k]+TF.SxyI[k]*TF.SxyI[k])/Math.max(1e-18,TF.Sxx[k]);let v=20*Math.log10(Math.max(1e-6,mag));let phase=Math.atan2(TF.SxyI[k],TF.SxyR[k])*180/Math.PI; if(invertPhase){phase+=180; if(phase>180)phase-=360} out.push({f,v,phase,coh:Math.min(1,coh)})}
+ const N=8192, out=[];
+ for(let k=1;k<TF.Sxx.length;k++){const f=k*audio.sampleRate/N; if(f<minF||f>maxF)continue;const coh=(TF.SxyR[k]*TF.SxyR[k]+TF.SxyI[k]*TF.SxyI[k])/Math.max(1e-18,TF.Sxx[k]*TF.Syy[k]);const mag=Math.sqrt(TF.SxyR[k]*TF.SxyR[k]+TF.SxyI[k]*TF.SxyI[k])/Math.max(1e-18,TF.Sxx[k]);let v=20*Math.log10(Math.max(1e-6,mag));let phase=Math.atan2(TF.SxyI[k],TF.SxyR[k])*180/Math.PI; if(invertPhase){phase+=180; if(phase>180)phase-=360} out.push({f,v,phase,coh:Math.min(1,coh)})}
  const mid=out.filter(o=>o.f>500&&o.f<2000); const avgP=mid.length?mid.reduce((s,o)=>s+db2p(o.v),0)/mid.length:1; const off=p2db(avgP); out.forEach(o=>o.v=o.v-off);
- return smoothTF(out);
+ const sm=smoothTF(out);
+ const avgBand=(a,b)=>{const s=sm.filter(o=>o.f>=a&&o.f<=b);return s.length?s.reduce((x,o)=>x+o.coh,0)/s.length:0};
+ dbg.cohLow=avgBand(100,1000); dbg.cohMid=avgBand(1000,8000); dbg.cohHigh=avgBand(8000,20000);
+ return sm;
 }
 function findBestLag(){
  if(!tfAn||!refAn||!audio) return null;
- const N=4096,tdM=new Float32Array(N),tdR=new Float32Array(N); tfAn.getFloatTimeDomainData(tdM); refAn.getFloatTimeDomainData(tdR);
+ const N=8192,tdM=new Float32Array(N),tdR=new Float32Array(N); tfAn.getFloatTimeDomainData(tdM); refAn.getFloatTimeDomainData(tdR);
  let bestLag=0,bestV=-1,denM=0,denR=0;
  for(let i=0;i<N;i++){denM+=tdM[i]*tdM[i];denR+=tdR[i]*tdR[i]}
  if(denM===0||denR===0) return null;
@@ -192,7 +201,7 @@ function findBestLag(){
 }
 function corrSign(){
  if(!tfAn||!refAn||!audio) return null;
- const N=4096,tdM=new Float32Array(N),tdR=new Float32Array(N); tfAn.getFloatTimeDomainData(tdM); refAn.getFloatTimeDomainData(tdR);
+ const N=8192,tdM=new Float32Array(N),tdR=new Float32Array(N); tfAn.getFloatTimeDomainData(tdM); refAn.getFloatTimeDomainData(tdR);
  const delaySamp=Math.round((+$('delayms').value/1000)*audio.sampleRate);
  let num=0,denM=0,denR=0;
  for(let i=0;i<N;i++){const r=tdR[(i+delaySamp)%N];num+=tdM[i]*r;denM+=tdM[i]*tdM[i];denR+=r*r}
@@ -239,7 +248,7 @@ function setPolBadge(res,corr){
 }
 function livePolarity(tf){
  if(!tf||noiseType!=='pink'){ if(!checkingPol) setPolBadge(null,null); return }
- const res=polarityFromTF(tf); const corr=corrSign();
+ const res=polarityFromTF(tf); const corr=corrSign(); dbg.corr=corr||0;
  if(res&&res.state!=='unknown'&&corr!==null){
   if(res.state==='inverted'&&corr>0.25) res.conf=Math.round(res.conf*0.5);
   if(res.state==='normal'&&corr<-0.25) res.conf=Math.round(res.conf*0.5);
@@ -248,23 +257,34 @@ function livePolarity(tf){
  if(!checkingPol) setPolBadge(res,corr);
  polResult=res;
 }
+function updateDebug(){
+ const el=$('debugbox');
+ if(!an){ el.textContent='DEBUG: belum LIVE. START dulu, terus PINK, tunggu 5 detik.'; return; }
+ el.textContent=
+  'DEBUG  noise='+ (noiseType||'OFF') +'  vol='+$('noisevol').value+'%  delay='+$('delayms').value+'ms  TFcount='+dbg.tfCount+'\n'+
+  'RefRMS='+dbg.refRMS.toFixed(4)+'  (harus >0.01, kalo 0.0000 = pink ga jalan)\n'+
+  'MicRMS='+dbg.micRMS.toFixed(4)+'  (harus 0.01-0.20, kalo <0.001 = mic ga denger pink)\n'+
+  'Coh 100-1k='+dbg.cohLow.toFixed(2)+'  Coh 1k-8k='+dbg.cohMid.toFixed(2)+'  Coh 8k-20k='+dbg.cohHigh.toFixed(2)+'  (harus 0.60+ di tengah)\n'+
+  'Corr='+(dbg.corr||0).toFixed(2)+'  SR='+(audio?audio.sampleRate:0)+'  FFT_TF=8192  ctx='+(ctx?'1':'0');
+}
 function powerAtLog(freqs,pArr,f){if(!freqs.length)return null;if(f<=freqs[0].f)return pArr[0];if(f>=freqs[freqs.length-1].f)return pArr[pArr.length-1];let lo=0,hi=freqs.length-1;while(hi-lo>1){let m=(lo+hi)>>1;if(freqs[m].f<=f)lo=m;else hi=m}const a=freqs[lo],b=freqs[hi],t=(Math.log(f)-Math.log(a.f))/(Math.log(b.f)-Math.log(a.f));return pArr[lo]+(pArr[hi]-pArr[lo])*t}
 function octaveSmooth(dense,perOct){if(!perOct||!dense.length)return dense;const half=1/(2*perOct);return dense.map(o=>{const lo=o.f*Math.pow(2,-half),hi=o.f*Math.pow(2,half);let s=0,c=0;for(const d of dense){if(d.f>=lo&&d.f<=hi){s+=db2p(d.v);c++}}return{f:o.f,v:p2db(c?s/c:db2p(o.v)),x:o.x,phase:o.phase,coh:o.coh}})}
 function densifyPower(freqs,pArr){const out=[],W=mag.width;for(let x=0;x<=W;x+=6){const f=freqAtX(x,W);const p=powerAtLog(freqs,pArr,f);if(p===null)continue;out.push({f,v:p2db(p),x})}return octaveSmooth(out,+$('detail').value||0)}
 function pointOnLine(data,f){if(!data||!data.length)return null;const cx=xfreq(f,mag.width);const pts=data.map(o=>({f:o.f,v:o.v,x:o.x??xfreq(o.f,mag.width),phase:o.phase,coh:o.coh}));if(cx<=pts[0].x)return pts[0];if(cx>=pts[pts.length-1].x)return pts[pts.length-1];for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1];if(cx>=a.x&&cx<=b.x){const t=b.x===a.x?0:(cx-a.x)/(b.x-a.x);return{f,v:a.v+(b.v-a.v)*t,x:cx,phase:a.phase+(b.phase-a.phase)*t,coh:a.coh+(b.coh-a.coh)*t}}}return pts[0]}
 function cursorData(){if(currentVals.length)return currentVals;const av=captures.map((cap,i)=>({cap,i})).filter(x=>x.cap);const ch=av[selectedSlot]||av[av.length-1];return ch?ch.cap.data:[]}
 let noiseSrc=null,noiseGain=null,noiseType=null;
-// PINK BARU: bikin di frekuensi, 1/sqrt(f), phase acak, IFFT. Loop mulus, ga ada patahan, ga ada ekor filter.
+// PINK FIX: potong di 20 Hz. Di bawah 20 Hz = 0, biar energi ga kebuang ke subsonic.
 function makePinkBuffer(c){
  const N=65536, re=new Float32Array(N), im=new Float32Array(N);
- for(let k=1;k<N/2;k++){
+ const sr=c.sampleRate, kMin=Math.max(1,Math.floor(20*N/sr));
+ for(let k=kMin;k<N/2;k++){
   const amp=1/Math.sqrt(k);
   const ph=Math.random()*2*Math.PI;
   re[k]=amp*Math.cos(ph); im[k]=amp*Math.sin(ph);
   re[N-k]=re[k]; im[N-k]=-im[k];
  }
  ifftCalc(re,im);
- const buf=c.createBuffer(1,N,c.sampleRate), d=buf.getChannelData(0);
+ const buf=c.createBuffer(1,N,sr), d=buf.getChannelData(0);
  let rms=0; for(let i=0;i<N;i++) rms+=re[i]*re[i]; rms=Math.sqrt(rms/N)||1;
  const gain=0.35/rms;
  for(let i=0;i<N;i++) d[i]=re[i]*gain;
@@ -284,7 +304,7 @@ async function startNoise(type){
   await ensureCtx();
   noiseSrc=ctx.createBufferSource(); noiseSrc.buffer=makeBuf(ctx,type); noiseSrc.loop=true;
   noiseGain=ctx.createGain(); noiseGain.gain.value=($('noisevol').value/100)*0.5;
-  refAn=ctx.createAnalyser(); refAn.fftSize=4096; refAn.smoothingTimeConstant=0;
+  refAn=ctx.createAnalyser(); refAn.fftSize=8192; refAn.smoothingTimeConstant=0;
   noiseSrc.connect(noiseGain); noiseGain.connect(ctx.destination); noiseGain.connect(refAn);
   noiseSrc.start(); noiseType=type;
   $('refstat').textContent=type.toUpperCase()+' NOISE'; $('syncstat').textContent='1 CONTEXT • '+ctx.sampleRate+' Hz';
@@ -304,9 +324,9 @@ $('whitebtn').onclick=()=>noiseType==='white'?stopNoise():startNoise('white');
 $('noiseoff').onclick=()=>stopNoise();
 $('noisevol').oninput=()=>{$('noisevoltxt').textContent=$('noisevol').value+'%';if(noiseGain&&ctx)noiseGain.gain.setTargetAtTime(($('noisevol').value/100)*0.5,ctx.currentTime,.02)};
 $('checkpol').onclick=async()=>{
- if(!an||noiseType!=='pink'){alert('START dulu + PINK NOISE dulu, mas. Polarity ga bisa dicek dari lagu / suara ruangan.');return}
+ if(!an||noiseType!=='pink'){alert('START dulu + PINK NOISE dulu, mas.');return}
  checkingPol=true; resetTF();
- $('poltitle').textContent='... NGUKUR 1 DETIK'; $('poldetail').textContent='Jangan gerakin mic / speaker, biarin pink noise bunyi 1 detik.';
+ $('poltitle').textContent='... NGUKUR 1 DETIK'; $('poldetail').textContent='Jangan gerakin mic / speaker.';
  $('checkpol').disabled=true;
  await new Promise(r=>setTimeout(r,1500));
  for(let i=0;i<8;i++) updateTF();
@@ -340,14 +360,15 @@ function drawAll(){
  if(showTF&&tf){
   pg.beginPath();pg.strokeStyle='#3fd4ec';pg.lineWidth=2.5;tf.forEach((o,i)=>{const X=xfreq(o.f,pw),Y=(180-o.phase)/360*ph2;if(i===0)pg.moveTo(X,Y);else pg.lineTo(X,Y)});pg.stroke();
   pg.fillStyle='rgba(5,7,10,.55)';let inLow=false,startX=0;tf.forEach(o=>{const low=o.coh<+$('cohmin').value;const X=xfreq(o.f,pw);if(low&&!inLow){inLow=true;startX=X}if(!low&&inLow){pg.fillRect(startX,0,X-startX,ph2);inLow=false}});if(inLow)pg.fillRect(startX,0,pw-startX,ph2);
-  const cohAvg=tf.reduce((s,o)=>s+o.coh,0)/tf.length;$('cohavg').textContent=cohAvg.toFixed(2);$('modetxt').textContent='MODE: TRANSFER FUNCTION • REFERENCE PINK NOISE • 1 CONTEXT';
-  $('cohwarn').textContent=cohAvg<0.3?'⚠ COHERENCE '+cohAvg.toFixed(2)+' RENDAH — FIND DELAY / DEKETIN MIC':'';
+  const cohAvg=tf.reduce((s,o)=>s+o.coh,0)/tf.length;$('cohavg').textContent=cohAvg.toFixed(2);$('modetxt').textContent='MODE: TRANSFER FUNCTION • PINK 20Hz+';
+  $('cohwarn').textContent=cohAvg<0.3?'⚠ COHERENCE '+cohAvg.toFixed(2)+' RENDAH':'';
   $('delaywarn').style.display=cohAvg<0.3?'block':'none';
   livePolarity(tf);
  } else {
   pg.fillStyle='#8b95a5';pg.font='bold 15px Arial';pg.textAlign='center';pg.fillText('NO REFERENCE — HIDUPKAN PINK NOISE UNTUK PHASE / POLARITY',pw/2,ph2/2);pg.textAlign='left';$('modetxt').textContent='MODE: RTA — HIDUPKAN PINK NOISE UNTUK TF + POLARITY';$('cohavg').textContent='—';$('cohwarn').textContent='';
   if(noiseType!=='pink'&&!checkingPol) setPolBadge(null,null);
  }
+ updateDebug();
 }
 function colorFor(v){let t=Math.max(0,Math.min(1,(v+90)/60));const st=[[20,16,48],[67,47,118],[170,76,137],[239,139,143],[255,218,142]];let p=t*4,i=Math.min(3,Math.floor(p)),a=p-i;const c=st[i].map((n,k)=>Math.round(n*(1-a)+st[i+1][k]*a));return c}
 function drawSpec(raw,n){const W=sp.width,H=sp.height,S=3;try{const o=sg.getImageData(0,0,W,H-S);sg.putImageData(o,0,S)}catch(e){}const row=sg.createImageData(W,S);for(let x=0;x<W;x++){const f=freqAtX(x,W),bin=Math.max(1,Math.min(n-1,Math.round(f*fft/audio.sampleRate))),v=raw[bin]||-120,m=colorFor(v);for(let y=0;y<S;y++){const p=(y*W+x)*4;row.data[p]=m[0];row.data[p+1]=m[1];row.data[p+2]=m[2];row.data[p+3]=255}}sg.putImageData(row,0,0)}
@@ -370,7 +391,7 @@ function draw(){
  if($('showlive').checked) drawTrace(mg,holdDense,w,plotH,range,'#ffd16a',1.2);
  const pct=Math.max(0,Math.min(100,(peak+90)/90*100));$('splbar').style.height=pct+'%';$('spldb').textContent=peak.toFixed(1);
  $('peakfreq').textContent=peakFreq.toFixed(0)+' Hz';$('rmsdb').textContent=p2db(cntP?sumP/cntP:1e-12).toFixed(1)+' dBFS';
- if(frameNo%3===0) updateTF();
+ if(frameNo%2===0) updateTF();
  if($('autodelay').checked&&noiseType==='pink'&&frameNo%60===0){
   const best=findBestLag();
   if(best&&best.corr>0.25&&Math.abs(best.ms-(+$('delayms').value))>0.4){
@@ -386,14 +407,14 @@ $('start').onclick=async()=>{
   await ensureCtx();
   src=ctx.createMediaStreamSource(stream);
   an=ctx.createAnalyser();fft=+$('fft').value;an.fftSize=fft;an.smoothingTimeConstant=0;an.minDecibels=-120;an.maxDecibels=0;
-  tfAn=ctx.createAnalyser();tfAn.fftSize=4096;tfAn.smoothingTimeConstant=0;
+  tfAn=ctx.createAnalyser();tfAn.fftSize=8192;tfAn.smoothingTimeConstant=0;
   src.connect(an); src.connect(tfAn);
   smP=[];holdP=[];avgFramesP=[];currentVals=[];resetTF();sg.fillStyle='#141030';sg.fillRect(0,0,sp.width,sp.height);
   $('start').disabled=true;$('stop').disabled=false;$('status').textContent='LIVE';$('liveind').textContent='● LIVE';$('samplerate').textContent=ctx.sampleRate+' Hz';$('binwidth').textContent=(ctx.sampleRate/fft).toFixed(1)+' Hz';$('fftstat').textContent=fft;draw();
  }catch(e){
   if(stream)stream.getTracks().forEach(t=>t.stop());
   $('status').textContent='MIC ERROR';
-  alert('Tidak bisa membuka mikrofon: '+e.message+'. Izinkan mic, pakai HTTPS, tutup tab lain yang pake mic, terus refresh.');
+  alert('Tidak bisa membuka mikrofon: '+e.message);
  }
 };
 $('stop').onclick=()=>{cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;src=null;an=null;tfAn=null;currentVals=[];$('start').disabled=false;$('stop').disabled=true;$('status').textContent='STOPPED';$('liveind').textContent='● STANDBY';drawAll()};
