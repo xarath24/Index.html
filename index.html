@@ -62,7 +62,7 @@ body.landscape-mode header h1{font-size:15px}
 const $=id=>document.getElementById(id);
 const spec=$('spectrum'),sc=spec.getContext('2d'),water=$('waterfall'),wc=water.getContext('2d');
 let audio=null,stream=null,an=null,src=null,raf=0,sm=[],hold=[],frame=0,fft=4096,avgCount=4;
-let captures=[];const captureColors=['#ff6b6b','#b58cff','#67d69b'];let currentVals=[];
+let captures=[];const captureColors=['#ff6b6b','#b58cff','#67d69b'];let currentVals=[];let avgFrames=[];
 let cursorFreq=1000,cursorActive=false;
 const minF=20,maxF=20000;
 // Piecewise log scale: give the important 1 kHz–10 kHz region half of the graph width.
@@ -91,23 +91,21 @@ function drawFrozen(){
  grid();
  const w=spec.width,h=spec.height,ph=h-36,range=+$('range').value;
  const y=v=>Math.max(0,Math.min(range,-v))/range*ph;
- if(currentVals.length){
-  sc.beginPath();sc.strokeStyle='#55d9ed';sc.lineWidth=2.2;
-  currentVals.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(o.v);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});sc.stroke();
- }
  captures.forEach((cap,ci)=>{
-  sc.beginPath();sc.strokeStyle=captureColors[ci%captureColors.length];sc.lineWidth=2.8;
-  cap.data.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(o.v);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});sc.stroke();
+  sc.beginPath();sc.strokeStyle=captureColors[ci%captureColors.length];sc.lineWidth=3;
+  cap.data.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(o.v);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});
+  sc.stroke();
  });
  if(cursorActive){
   const cx=xfreq(cursorFreq,w);
   sc.save();sc.setLineDash([]);sc.strokeStyle='rgba(255,255,255,.22)';sc.lineWidth=14;
   sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();
   sc.strokeStyle='#fff';sc.lineWidth=4;sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();sc.restore();
-  if(currentVals.length){
-   const nearest=currentVals.reduce((best,o)=>Math.abs(o.f-cursorFreq)<Math.abs(best.f-cursorFreq)?o:best,currentVals[0]);
-   $('cursorlevel').textContent=nearest.v.toFixed(1)+' dBFS';
-  }
+  const data=captures.length?captures[captures.length-1].data:[];
+  if(data.length){
+   const nearest=data.reduce((best,o)=>Math.abs(o.f-cursorFreq)<Math.abs(best.f-cursorFreq)?o:best,data[0]);
+   $('cursorlevel').textContent=nearest.v.toFixed(1)+' dBFS (capture)';
+  } else $('cursorlevel').textContent='— dBFS';
  }
 }
 function draw(){
@@ -116,8 +114,13 @@ function draw(){
  let vals=[],peak=-Infinity,peakBin=1,range=+$('range').value;
  for(let i=1;i<n;i++){let f=i*audio.sampleRate/fft;if(f<minF||f>maxF)continue;let v=Number.isFinite(raw[i])?raw[i]:-120;vals.push({f,v,i});if(v>peak){peak=v;peakBin=i}}
  let smoothing=+$('smooth').value;
- if(sm.length!==vals.length){sm=vals.map(o=>o.v);hold=vals.map(o=>o.v)}
- else vals.forEach((o,i)=>{sm[i]=smoothing*sm[i]+(1-smoothing)*o.v;hold[i]=Math.max(o.v,hold[i]-.12)});
+ const target=vals.map(o=>o.v);
+ avgFrames.push(target);
+ const wanted=Math.max(1,+$('average').value);
+ while(avgFrames.length>wanted)avgFrames.shift();
+ const averaged=target.map((_,i)=>avgFrames.reduce((sum,frame)=>sum+frame[i],0)/avgFrames.length);
+ if(sm.length!==vals.length){sm=averaged.slice();hold=averaged.slice()}
+ else vals.forEach((o,i)=>{sm[i]=smoothing*sm[i]+(1-smoothing)*averaged[i];hold[i]=Math.max(averaged[i],hold[i]-.12)});
  grid();let w=spec.width,h=spec.height,ph=h-36;
  function y(v){return Math.max(0,Math.min(range, -v))/range*ph}
  sc.beginPath();sc.strokeStyle='#55d9ed';sc.lineWidth=2.2;
@@ -170,10 +173,10 @@ $('start').onclick=async()=>{
   if(!navigator.mediaDevices?.getUserMedia)throw Error('Browser tidak mendukung akses mikrofon. Buka file melalui HTTPS.');
   stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
   audio=new(window.AudioContext||window.webkitAudioContext)();await audio.resume();src=audio.createMediaStreamSource(stream);an=audio.createAnalyser();fft=+$('fft').value;avgCount=+$('average').value;an.fftSize=fft;an.smoothingTimeConstant=0;src.connect(an);
-  sm=[];hold=[];wc.clearRect(0,0,water.width,water.height);$('status').textContent='LIVE';$('inputstate').textContent='MIC ON';$('samplerate').textContent=audio.sampleRate+' Hz';$('start').disabled=true;$('stop').disabled=false;draw();
+  sm=[];hold=[];avgFrames=[];currentVals=[];wc.clearRect(0,0,water.width,water.height);$('capture').disabled=false;$('status').textContent='LIVE';$('inputstate').textContent='MIC ON';$('samplerate').textContent=audio.sampleRate+' Hz';$('start').disabled=true;$('stop').disabled=false;draw();
  }catch(e){$('status').textContent='MIC ERROR';alert('Tidak bisa membuka mikrofon: '+e.message+'. Izinkan akses mikrofon dan gunakan browser yang mendukung HTTPS.')}
 };
-$('stop').onclick=()=>{cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());if(audio)audio.close();audio=null;stream=null;an=null;$('status').textContent='STOPPED • CAPTURE TETAP TAMPIL';$('inputstate').textContent='OFF';$('start').disabled=false;$('stop').disabled=true;drawFrozen()};
+$('stop').onclick=()=>{cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());if(audio)audio.close();audio=null;stream=null;an=null;currentVals=[];sm=[];hold=[];avgFrames=[];$('status').textContent='STOPPED • HANYA CAPTURE TERSIMPAN';$('inputstate').textContent='OFF';$('start').disabled=false;$('stop').disabled=true;$('capture').disabled=true;drawFrozen()};
 function moveCursor(ev){
  const rect=spec.getBoundingClientRect();
  const px=Math.max(0,Math.min(spec.width,(ev.clientX-rect.left)/rect.width*spec.width));
@@ -193,14 +196,14 @@ function endCursorDrag(){draggingCursor=false}
 spec.addEventListener('pointerup',endCursorDrag);
 spec.addEventListener('pointercancel',endCursorDrag);
 spec.addEventListener('lostpointercapture',endCursorDrag);
-$('fft').onchange=()=>{if(an){fft=+$('fft').value;an.fftSize=fft;sm=[];hold=[]}};
+$('fft').onchange=()=>{if(an){fft=+$('fft').value;an.fftSize=fft;sm=[];hold=[];avgFrames=[]}};
+$('average').onchange=()=>{avgFrames=[];};
 $('range').onchange=()=>{if(an){cancelAnimationFrame(raf);draw()}else drawFrozen()};
 $('capture').onclick=()=>{
- if(!currentVals.length){$('capturestatus').textContent='Belum ada data. Jalankan LIVE untuk mengambil pengukuran.';return}
+ if(!an||!currentVals.length){$('capturestatus').textContent='Tekan START LIVE dan tunggu grafik terbaca sebelum capture.';return}
  if(captures.length>=3){$('capturestatus').textContent='Maksimal 3 capture. Hapus capture lama untuk mengambil yang baru.';return}
  captures.push({name:'Capture '+(captures.length+1),data:currentVals.map(o=>({...o}))});
- $('capturestatus').textContent=captures.length+' kurva tersimpan — bandingkan overlay dengan LIVE.';
- if(an){cancelAnimationFrame(raf);draw()}else drawFrozen();
+ $('capturestatus').textContent=captures.length+' capture tersimpan. Capture tetap tampil setelah STOP.';
 };
 $('clearcaptures').onclick=()=>{captures=[];$('capturestatus').textContent='Semua capture dihapus.';if(an){cancelAnimationFrame(raf);draw()}else drawFrozen()};
 grid();
