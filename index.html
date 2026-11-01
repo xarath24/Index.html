@@ -18,7 +18,7 @@ button.cap{background:#7c3aed;border-color:#a78bfa;font-weight:800}
 button.danger{background:#7f1d1d;border-color:#ef4444}
 button.phon{background:#065f46!important;border-color:#34d399!important;color:#fff}
 button.find{background:#7c3aed;border-color:#a78bfa;font-weight:800;padding:7px 14px}
-select{background:#222b37;color:#e8eaf0;border:1px solid #4a5566;border-radius:6px;padding:6px}
+select{background:#222b37;color:#e8eaf0;border:1px solid #4a5566;border-radius:6px;padding:6px;width:100%}
 .layout{display:grid;grid-template-columns:250px minmax(640px,1fr) 170px;gap:8px;padding:8px;max-width:1600px;margin:auto;min-width:900px}
 .panel{background:#14181f;border:1px solid #2b323e;border-radius:8px;padding:9px}
 h3{margin:0 0 8px;font-size:11px;letter-spacing:1px;color:#8b95a5}
@@ -78,7 +78,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 .clipTxt{font-weight:900;font-size:12px;color:#8b95a5;letter-spacing:.5px}
 .clipTxt.on{color:#f87171}
 .clipHint{margin-left:auto;font-size:10px;color:#8b95a5}
-.cursorTop{flex:1;min-width:280px;background:#090d12;border:1px solid #2b323e;border-radius:8px;padding:6px 12px;display:flex;gap:16px;align-items:center;justify-content:center;text-align:center;white-space:nowrap;overflow:hidden;margin:0 auto}
+.cursorTop{flex:1;min-width:280px;background:#090d12;border:1px solid #2b323e;border-radius:8px;padding:10px 12px;display:flex;gap:16px;align-items:center;justify-content:center;text-align:center;white-space:nowrap;overflow:hidden;margin:0 auto}
 .cursorTop .lab{font-size:10px;color:#8b95a5;letter-spacing:1px}
 .cursorTop .freq{font-weight:900;font-size:16px;color:#fff}
 .cursorTop .db{font-weight:900;font-size:16px;color:#3fd4ec}
@@ -97,6 +97,8 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 .peakClip{display:flex;align-items:center;gap:8px;margin-top:8px}
 .peakClipLamp{width:16px;height:16px;border-radius:50%;background:#3a4452;border:2px solid #6b7280;flex-shrink:0}
 .peakClipLamp.on{background:#ef4444;border-color:#fca5a5;box-shadow:0 0 12px #ef4444,0 0 26px #ef4444;animation:clipBlink .3s infinite alternate}
+.setRow{display:flex;flex-direction:column;gap:7px}
+.setRow label{font-size:10px;color:#8b95a5;display:flex;flex-direction:column;gap:3px}
 :fullscreen body{background:#0a0c10}
 </style>
 </head>
@@ -175,38 +177,6 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
   <main>
     <div class="panel">
       <div class="ctl">
-        <label>FFT
-          <select id="fft">
-            <option value="2048">2048</option>
-            <option value="4096">4096</option>
-            <option value="8192" selected>8192</option>
-            <option value="16384">16384</option>
-          </select>
-        </label>
-        <label>AVERAGE
-          <select id="average">
-            <option value="1">1</option>
-            <option value="4">4</option>
-            <option value="8">8</option>
-            <option value="12" selected>12</option>
-            <option value="16">16</option>
-          </select>
-        </label>
-        <label>SMOOTHING
-          <select id="detail">
-            <option value="0">RAW</option>
-            <option value="12">1/12 OKT</option>
-            <option value="6" selected>1/6 OKT</option>
-            <option value="3">1/3 OKT</option>
-          </select>
-        </label>
-        <label>RANGE
-          <select id="range">
-            <option value="60">60</option>
-            <option value="90" selected>90</option>
-            <option value="120">120</option>
-          </select>
-        </label>
         <div class="cursorTop" id="cursorTop">
           <span class="lab">CURSOR</span>
           <span class="freq" id="ctFreq">4.19 kHz</span>
@@ -255,6 +225,44 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       </div>
       <button id="resetpeak" style="width:100%;padding:8px;margin-top:8px">↻ RESET PEAK HOLD</button>
       <p style="color:#8b95a5;font-size:10px;line-height:1.6;margin:6px 0 0">Bagus nya di -12 sampai -6 dBFS. Kalo sering 0 dBFS, hasil phase nya ga akurat.</p>
+    </div>
+
+    <div class="panel" style="margin-top:8px">
+      <h3>⚙️ PENGATURAN</h3>
+      <div class="setRow">
+        <label>FFT
+          <select id="fft">
+            <option value="2048">2048</option>
+            <option value="4096">4096</option>
+            <option value="8192" selected>8192</option>
+            <option value="16384">16384</option>
+          </select>
+        </label>
+        <label>AVERAGE
+          <select id="average">
+            <option value="1">1</option>
+            <option value="4">4</option>
+            <option value="8">8</option>
+            <option value="12" selected>12</option>
+            <option value="16">16</option>
+          </select>
+        </label>
+        <label>SMOOTHING
+          <select id="detail">
+            <option value="0">RAW</option>
+            <option value="12">1/12 OKT</option>
+            <option value="6" selected>1/6 OKT</option>
+            <option value="3">1/3 OKT</option>
+          </select>
+        </label>
+        <label>RANGE
+          <select id="range">
+            <option value="60">60</option>
+            <option value="90" selected>90</option>
+            <option value="120">120</option>
+          </select>
+        </label>
+      </div>
     </div>
   </aside>
 </div>
