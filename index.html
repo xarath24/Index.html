@@ -19,12 +19,16 @@ main{padding:10px;max-width:1100px;margin:auto;overflow-x:hidden}.toolbar,.panel
 .toolbar .tb-btn{padding:9px 10px;border-right:1px solid #303640;display:flex;align-items:center}
 button,select{background:#222b37;color:var(--txt);border:1px solid #566171;border-radius:7px;padding:9px 11px;font-size:13px}
 button.go{background:#087e91;border-color:#13b5c9}button:disabled{opacity:.45}
+button.noise-on{background:#c2410c!important;border-color:#fb923c!important;color:#fff}
 label{font-size:11px;color:var(--muted)}
 canvas{display:block;width:100%;height:auto;background:#030507;border-radius:5px;max-width:100%;cursor:ew-resize;touch-action:none}
 #spectrum{aspect-ratio:1200/400}
 #waterfall{aspect-ratio:1200/140;height:auto;cursor:default}
 .capturebar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
 .capturebar button{padding:10px 14px}
+.noisebar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.noisebar button{padding:11px 14px;flex:1;min-width:110px}
+.noisebar input[type=range]{flex:1;min-width:120px;accent-color:#fb923c;height:28px}
 .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}
 .title{font-size:13px;color:#cbd3df;margin:0 0 7px;display:flex;justify-content:space-between}
@@ -52,6 +56,21 @@ body.landscape-mode header h1{font-size:15px}
 <div class="tb"><label>RANGE</label><select id="range"><option value="60">60 dB</option><option value="90" selected>90 dB</option><option value="120">120 dB</option></select></div>
 <div class="tb"><label>SMOOTH</label><select id="smooth"><option value="0">OFF</option><option value=".55">LOW</option><option value=".8" selected>MED</option><option value=".93">HIGH</option></select></div>
 </section>
+
+<section class="panel"><div class="title"><b>🔊 NOISE GENERATOR — BUAT TES SPEAKER / PA</b><span id="noisestatus">OFF</span></div>
+<div class="noisebar">
+ <button id="pinkbtn">🩷 PINK NOISE</button>
+ <button id="whitebtn">🤍 WHITE NOISE</button>
+ <button id="noiseoff">■ MATIKAN</button>
+</div>
+<div class="noisebar" style="margin-top:8px">
+ <label style="white-space:nowrap">VOLUME <b id="noisevoltxt" style="color:#fff">20%</b></label>
+ <input type="range" id="noisevol" min="0" max="100" value="20">
+ <label style="white-space:nowrap">START LIVE dulu biar kebaca RTA nya</label>
+</div>
+<div class="info">Pink noise = rata per oktaf, buat tuning / cek response. White noise = rata per Hz, lebih nyaring di high, buat cek tweeter. Mulai volume kecil, naik pelan-pelan. Jangan deketin mic ke speaker biar ga feedback.</div>
+</section>
+
 <section class="panel"><div class="title"><b>MAGNITUDE / FREQUENCY RESPONSE</b><span>20 Hz — 20 kHz</span></div><canvas id="spectrum" width="1200" height="400"></canvas>
 <div class="cursorctl">
  <button id="curleft" aria-label="geser kiri">◀</button>
@@ -62,7 +81,7 @@ body.landscape-mode header h1{font-size:15px}
  <div class="stat"><small>CURSOR FREQUENCY</small><strong id="cursorfreq">4.72 kHz</strong></div>
  <div class="stat"><small>LEVEL DI TITIK</small><strong id="cursorlevel">— dBFS</strong></div>
 </div>
-<div class="info">Geser garis putih di grafik, geser slider di atas, atau pencet ◀ ▶ untuk geser halus. Titik putih harus nempel di kurva.</div>
+<div class="info">Titik putih sekarang dihitung persis di garis kurva, bukan titik terdekat, jadi ga ngambang lagi.</div>
 <div class="capturebar">
  <label style="width:100%">PILIH SLOT TUJUAN (capture baru hanya mengganti slot ini)</label>
  <select id="targetslot"></select>
@@ -118,9 +137,16 @@ function freqAtX(x,w){
  return maxF;
 }
 function fmtFreq(f){return f>=1000?(f/1000).toFixed(2)+' kHz':f.toFixed(0)+' Hz'}
-function nearestIn(data,f){
+// INTERPOLASI: level persis di garis, di antara 2 titik data. Ini yang bikin titik ga ngambang.
+function levelAt(data,f){
  if(!data||!data.length)return null;
- return data.reduce((best,o)=>Math.abs(o.f-f)<Math.abs(best.f-f)?o:best,data[0]);
+ if(f<=data[0].f) return data[0].v;
+ if(f>=data[data.length-1].f) return data[data.length-1].v;
+ let lo=0,hi=data.length-1;
+ while(hi-lo>1){let mid=(lo+hi)>>1;if(data[mid].f<=f)lo=mid;else hi=mid}
+ const a=data[lo],b=data[hi];
+ const t=(Math.log(f)-Math.log(a.f))/(Math.log(b.f)-Math.log(a.f));
+ return a.v+(b.v-a.v)*t;
 }
 function cursorData(){
  if(currentVals.length) return currentVals;
@@ -128,6 +154,58 @@ function cursorData(){
  const ch=av.find(x=>x.i===selectedSlot)||av[av.length-1];
  return ch?ch.cap.data:[];
 }
+// ===== NOISE GENERATOR =====
+let noiseCtx=null,noiseSrc=null,noiseGain=null,noiseType=null;
+function makeNoiseBuffer(ctx,type){
+ const len=ctx.sampleRate*2, buf=ctx.createBuffer(1,len,ctx.sampleRate), d=buf.getChannelData(0);
+ if(type==='white'){
+  for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+ } else {
+  // Pink noise, filter Paul Kellet
+  let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+  for(let i=0;i<len;i++){
+   const w=Math.random()*2-1;
+   b0=.99886*b0+.0555179*w; b1=.99332*b1+.0750759*w; b2=.969*b2+.153852*w;
+   b3=.8665*b3+.3104856*w; b4=.55*b4+.5329522*w; b5=-.7616*b5+.016898*w;
+   let out=b0+b1+b2+b3+b4+b5+b6+w*.5362; b6=w*.115926;
+   d[i]=out*.11;
+  }
+ }
+ return buf;
+}
+async function startNoise(type){
+ stopNoise(true);
+ try{
+  noiseCtx=noiseCtx||new (window.AudioContext||window.webkitAudioContext)();
+  await noiseCtx.resume();
+  noiseSrc=noiseCtx.createBufferSource();
+  noiseSrc.buffer=makeNoiseBuffer(noiseCtx,type); noiseSrc.loop=true;
+  noiseGain=noiseCtx.createGain();
+  noiseGain.gain.value=($('noisevol').value/100)*0.5;
+  noiseSrc.connect(noiseGain); noiseGain.connect(noiseCtx.destination);
+  noiseSrc.start(); noiseType=type;
+  $('noisestatus').textContent=type==='pink'?'PINK NOISE ON':'WHITE NOISE ON';
+  $('noisestatus').style.color='#fb923c';
+  $('pinkbtn').classList.toggle('noise-on',type==='pink');
+  $('whitebtn').classList.toggle('noise-on',type==='white');
+ }catch(e){alert('Noise ga bisa bunyi: '+e.message)}
+}
+function stopNoise(silent){
+ if(noiseSrc){try{noiseSrc.stop()}catch(_){} try{noiseSrc.disconnect()}catch(_){} noiseSrc=null}
+ if(noiseGain){try{noiseGain.disconnect()}catch(_){} noiseGain=null}
+ noiseType=null;
+ $('noisestatus').textContent='OFF'; $('noisestatus').style.color='';
+ $('pinkbtn').classList.remove('noise-on'); $('whitebtn').classList.remove('noise-on');
+ if(!silent) $('noisestatus').textContent='OFF';
+}
+$('pinkbtn').onclick=()=>{ if(noiseType==='pink') stopNoise(); else startNoise('pink') };
+$('whitebtn').onclick=()=>{ if(noiseType==='white') stopNoise(); else startNoise('white') };
+$('noiseoff').onclick=()=>stopNoise();
+$('noisevol').oninput=()=>{
+ $('noisevoltxt').textContent=$('noisevol').value+'%';
+ if(noiseGain&&noiseCtx) noiseGain.gain.setTargetAtTime(($('noisevol').value/100)*0.5,noiseCtx.currentTime,.02);
+};
+// ===== CURSOR =====
 function drawCursor(ph,range,levelVal){
  if(!cursorActive)return;
  const w=spec.width;
@@ -163,17 +241,10 @@ function grid(){
  [20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000].forEach(f=>{let x=xfreq(f,w);sc.beginPath();sc.moveTo(x,0);sc.lineTo(x,plotH);sc.stroke();if(f===50&&x<70)return;let label=f===20?'20 Hz':(f===20000?'20 kHz':(f>=1000?(f/1000)+'k':String(f)));sc.textAlign=f===20000?'right':(f===20?'left':'center');let tx=f===20000?w-4:(f===20?4:x);sc.fillText(label,tx,h-14)});sc.textAlign='left';
  let range=+$('range').value;for(let d=0;d<=range;d+=10){let y=d/range*plotH;sc.beginPath();sc.moveTo(0,y);sc.lineTo(w,y);sc.stroke();sc.fillText(-d+' dB',5,Math.max(14,y+14))}
 }
-// Warna waterfall: -90 dB gelap, -30 dB paling terang. Dibuat lebih terang dari sebelumnya.
 function colorFor(v){let t=Math.max(0,Math.min(1,(v+90)/60));let stops=[[20,16,48],[67,47,118],[170,76,137],[239,139,143],[255,218,142]];let p=t*4,i=Math.min(3,Math.floor(p)),a=p-i;let c=stops[i].map((n,k)=>Math.round(n*(1-a)+stops[i+1][k]*a));return [c[0],c[1],c[2]]}
 function drawWaterfall(raw,n){
  const W=water.width,H=water.height,SHIFT=3;
- // BUG LAMA: gambar lama ditempel di y=0 lagi, jadi ga geser. INI YANG BENER: geser turun SHIFT.
- try{
-  const old=wc.getImageData(0,0,W,H-SHIFT);
-  wc.putImageData(old,0,SHIFT);
- }catch(e){
-  wc.drawImage(water,0,0,W,H-SHIFT,0,SHIFT,W,H-SHIFT);
- }
+ try{const old=wc.getImageData(0,0,W,H-SHIFT);wc.putImageData(old,0,SHIFT);}catch(e){wc.drawImage(water,0,0,W,H-SHIFT,0,SHIFT,W,H-SHIFT);}
  const row=wc.createImageData(W,SHIFT);
  const gridXs=new Set([20,100,500,1000,2000,5000,10000,20000].map(f=>Math.round(xfreq(f,W))));
  for(let x=0;x<W;x++){
@@ -181,19 +252,15 @@ function drawWaterfall(raw,n){
   const bin=Math.max(1,Math.min(n-1,Math.round(f*fft/audio.sampleRate)));
   const v=Number.isFinite(raw[bin])?raw[bin]:-120;
   let m=colorFor(v);
-  // garis grid vertikal tipis, biar sejajar sama magnitude di atas
   if(gridXs.has(x)){m=[Math.max(0,m[0]-30),Math.max(0,m[1]-30),Math.max(0,m[2]-30)]}
-  for(let yy=0;yy<SHIFT;yy++){
-   const p=(yy*W+x)*4;
-   row.data[p]=m[0];row.data[p+1]=m[1];row.data[p+2]=m[2];row.data[p+3]=255;
-  }
+  for(let yy=0;yy<SHIFT;yy++){const p=(yy*W+x)*4;row.data[p]=m[0];row.data[p+1]=m[1];row.data[p+2]=m[2];row.data[p+3]=255;}
  }
  wc.putImageData(row,0,0);
 }
 function syncCursorUI(){
  $('cursorfreq').textContent=fmtFreq(cursorFreq);
- const near=nearestIn(cursorData(),cursorFreq);
- $('cursorlevel').textContent=near?near.v.toFixed(1)+' dBFS':'— dBFS';
+ const lv=levelAt(cursorData(),cursorFreq);
+ $('cursorlevel').textContent=lv!==null?lv.toFixed(1)+' dBFS':'— dBFS';
  const s=$('cursorslider');
  const pos=Math.round(xfreq(cursorFreq,spec.width)/spec.width*1000);
  if(document.activeElement!==s) s.value=String(pos);
@@ -212,8 +279,7 @@ function drawFrozen(){
   cap.data.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(o.v);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});
   sc.stroke();
  });
- const near=nearestIn(cursorData(),cursorFreq);
- drawCursor(ph,range,near?near.v:null);
+ drawCursor(ph,range,levelAt(cursorData(),cursorFreq));
  syncCursorUI();
 }
 function draw(){
@@ -231,7 +297,7 @@ function draw(){
  else vals.forEach((o,i)=>{sm[i]=smoothing*sm[i]+(1-smoothing)*averaged[i];hold[i]=Math.max(averaged[i],hold[i]-.12)});
  grid();let w=spec.width,h=spec.height,ph=h-PLOT_BOTTOM;
  function y(v){return Math.max(0,Math.min(range, -v))/range*ph}
- sc.beginPath();sc.strokeStyle='#55d9ed';sc.lineWidth=2.2;
+ sc.beginPath();sc.strokeStyle='#55d9ed';sc.lineWidth=2.5;
  vals.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(sm[i]);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});sc.stroke();
  sc.beginPath();sc.strokeStyle='#ffd16a';sc.lineWidth=1.2;
  vals.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(hold[i]);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});sc.stroke();
@@ -242,8 +308,7 @@ function draw(){
   cap.data.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(o.v);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});
   sc.stroke();
  });
- const near=nearestIn(currentVals,cursorFreq);
- drawCursor(ph,range,near?near.v:null);
+ drawCursor(ph,range,levelAt(currentVals,cursorFreq));
  syncCursorUI();
  drawWaterfall(raw,n);
  $('peakdb').textContent=peak.toFixed(1)+' dBFS';$('peakfreq').textContent=(peakBin*audio.sampleRate/fft).toFixed(0)+' Hz';raf=requestAnimationFrame(draw);
