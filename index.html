@@ -13,12 +13,17 @@ main{padding:10px;max-width:1100px;margin:auto}.toolbar,.panel{background:var(--
 button,select{background:#222b37;color:var(--txt);border:1px solid #566171;border-radius:7px;padding:9px 11px;font-size:13px}
 button.go{background:#087e91;border-color:#13b5c9}button:disabled{opacity:.45}
 label{font-size:11px;color:var(--muted)}canvas{display:block;width:100%;background:#030507;border-radius:5px}
-#spectrum{height:260px}#waterfall{height:160px}
+#spectrum{height:430px}#waterfall{height:220px}
+.capturebar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.capturebar button{padding:10px 14px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}
+@media(max-width:520px){#spectrum{height:360px}#waterfall{height:190px}}
 .title{font-size:13px;color:#cbd3df;margin:0 0 7px;display:flex;justify-content:space-between}
 .info{font-size:11px;color:var(--muted);line-height:1.45;margin-top:7px}
 .stats{display:flex;gap:8px;flex-wrap:wrap}.stat{background:#090d12;border-radius:7px;padding:7px 10px;min-width:105px;flex:1}.stat small{display:block;color:var(--muted);font-size:10px}.stat strong{font-size:15px}
 .status{font-size:12px;color:#7ee0ad;margin-left:auto}
-@media(max-width:520px){#spectrum{height:235px}#waterfall{height:145px}header{align-items:flex-start}}
+@media(max-width:520px){header{align-items:flex-start}}
 </style></head>
 <body>
 <header><div><h1>SMART RTA LIVE</h1><div class="sub">REAL-TIME SPECTRUM • WATERFALL • AUDIO ANALYZER</div></div><div id="status" class="status">STANDBY</div></header>
@@ -30,7 +35,10 @@ label{font-size:11px;color:var(--muted)}canvas{display:block;width:100%;backgrou
 <label>RANGE<br><select id="range"><option value="60">60 dB</option><option value="90" selected>90 dB</option><option value="120">120 dB</option></select></label>
 <label>SMOOTH<br><select id="smooth"><option value="0">OFF</option><option value=".55">LOW</option><option value=".8" selected>MED</option><option value=".93">HIGH</option></select></label>
 </section>
-<section class="panel"><div class="title"><b>MAGNITUDE / FREQUENCY RESPONSE</b><span>20 Hz — 20 kHz</span></div><canvas id="spectrum" width="1200" height="520"></canvas><div class="info">Garis cyan = level real-time • Garis kuning = peak hold. Sumbu frekuensi logaritmik seperti spectrum analyzer.</div></section>
+<section class="panel"><div class="title"><b>MAGNITUDE / FREQUENCY RESPONSE</b><span>20 Hz — 20 kHz</span></div><canvas id="spectrum" width="1200" height="760"></canvas>
+<div class="capturebar"><button class="go" id="capture">📸 CAPTURE CURVE</button><button id="clearcaptures">HAPUS CAPTURE</button><span id="capturestatus" class="info">Belum ada capture.</span></div>
+<div class="legend"><span><i class="dot" style="background:#55d9ed"></i>LIVE</span><span><i class="dot" style="background:#ffd16a"></i>PEAK HOLD</span><span><i class="dot" style="background:#ff6b6b"></i>CAPTURE 1</span><span><i class="dot" style="background:#b58cff"></i>CAPTURE 2</span><span><i class="dot" style="background:#67d69b"></i>CAPTURE 3</span></div>
+<div class="info">Capture menyimpan kurva magnitude saat itu. Kurva tersimpan akan ditampilkan sebagai overlay agar bisa dibandingkan dengan kondisi LIVE atau capture lain.</div></section>
 <section class="panel"><div class="title"><b>LIVE SPECTROGRAM / WATERFALL</b><span>Waktu berjalan ↓</span></div><canvas id="waterfall" width="1200" height="300"></canvas><div class="info">Warna terang menunjukkan energi frekuensi lebih kuat. Waterfall bergerak saat mikrofon menerima suara.</div></section>
 <section class="panel"><div class="stats">
 <div class="stat"><small>PEAK LEVEL</small><strong id="peakdb">— dBFS</strong></div>
@@ -43,6 +51,7 @@ label{font-size:11px;color:var(--muted)}canvas{display:block;width:100%;backgrou
 const $=id=>document.getElementById(id);
 const spec=$('spectrum'),sc=spec.getContext('2d'),water=$('waterfall'),wc=water.getContext('2d');
 let audio=null,stream=null,an=null,src=null,raf=0,sm=[],hold=[],frame=0,fft=4096,avgCount=4;
+let captures=[];const captureColors=['#ff6b6b','#b58cff','#67d69b'];let currentVals=[];
 const minF=20,maxF=20000;
 function xfreq(f,w){return Math.log(f/minF)/Math.log(maxF/minF)*w}
 function grid(){
@@ -66,6 +75,13 @@ function draw(){
  vals.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(sm[i]);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});sc.stroke();
  sc.beginPath();sc.strokeStyle='#ffd16a';sc.lineWidth=1.2;
  vals.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(hold[i]);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});sc.stroke();
+ currentVals=vals.map((o,i)=>({f:o.f,v:sm[i]}));
+ // Draw saved curves on top of the live trace for direct comparison.
+ captures.forEach((cap,ci)=>{
+  sc.beginPath();sc.strokeStyle=captureColors[ci%captureColors.length];sc.lineWidth=2.4;
+  cap.data.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(o.v);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});
+  sc.stroke();
+ });
  // Scroll waterfall upwards, paint a new spectral row at the bottom.
  let image=wc.getImageData(0,0,water.width,water.height-1);wc.putImageData(image,0,0);
  let row=wc.createImageData(water.width,1);
@@ -84,5 +100,13 @@ $('start').onclick=async()=>{
 $('stop').onclick=()=>{cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());if(audio)audio.close();audio=null;stream=null;an=null;$('status').textContent='STANDBY';$('inputstate').textContent='OFF';$('start').disabled=false;$('stop').disabled=true};
 $('fft').onchange=()=>{if(an){fft=+$('fft').value;an.fftSize=fft;sm=[];hold=[]}};
 $('range').onchange=()=>{if(an){cancelAnimationFrame(raf);draw()}else grid()};
+$('capture').onclick=()=>{
+ if(!an||!currentVals.length){$('capturestatus').textContent='Mulai LIVE terlebih dahulu sebelum capture.';return}
+ if(captures.length>=3){$('capturestatus').textContent='Maksimal 3 capture. Hapus capture lama untuk mengambil yang baru.';return}
+ captures.push({name:'Capture '+(captures.length+1),data:currentVals.map(o=>({...o}))});
+ $('capturestatus').textContent=captures.length+' kurva tersimpan — bandingkan overlay dengan LIVE.';
+ cancelAnimationFrame(raf);draw();
+};
+$('clearcaptures').onclick=()=>{captures=[];$('capturestatus').textContent='Semua capture dihapus.';if(an){cancelAnimationFrame(raf);draw()}};
 grid();
 </script></body></html>
