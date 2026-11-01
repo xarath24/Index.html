@@ -68,6 +68,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <div class="kv"><span>Coherence</span><b id="cohtxt">—</b></div>
       <div class="kv"><span>Peak</span><b id="peakdb">—</b></div>
       <div class="kv"><span>Peak Freq</span><b id="peakfreq">—</b></div>
+      <div class="kv"><span>Cursor Freq</span><b id="cursorfreqbig">4.19 kHz</b></div>
       <div class="kv"><span>Sample Rate</span><b id="samplerate">48000 Hz</b></div>
     </div>
   </aside>
@@ -134,8 +135,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         3. Pink lewat kabel AUX ke speaker<br>
         4. HP / mic 1 meter di depan speaker<br>
         5. Liat grafik nya, jangan gerak dulu 5 detik<br><br>
-        Jangan pake speaker HP sendiri / bluetooth, coherence nya bakal rendah.<br><br>
-        Kalo RTA doang (Pink OFF), bunyiin musik / tepuk tangan, kurva nya harus naik ke tengah.
+        Geser garis putih di grafik, angka frekuensi nya ikut di garis itu, ga usah nebak-nebak lagi. Liat juga di STATUS kiri, ada Cursor Freq nya.
       </div>
     </div>
   </aside>
@@ -222,17 +222,30 @@ $('pinkbtn').onclick=()=>S.pink?stopPink():startPink();
 $('noiseoff').onclick=stopPink;
 $('noisevol').oninput=e=>{$('voltxt').textContent=e.target.value+'%';if(S.noiseGain&&S.ctx)S.noiseGain.gain.setTargetAtTime((e.target.value/100)*0.5,S.ctx.currentTime,.02)};
 
+/* LABEL ANGKA DI GARIS CURSOR */
+function drawCursorLabel(c,cx,W,txt,y,bg,fg2){
+  c.font='bold 16px Arial';
+  const tw=c.measureText(txt).width+18;
+  let lx=Math.max(4,Math.min(W-tw-4,cx-tw/2));
+  c.fillStyle=bg;
+  c.beginPath();c.roundRect(lx,y,tw,26,6);c.fill();
+  c.fillStyle=fg2;c.textAlign='center';c.textBaseline='middle';
+  c.fillText(txt,lx+tw/2,y+14);
+  c.textAlign='left';c.textBaseline='alphabetic';
+}
+
 function drawScale(){
   const c=fg,W=fsc.width,H=fsc.height;
   c.clearRect(0,0,W,H);c.fillStyle='#0b0f14';c.fillRect(0,0,W,H);
   MAJORS.forEach(f=>{
     const x=xfreq(f,W);
-    c.strokeStyle='#8b95a5';c.lineWidth=2;c.beginPath();c.moveTo(x,0);c.lineTo(x,14);c.stroke();
-    c.fillStyle='#8b95a5';c.font='bold 15px Arial';c.textAlign=f===20000?'right':f===20?'left':'center';
-    c.fillText(f===20?'20':f===20000?'20 kHz':fmtLab(f),f===20000?W-4:f===20?4:x,38);
+    c.strokeStyle='#8b95a5';c.lineWidth=2;c.beginPath();c.moveTo(x,18);c.lineTo(x,32);c.stroke();
+    c.fillStyle='#8b95a5';c.font='bold 13px Arial';c.textAlign=f===20000?'right':f===20?'left':'center';
+    c.fillText(f===20?'20':f===20000?'20 kHz':fmtLab(f),f===20000?W-4:f===20?4:x,50);
   });
   const cx=xfreq(S.cursor,W);
   c.strokeStyle='#fff';c.lineWidth=3;c.beginPath();c.moveTo(cx,0);c.lineTo(cx,H);c.stroke();
+  drawCursorLabel(c,cx,W,fmtF(S.cursor),0,'#3fd4ec','#000');
   c.textAlign='left';
 }
 function gridMag(c,w,h,range){
@@ -275,6 +288,7 @@ function pointOn(data,f){
 function drawAll(){
   const w=mag.width,h=mag.height,range=+$('range').value;
   gridMag(mg,w,h,range);
+  $('cursorfreqbig').textContent=fmtF(S.cursor);
   if(S.live.length){
     mg.beginPath();mg.strokeStyle='#3fd4ec';mg.lineWidth=2.5;
     S.live.forEach((o,i)=>{const Y=yMag(o.v,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke();
@@ -289,6 +303,7 @@ function drawAll(){
     const Y=yMag(pt.v,range,h);
     mg.beginPath();mg.arc(cx,Y,9,0,Math.PI*2);mg.fillStyle='#fff';mg.fill();
     $('cursorread').textContent=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB';
+    drawCursorLabel(mg,cx,w,fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB',4,'#000','#fff');
   }else $('cursorread').textContent=fmtF(S.cursor)+' • — dB';
   drawScale();
   const pw=phc.width,phH=phc.height,yFor=d=>((180-d)/360)*phH;
@@ -342,7 +357,6 @@ function computeTF(){
   }
   return{freqs,magP,ph,coh};
 }
-/* INI PERBAIKAN NYA: RTA JUGA DINORMALISASI KE TENGAH, JANGAN MENTOK BAWAH */
 function normalizeToCenter(freqs,powerArr){
   const mid=powerArr.filter((_,i)=>freqs[i].f>=500&&freqs[i].f<=2000);
   const avgMid=mid.reduce((s,v)=>s+v,0)/Math.max(1,mid.length);
