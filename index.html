@@ -19,8 +19,10 @@ button.danger{background:#7f1d1d;border-color:#ef4444}
 button.phon{background:#065f46!important;border-color:#34d399!important;color:#fff}
 button.find{background:#7c3aed;border-color:#a78bfa;font-weight:800;padding:7px 14px}
 select{background:#222b37;color:#e8eaf0;border:1px solid #4a5566;border-radius:6px;padding:6px;width:100%}
-.layout{display:grid;grid-template-columns:250px minmax(640px,1fr) 170px;gap:8px;padding:8px;max-width:1600px;margin:auto;min-width:900px}
+.layout{display:grid;grid-template-columns:250px minmax(640px,1fr) 170px;gap:8px;padding:8px;max-width:1600px;margin:auto;min-width:900px;align-items:stretch}
+.leftCol{display:flex;flex-direction:column}
 .panel{background:#14181f;border:1px solid #2b323e;border-radius:8px;padding:9px}
+.capPanel{margin-top:auto}
 h3{margin:0 0 8px;font-size:11px;letter-spacing:1px;color:#8b95a5}
 canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-resize;touch-action:none}
 #mag{aspect-ratio:1200/300}
@@ -35,6 +37,10 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
 .statusbar{background:#10141a;border-top:1px solid #2b323e;padding:7px 12px;display:flex;gap:16px;flex-wrap:wrap;color:#8b95a5;font-size:11px;position:sticky;bottom:0;min-width:900px}
 .statusbar b{color:#7ee0ad}
 input[type=range]{width:100%;accent-color:#3fd4ec}
+.capBtns{display:flex;gap:5px}
+.capBtns button{padding:6px 4px;font-size:11px;font-weight:700;white-space:nowrap}
+.capBtns .cap{flex:2}
+.capBtns .mini{flex:0 0 auto}
 .capitem{display:flex;align-items:center;gap:6px;padding:6px 4px;border-bottom:1px solid #2b323e}
 .capitem .dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
 .capitem .nm{flex:1;min-width:0}
@@ -69,12 +75,37 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 .miniRef button{flex:1;padding:7px 4px;font-size:11px;font-weight:700;white-space:nowrap}
 .miniVol{display:block;margin-top:7px;color:#8b95a5;font-size:10px}
 .miniVol input{margin-top:2px;height:18px}
+#infoModal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:center;justify-content:center;padding:16px}
+#infoModal.show{display:flex}
+.infoBox{background:#14181f;border:1px solid #3fd4ec;border-radius:10px;max-width:520px;width:100%;max-height:88vh;overflow:auto;padding:16px}
+.infoBox h3{font-size:13px;color:#fff;letter-spacing:0}
+.infoBox ol{margin:8px 0 0;padding-left:18px;color:#cbd5e1;font-size:12px;line-height:1.9}
+.infoBox b{color:#fff}
 :fullscreen body{background:#0a0c10}
 </style>
 </head>
 <body>
 
 <div id="toast"></div>
+
+<div id="infoModal">
+  <div class="infoBox">
+    <h3>ⓘ CARA PAKAI — SMART LIVE</h3>
+    <ol>
+      <li>Sentuh layar 1x, otomatis landscape.</li>
+      <li>Pencet <b>START</b> di atas, izinin mic.</li>
+      <li>Pencet <b>🩷 PINK</b> di kanan bawah, volume 100%, mic 1 m dari speaker.</li>
+      <li>Liat <b>dBFS PEAK</b> di kanan, bagus nya -12 sampai -6 dBFS. Kalo angka nya merah / 0 dBFS, kecilin volume.</li>
+      <li>Geser cursor di grafik, liat kotak <b>CURSOR</b> di tengah atas: freq + dB + derajat phase nya.</li>
+      <li>Liat kiri grafik phase, tulisan kecil: <b>NORMAL ✓ / TERBALIK ⚠</b>, itu polarity nya.</li>
+      <li>Pencet <b>🔍 FIND DELAY</b>, hasil delay nya nongol di atas grafik phase.</li>
+      <li>Pencet <b>📸 CAPTURE</b> kiri bawah, pencet nama capture nya / tombol ✏️, ubah jadi misal <b>box pahratel</b>.</li>
+      <li>Pencet <b>■ OFF</b> di kanan bawah, pink mati, phase capture + cursor tetep aktif.</li>
+    </ol>
+    <p style="color:#8b95a5;font-size:11px;line-height:1.6">Garis ijo tengah = 0 dB / 0°. dBFS rel, bukan SPL terkalibrasi.</p>
+    <button id="infoClose" style="width:100%;padding:9px;margin-top:6px">✕ TUTUP</button>
+  </div>
+</div>
 
 <div class="topbar">
   <div class="logo"><b>SMART</b> LIVE <span>MEASUREMENT • LIKE SMAART</span></div>
@@ -87,12 +118,15 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 </div>
 
 <div class="layout">
-  <aside>
-    <div class="panel">
+  <aside class="leftCol">
+    <div class="panel capPanel">
       <h3>📸 CAPTURE — TAK TERBATAS</h3>
-      <button id="capturebtn" class="cap" style="width:100%;padding:12px">📸 CAPTURE KURVA INI</button>
-      <button id="clearcap" class="danger" style="width:100%;padding:8px;margin-top:6px">🗑 HAPUS SEMUA CAPTURE</button>
-      <div style="color:#8b95a5;font-size:10px;margin-top:6px">Pencet nama capture / tombol ✏️ buat ganti nama sendiri, misal jadi box pahratel.</div>
+      <div class="capBtns">
+        <button id="capturebtn" class="cap">📸 CAPTURE</button>
+        <button id="clearcap" class="danger mini" title="Hapus semua capture">🗑</button>
+        <button id="infobtn" class="mini" title="Cara pakai">ⓘ INFO</button>
+      </div>
+      <div style="color:#8b95a5;font-size:10px;margin-top:6px">Pencet nama capture / ✏️ buat ganti nama, misal jadi box pahratel.</div>
       <div id="caplist" style="margin-top:6px"></div>
     </div>
   </aside>
@@ -218,6 +252,10 @@ const S={ctx:null,stream:null,src:null,an:null,refAn:null,noise:null,noiseGain:n
   cursor:4190,live:[],phase:[],phaseRaw:[],coh:[],sm:null,acc:null,accN:0,magOffset:null,captures:[],capN:0,unwrap:false,delayMs:null,
   polarity:null,phaseAvg:null,phSmooth:6,delayLo:200,delayHi:2000,cohAvg:null,foundDelay:null,foundDelayBand:null,foundDelayCoh:null,
   clipUntil:0,peakHoldDb:-120,peakHoldUntil:0};
+
+$('infobtn').onclick=()=>{$('infoModal').classList.add('show')};
+$('infoClose').onclick=()=>{$('infoModal').classList.remove('show')};
+$('infoModal').addEventListener('click',e=>{if(e.target.id==='infoModal')$('infoModal').classList.remove('show')});
 
 function updatePeakPanel(peakDb,peakFreq){
   const big=$('peakBig'),fill=$('peakFill');
