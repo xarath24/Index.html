@@ -58,6 +58,23 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 .lampTxt small{display:block;color:#8b95a5;font-weight:400;font-size:10px;letter-spacing:0}
 .lampState{font-weight:900;font-size:12px;color:#8b95a5}
 .lampState.on{color:#ff8ac2}
+.sigRow{background:#090d12;border:1px solid #2b323e;border-radius:8px;padding:9px 10px;margin-top:6px}
+.sigTop{display:flex;align-items:center;gap:8px}
+.sigLamp{width:16px;height:16px;border-radius:50%;background:#3a4452;border:2px solid #6b7280;flex-shrink:0}
+.sigLamp.on{background:#22ff88;border-color:#86efac;box-shadow:0 0 10px #22ff88,0 0 22px #22ff88}
+.sigLabel{flex:1;font-weight:800;font-size:12px}
+.sigLabel small{display:block;color:#8b95a5;font-weight:400;font-size:10px}
+.sigDb{font-weight:900;font-size:12px;white-space:nowrap}
+.meter{height:10px;background:#1f2937;border-radius:5px;overflow:hidden;margin-top:8px;position:relative}
+.meterFill{height:100%;width:0%;background:#22ff88;border-radius:5px;transition:width .06s linear}
+.meterMark{position:absolute;top:0;bottom:0;width:2px;background:#fff;opacity:.6}
+.clipRow{display:flex;align-items:center;gap:8px;margin-top:8px}
+.clipLamp{width:16px;height:16px;border-radius:50%;background:#3a4452;border:2px solid #6b7280;flex-shrink:0}
+.clipLamp.on{background:#ef4444;border-color:#fca5a5;box-shadow:0 0 12px #ef4444,0 0 26px #ef4444;animation:clipBlink .3s infinite alternate}
+@keyframes clipBlink{from{opacity:1}to{opacity:.55}}
+.clipTxt{font-weight:900;font-size:12px;color:#8b95a5;letter-spacing:.5px}
+.clipTxt.on{color:#f87171}
+.clipHint{margin-left:auto;font-size:10px;color:#8b95a5}
 :fullscreen body{background:#0a0c10}
 </style>
 </head>
@@ -88,6 +105,19 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         <span id="pinklamp" class="lamp"></span>
         <div class="lampTxt">PINK NOISE: <span id="pinklamptext">OFF</span><small id="pinklampsub">Pink mati, ga ada suara keluar</small></div>
         <span id="pinklampstate" class="lampState">MATI</span>
+      </div>
+      <div class="sigRow">
+        <div class="sigTop">
+          <span id="siglamp" class="sigLamp"></span>
+          <div class="sigLabel">SIGNAL <small id="sigsub">Mic belum jalan</small></div>
+          <span class="sigDb" id="sigdb">— dB</span>
+        </div>
+        <div class="meter"><div class="meterFill" id="sigfill"></div><div class="meterMark" style="left:75%"></div><div class="meterMark" style="left:90%"></div></div>
+        <div class="clipRow">
+          <span id="cliplamp" class="clipLamp"></span>
+          <span id="cliptxt" class="clipTxt">PEAK / CLIP</span>
+          <span class="clipHint">Merah = kegedean, kecilin volume</span>
+        </div>
       </div>
       <p style="color:#8b95a5;font-size:11px;line-height:1.6;margin:8px 0 0">
         Pink OFF = live mati, cursor + phase capture tetep aktif.<br>
@@ -181,11 +211,12 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <h3>CARA CEK POLARITY + DELAY</h3>
       <div style="font-size:11px;color:#8b95a5;line-height:1.8">
         1. Sentuh layar 1x, otomatis landscape<br>
-        2. START + PINK ON, lampu pink di kiri nyala, volume 100%, mic 1 m<br>
-        3. Liat kiri grafik phase, tulisan kecil: NORMAL / TERBALIK<br>
-        4. Pencet 🔍 FIND DELAY, hasil nya nongol di atas grafik phase<br>
-        5. Kalo ada tanda ?, coherence nya masih rendah, deketin mic nya<br>
-        6. Capture, OFF, lampu mati, phase capture + cursor tetep aktif<br><br>
+        2. START, lampu SIGNAL ijo nyala kalo mic nangkep suara<br>
+        3. PINK ON, lampu pink nyala, volume 100%, mic 1 m<br>
+        4. Kalo lampu CLIP merah nyala, kecilin volume / jauhin mic<br>
+        5. Liat kiri grafik phase, tulisan kecil: NORMAL / TERBALIK<br>
+        6. Pencet 🔍 FIND DELAY, hasil nya nongol di atas grafik phase<br>
+        7. Capture, OFF, lampu mati, phase capture + cursor tetep aktif<br><br>
         Garis ijo tengah = 0 dB / 0°.
       </div>
     </div>
@@ -216,7 +247,8 @@ const CAPCOLORS=['#fb923c','#facc15','#f472b6','#a78bfa','#34d399','#f87171','#9
 
 const S={ctx:null,stream:null,src:null,an:null,refAn:null,noise:null,noiseGain:null,pink:false,running:false,fft:8192,raf:0,
   cursor:4190,live:[],phase:[],phaseRaw:[],coh:[],sm:null,acc:null,accN:0,magOffset:null,captures:[],capN:0,unwrap:false,delayMs:null,
-  polarity:null,phaseAvg:null,phSmooth:6,delayLo:200,delayHi:2000,cohAvg:null,foundDelay:null,foundDelayBand:null,foundDelayCoh:null};
+  polarity:null,phaseAvg:null,phSmooth:6,delayLo:200,delayHi:2000,cohAvg:null,foundDelay:null,foundDelayBand:null,foundDelayCoh:null,
+  clipUntil:0,peakHoldDb:-120,peakHoldUntil:0};
 
 function updatePinkLamp(){
   const lamp=$('pinklamp'),txt=$('pinklamptext'),sub=$('pinklampsub'),st=$('pinklampstate');
@@ -231,6 +263,42 @@ function updatePinkLamp(){
   }
 }
 updatePinkLamp();
+
+function resetSignalUI(){
+  $('siglamp').classList.remove('on');
+  $('sigsub').textContent='Mic belum jalan';
+  $('sigdb').textContent='— dB';
+  $('sigfill').style.width='0%';$('sigfill').style.background='#22ff88';
+  $('cliplamp').classList.remove('on');$('cliptxt').classList.remove('on');$('cliptxt').textContent='PEAK / CLIP';
+  S.clipUntil=0;S.peakHoldDb=-120;
+}
+function updateSignalUI(){
+  if(!S.an||!S.running){resetSignalUI();return}
+  const td=new Float32Array(S.an.fftSize);
+  S.an.getFloatTimeDomainData(td);
+  let peak=0,sum=0;
+  for(let i=0;i<td.length;i++){const a=Math.abs(td[i]);if(a>peak)peak=a;sum+=td[i]*td[i]}
+  const rms=Math.sqrt(sum/Math.max(1,td.length));
+  const db=peak<=0.00001?-120:20*Math.log10(peak);
+  const now=performance.now();
+  if(db>S.peakHoldDb||now>S.peakHoldUntil){S.peakHoldDb=db;S.peakHoldUntil=now+900}
+  const showDb=Math.max(db,S.peakHoldDb-0.001);
+  const pct=Math.max(0,Math.min(100,(showDb+60)/60*100));
+  const fill=$('sigfill');
+  fill.style.width=pct+'%';
+  fill.style.background=showDb>=-3?'#ef4444':showDb>=-12?'#facc15':'#22ff88';
+  $('sigdb').textContent=(showDb<=-99?'-99':showDb.toFixed(0))+' dB';
+  const sig=$('siglamp');
+  if(rms>0.002||peak>0.01){sig.classList.add('on');$('sigsub').textContent=showDb>=-3?'Kenceng banget, hati-hati clip':showDb>=-20?'Sinyal bagus':'Sinyal kecil, deketin mic / gedein volume'}
+  else{sig.classList.remove('on');$('sigsub').textContent='Sinyal kecil / hening'}
+  if(peak>=0.89){S.clipUntil=now+1000}
+  const clipOn=now<S.clipUntil;
+  $('cliplamp').classList.toggle('on',clipOn);
+  $('cliptxt').classList.toggle('on',clipOn);
+  $('cliptxt').textContent=clipOn?'⚠ CLIP! KECILIN VOLUME':'PEAK / CLIP';
+  return db;
+}
+resetSignalUI();
 
 let toastTimer=0;
 function toast(msg){
@@ -722,6 +790,7 @@ function normalizeToCenter(freqs,powerArr){
 let delayTick=0,polTick=0;
 function draw(){
   if(!S.running||!S.an||!S.ctx)return;
+  updateSignalUI();
   const n=S.an.frequencyBinCount,raw=new Float32Array(n);S.an.getFloatFrequencyData(raw);
   let peak=-Infinity,peakBin=1;
   for(let i=1;i<n;i++){const f=i*S.ctx.sampleRate/S.fft;if(f<MINF||f>MAXF)continue;if(raw[i]>peak){peak=raw[i];peakBin=i}}
@@ -766,6 +835,7 @@ $('stop').onclick=()=>{
   if(S.stream)S.stream.getTracks().forEach(t=>t.stop());
   S.stream=null;S.an=null;$('start').disabled=false;$('stop').disabled=true;
   $('status').textContent='STANDBY';$('liveind').textContent='● STANDBY';
+  resetSignalUI();
   if(S.pink)stopPink();else{killLive();drawAll()}
 };
 $('fft').onchange=()=>{if(S.an&&S.ctx){S.fft=+$('fft').value;S.an.fftSize=S.fft;if(S.refAn)S.refAn.fftSize=S.fft;resetAcc();$('fftstat').textContent=S.fft}};
