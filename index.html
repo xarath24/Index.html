@@ -42,6 +42,11 @@ body.landscape-mode header h1{font-size:15px}
 <label>SMOOTH<br><select id="smooth"><option value="0">OFF</option><option value=".55">LOW</option><option value=".8" selected>MED</option><option value=".93">HIGH</option></select></label>
 </section>
 <section class="panel"><div class="title"><b>MAGNITUDE / FREQUENCY RESPONSE</b><span>20 Hz — 20 kHz</span></div><canvas id="spectrum" width="1200" height="760"></canvas>
+<div class="stats" style="margin-top:9px">
+ <div class="stat"><small>CURSOR FREQUENCY</small><strong id="cursorfreq">Geser garis pada grafik</strong></div>
+ <div class="stat"><small>LEVEL DI TITIK</small><strong id="cursorlevel">— dBFS</strong></div>
+</div>
+<div class="info">Sentuh lalu geser garis vertikal pada grafik untuk membaca frekuensi dan level. Rentang sumbu: 20 Hz–20 kHz.</div>
 <div class="capturebar"><button class="go" id="capture">📸 CAPTURE CURVE</button><button id="clearcaptures">HAPUS CAPTURE</button><span id="capturestatus" class="info">Belum ada capture.</span></div>
 <div class="legend"><span><i class="dot" style="background:#55d9ed"></i>LIVE</span><span><i class="dot" style="background:#ffd16a"></i>PEAK HOLD</span><span><i class="dot" style="background:#ff6b6b"></i>CAPTURE 1</span><span><i class="dot" style="background:#b58cff"></i>CAPTURE 2</span><span><i class="dot" style="background:#67d69b"></i>CAPTURE 3</span></div>
 <div class="info">Capture menyimpan kurva magnitude saat itu. Kurva tersimpan akan ditampilkan sebagai overlay agar bisa dibandingkan dengan kondisi LIVE atau capture lain.</div></section>
@@ -58,6 +63,7 @@ const $=id=>document.getElementById(id);
 const spec=$('spectrum'),sc=spec.getContext('2d'),water=$('waterfall'),wc=water.getContext('2d');
 let audio=null,stream=null,an=null,src=null,raf=0,sm=[],hold=[],frame=0,fft=4096,avgCount=4;
 let captures=[];const captureColors=['#ff6b6b','#b58cff','#67d69b'];let currentVals=[];
+let cursorFreq=1000,cursorActive=false;
 const minF=20,maxF=20000;
 function xfreq(f,w){return Math.log(f/minF)/Math.log(maxF/minF)*w}
 function grid(){
@@ -88,6 +94,15 @@ function draw(){
   cap.data.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(o.v);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});
   sc.stroke();
  });
+ // Movable frequency cursor and live readout.
+ if(cursorActive){
+  const cx=xfreq(cursorFreq,w);
+  sc.save();sc.strokeStyle='#ffffff';sc.lineWidth=2;sc.setLineDash([9,7]);
+  sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();sc.restore();
+  let nearest=vals.reduce((best,o)=>Math.abs(o.f-cursorFreq)<Math.abs(best.f-cursorFreq)?o:best,vals[0]);
+  $('cursorfreq').textContent=cursorFreq>=1000?(cursorFreq/1000).toFixed(2)+' kHz':cursorFreq.toFixed(0)+' Hz';
+  $('cursorlevel').textContent=(nearest?sm[vals.indexOf(nearest)]:-120).toFixed(1)+' dBFS';
+ }
  // Scroll waterfall upwards, paint a new spectral row at the bottom.
  let image=wc.getImageData(0,0,water.width,water.height-1);wc.putImageData(image,0,0);
  let row=wc.createImageData(water.width,1);
@@ -117,6 +132,15 @@ $('start').onclick=async()=>{
  }catch(e){$('status').textContent='MIC ERROR';alert('Tidak bisa membuka mikrofon: '+e.message+'. Izinkan akses mikrofon dan gunakan browser yang mendukung HTTPS.')}
 };
 $('stop').onclick=()=>{cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());if(audio)audio.close();audio=null;stream=null;an=null;$('status').textContent='STANDBY';$('inputstate').textContent='OFF';$('start').disabled=false;$('stop').disabled=true};
+function moveCursor(ev){
+ const rect=spec.getBoundingClientRect();
+ const px=Math.max(0,Math.min(spec.width,(ev.clientX-rect.left)/rect.width*spec.width));
+ cursorFreq=minF*Math.pow(maxF/minF,px/spec.width);cursorActive=true;
+ $('cursorfreq').textContent=cursorFreq>=1000?(cursorFreq/1000).toFixed(2)+' kHz':cursorFreq.toFixed(0)+' Hz';
+ if(an){cancelAnimationFrame(raf);draw()}else{grid();const cx=xfreq(cursorFreq,spec.width);sc.save();sc.strokeStyle='#fff';sc.lineWidth=2;sc.setLineDash([9,7]);sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,spec.height-36);sc.stroke();sc.restore()}
+}
+spec.addEventListener('pointerdown',ev=>{spec.setPointerCapture(ev.pointerId);moveCursor(ev)});
+spec.addEventListener('pointermove',ev=>{if(ev.buttons||ev.pressure>0)moveCursor(ev)});
 $('fft').onchange=()=>{if(an){fft=+$('fft').value;an.fftSize=fft;sm=[];hold=[]}};
 $('range').onchange=()=>{if(an){cancelAnimationFrame(raf);draw()}else grid()};
 $('capture').onclick=()=>{
