@@ -39,6 +39,10 @@ canvas{display:block;width:100%;background:#05070a;cursor:ew-resize;touch-action
 .legend{display:flex;gap:10px;flex-wrap:wrap;color:#8b95a5;font-size:11px;margin-top:7px}.legend i{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:4px}
 .statusbar{background:#10141a;border-top:1px solid #2b323e;padding:7px 12px;display:flex;gap:16px;flex-wrap:wrap;color:#8b95a5;font-size:11px;position:sticky;bottom:0}
 .statusbar b{color:#7ee0ad}
+.delaybox{border:2px solid #3fd4ec;border-radius:8px;padding:12px;text-align:center;background:#082f3a}
+.delaybox b{font-size:32px;display:block}.delaybox span{font-size:11px;color:#cbd5e1;display:block;margin-top:3px;line-height:1.5}
+.delaygrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px}.delaygrid button{padding:9px}
+.delayinput{width:100%;background:#05070a;color:#fff;border:1px solid #2b323e;border-radius:6px;padding:10px;text-align:center;font-size:18px;font-weight:700;margin-top:6px}
 input[type=range]{width:100%;accent-color:#3fd4ec}
 .polbadge{border-radius:8px;padding:10px;text-align:center;border:2px solid #2b323e;background:#090d12;margin:8px 0}
 .polbadge b{font-size:20px;display:block}.polbadge span{font-size:11px;color:#8b95a5;display:block;margin-top:3px;line-height:1.5}
@@ -65,6 +69,16 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 <div class="meas"><span class="sw" style="background:#5fd68a"></span><b>Trace C<small id="capCinfo">Empty</small></b><input type="checkbox" id="showC" checked></div>
 <button class="go" id="capture" style="width:100%;padding:10px">📸 CAPTURE LIVE → SLOT</button>
 <select id="targetslot" style="width:100%;margin-top:6px"><option value="0">Slot A</option><option value="1">Slot B</option><option value="2">Slot C</option></select>
+</div>
+
+<div class="panel" style="margin-top:8px"><h3>DELAY — CATATAN MANUAL (ms)</h3>
+<div class="delaybox"><b id="delaybig">0.0 ms</b><span id="delaydetail">Delay 0.0 ms = 0.00 m • 1ms = 34.3cm</span></div>
+<label style="display:block;margin-top:8px;color:#8b95a5;font-size:11px">KETIK DELAY (ms)<input type="number" step="0.1" id="delayinput" class="delayinput" value="0,0"></label>
+<button class="go" id="usedelay" style="width:100%;padding:10px;margin-top:6px">✓ PAKAI DELAY INI</button>
+<div class="delaygrid"><button data-d="-10">-10</button><button data-d="-1">-1</button><button data-d="-0.1">-0.1</button><button data-d="0.1">+0.1</button><button data-d="1">+1</button><button data-d="10">+10</button></div>
+<label style="display:block;margin-top:8px;color:#8b95a5;font-size:11px">Delay<input type="range" id="delayslider" min="-50" max="50" step="0.1" value="0"></label>
+<div class="kv"><span>Delay</span><b id="delaytxt">0.0 ms</b></div>
+<div class="kv"><span>Jarak suara</span><b id="disttxt">0.00 m / 0.0 cm</b></div>
 </div>
 
 <div class="panel" style="margin-top:8px"><h3>⚡ POLARITY — TES KLIK</h3>
@@ -106,6 +120,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 <div class="kv"><span>Band 1kHz</span><b id="band1k">— dB</b></div>
 <div class="kv"><span>Band 10kHz</span><b id="band10k">— dB</b></div>
 <div class="kv"><span>Band 16kHz</span><b id="band16k">— dB</b></div>
+<div class="kv"><span>Delay catatan</span><b id="delayright">0.0 ms</b></div>
 <div class="kv"><span>Polarity</span><b id="polmini">—</b></div>
 <div class="kv"><span>Sample Rate</span><b id="samplerate">48000 Hz</b></div>
 <div class="kv"><span>Bin Width</span><b id="binwidth">2.9 Hz</b></div>
@@ -122,7 +137,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 </aside>
 </div>
 
-<div class="statusbar"><span>● <b id="status">LIVE</b></span><span>Mode: <b>MIC SAJA • TANPA PINK</b></span><span>FFT: <b id="fftstat">16384</b></span><span>Polarity: <b id="polstat">—</b></span><span style="margin-left:auto">dBFS rel, bukan SPL terkalibrasi</span></div>
+<div class="statusbar"><span>● <b id="status">LIVE</b></span><span>Mode: <b>MIC SAJA • TANPA PINK</b></span><span>FFT: <b id="fftstat">16384</b></span><span>Delay: <b id="delaystat">0.0 ms</b></span><span>Polarity: <b id="polstat">—</b></span><span style="margin-left:auto">dBFS rel, bukan SPL terkalibrasi</span></div>
 
 <script>
 const $=id=>document.getElementById(id);
@@ -132,7 +147,7 @@ const SEGS=[[20,1000,.26],[1000,3000,.14],[3000,7000,.16],[7000,10000,.10],[1000
 const FREQS=[20,25,31.5,40,50,63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1500,1600,2000,2500,3000,3150,4000,5000,6300,7000,8000,10000,12500,15000,16000,20000];
 const MAJORS=new Set([20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000]);
 const db2p=v=>Math.pow(10,Math.max(-120,v)/10), p2db=p=>10*Math.log10(Math.max(1e-12,p));
-const S={ctx:null,stream:null,src:null,an:null,tfAn:null,raf:0,fft:16384,running:false,sm:null,hold:null,live:[],holdVals:[],caps:[null,null,null],slot:0,cursor:95,clickWave:null,clickResult:null};
+const S={ctx:null,stream:null,src:null,an:null,tfAn:null,raf:0,fft:16384,running:false,sm:null,hold:null,live:[],holdVals:[],caps:[null,null,null],slot:0,cursor:95,delay:0,clickWave:null,clickResult:null};
 function xfreq(f,w){f=Math.max(MINF,Math.min(MAXF,f));let s=0;for(const[a,b,pw]of SEGS){if(f<=b||a===15000)return(s+Math.log(f/a)/Math.log(b/a)*pw)*w;s+=pw}return w}
 function freqAtX(x,w){const r=Math.max(0,Math.min(1,x/w));let s=0;for(const[a,b,pw]of SEGS){if(r<=s+pw||a===15000)return a*Math.exp(((r-s)/pw)*Math.log(b/a));s+=pw}return MAXF}
 function fmtF(f){return f>=1000?(f/1000).toFixed(2).replace(/0+$/,'').replace(/\.$/,'')+' kHz':Math.round(f)+' Hz'}
@@ -140,6 +155,14 @@ function fmtLab(f){return f>=1000?(f/1000).toString().replace(/\.0$/,'')+'k':(''
 function sliderForFreq(f){let lo=0,hi=mag.width;for(let i=0;i<24;i++){const m=(lo+hi)/2;if(freqAtX(m,mag.width)<f)lo=m;else hi=m}return Math.round(lo/mag.width*1000)}
 async function ensureCtx(){if(!S.ctx)S.ctx=new(window.AudioContext||window.webkitAudioContext)({latencyHint:'interactive',sampleRate:48000});if(S.ctx.state==='suspended')await S.ctx.resume();return S.ctx}
 function setPol(state,detail,first){const b=$('polbadge');b.className='polbadge '+state;$('poltitle').textContent=state==='normal'?'✓ NORMAL':state==='inverted'?'✕ TERBALIK':'? UNKNOWN';$('poldetail').textContent=detail;$('firstwave').textContent=first||'—';$('polmini').textContent=state==='normal'?'NORMAL':state==='inverted'?'TERBALIK':'—';$('polstat').textContent=$('polmini').textContent}
+function setDelay(v){S.delay=Math.max(-50,Math.min(50,Math.round(v*10)/10));const m=S.delay*0.343;
+$('delaybig').textContent=S.delay.toFixed(1)+' ms';$('delaydetail').textContent='Delay '+S.delay.toFixed(1)+' ms = '+m.toFixed(2)+' m • 1ms = 34.3cm';
+$('delaytxt').textContent=S.delay.toFixed(1)+' ms';$('delayright').textContent=S.delay.toFixed(1)+' ms';$('delaystat').textContent=S.delay.toFixed(1)+' ms';
+$('disttxt').textContent=m.toFixed(2)+' m / '+(m*100).toFixed(1)+' cm';$('delayinput').value=S.delay.toFixed(1).replace('.',',');$('delayslider').value=S.delay}
+$('usedelay').onclick=()=>{const v=parseFloat((''+$('delayinput').value).replace(',','.'));if(!isNaN(v))setDelay(v)};
+$('delayinput').onchange=$('usedelay').onclick;
+$('delayslider').oninput=e=>setDelay(parseFloat(e.target.value));
+document.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>setDelay(S.delay+parseFloat(b.dataset.d)));
 async function doOneClick(){
   const rec=[];let recording=true;const t0=performance.now(),totalMs=900;
   const poll=()=>{if(!recording)return;const buf=new Float32Array(BIG);S.tfAn.getFloatTimeDomainData(buf);rec.push(Float32Array.from(buf.subarray(BIG-4096)));if(performance.now()-t0<totalMs)requestAnimationFrame(poll)};
@@ -275,7 +298,7 @@ $('capture').onclick=()=>{if(!S.live.length)return alert('START dulu.');S.caps[S
 $('targetslot').onchange=e=>S.slot=+e.target.value;
 $('landscape').onclick=async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock('landscape')}catch(e){}};
 ['showlive','showA','showB','showC'].forEach(id=>$(id).addEventListener('change',drawAll));
-setPol('unknown','Pencet TES KLIK. Ini klik pendek, bukan pink noise.');
+setDelay(0);setPol('unknown','Pencet TES KLIK. Ini klik pendek, bukan pink noise.');
 drawAll();
 </script>
 </body>
