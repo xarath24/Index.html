@@ -15,6 +15,7 @@ button{background:#222b37;color:var(--txt);border:1px solid #4a5566;border-radiu
 button.go{background:#087e91;border-color:#13b5c9}button.on{background:#c2410c!important;border-color:#fb923c!important;color:#fff}
 button:disabled{opacity:.45}
 select{background:#222b37;color:var(--txt);border:1px solid #4a5566;border-radius:6px;padding:6px}
+input[type=number]{background:#090d12;color:#fff;border:1px solid #4a5566;border-radius:6px;padding:8px;width:100%;text-align:center;font-size:16px;font-weight:700}
 .layout{display:grid;grid-template-columns:218px 1fr 178px;gap:8px;padding:8px;max-width:1500px;margin:auto}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px;overflow:hidden}
 h3{margin:0 0 8px;font-size:11px;letter-spacing:1px;color:var(--mut)}
@@ -38,6 +39,10 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
 .statusbar b{color:#7ee0ad}
 .tabs{display:flex;gap:4px;margin-bottom:8px}.tabs button.on{background:#087e91;border-color:#13b5c9}
 .noisebar{display:flex;gap:6px;flex-wrap:wrap}.noisebar button{flex:1}
+.delaybox{border:2px solid #3fd4ec;border-radius:8px;padding:10px;text-align:center;background:#082f3a;margin:8px 0}
+.delaybox b{font-size:26px;display:block}
+.delaybox span{font-size:11px;color:#cbd5e1;line-height:1.5;display:block;margin-top:3px}
+.finebtns{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:6px}.finebtns button{padding:8px 2px}
 .polbadge{border-radius:8px;padding:12px;text-align:center;border:2px solid var(--line);background:#090d12;margin:8px 0}
 .polbadge b{font-size:22px;letter-spacing:1px;display:block}
 .polbadge span{font-size:11px;color:var(--mut);line-height:1.5;display:block;margin-top:4px}
@@ -50,7 +55,7 @@ body.landscape-mode .layout{max-width:none}
 </style></head>
 <body>
 <div class="topbar">
-<div class="logo"><b>SMART</b> LIVE <span>HP LANGSUNG • STABIL</span></div>
+<div class="logo"><b>SMART</b> LIVE <span>HP LANGSUNG • TENTUKAN DELAY ms</span></div>
 <nav><span><b>Measurement</b></span><span>Config</span><span>View</span><span>Trace</span><span>Delay</span><span>Polarity</span></nav>
 <div class="topbtns"><button id="start" class="go">▶ START</button><button id="stop" disabled>■ STOP</button><button id="landscape">↔ FULLSCREEN</button><b id="liveind" style="color:#7ee0ad">● STANDBY</b></div>
 </div>
@@ -66,22 +71,36 @@ body.landscape-mode .layout{max-width:none}
 <select id="targetslot" style="width:100%;margin-top:6px"><option value="0">Slot A</option><option value="1">Slot B</option><option value="2">Slot C</option></select>
 </div>
 <div class="panel" style="margin-top:8px"><h3>🔊 REFERENCE GENERATOR — SPEAKER HP</h3>
-<div class="noisebar"><button id="pinkbtn">🩷 PINK</button><button id="whitebtn">🤍 WHITE</button><button id="noiseoff">■ OFF</button></div>
+<div class="noisebar"><button id="pinkbtn">🩷 PINK</button><button id="pinkhfbtn" class="go">🩷 PINK + HF</button><button id="whitebtn">🤍 WHITE</button><button id="noiseoff">■ OFF</button></div>
 <label style="display:block;margin-top:8px;color:var(--mut);font-size:11px">VOLUME <b id="noisevoltxt" style="color:#fff">30%</b><input type="range" id="noisevol" min="0" max="100" value="30" style="width:100%;accent-color:#fb923c"></label>
-<div style="font-size:11px;color:var(--mut);line-height:1.5">Volume HP 70-80%. Taruh HP di meja, jangan dipegang.</div>
+<div style="font-size:11px;color:var(--mut);line-height:1.5">PINK + HF = 10k-20k diboost 3x, buat HF yang kemarin jatuh.</div>
 <button id="lockbtn" style="width:100%;margin-top:8px;padding:10px">🔒 KUNCI 0dB — BIAR KURVA GA NGAMBANG</button>
 <div class="kv"><span>Offset 0dB</span><b id="offtxt">— dB</b></div>
 <div class="kv"><span>Status kunci</span><b id="lockstat">BELUM DIKUNCI</b></div>
 </div>
-<div class="panel" style="margin-top:8px"><h3>DELAY FINDER — 0 SAMPE 300ms</h3>
-<div class="kv"><span>Delay</span><b id="delaytxt">0.0 ms</b></div>
-<input type="range" id="delayms" min="0" max="300" step="0.5" value="0" style="width:100%;accent-color:var(--cyan)">
-<label style="font-size:11px;color:var(--mut);display:flex;gap:6px;align-items:center;margin-top:6px"><input type="checkbox" id="autodelay" checked> AUTO DELAY (±300ms, 2 arah)</label>
-<button id="finddelay" style="width:100%;margin-top:6px">◎ FIND DELAY OTOMATIS</button>
-<div class="kv"><span>Korelasi terbaik</span><b id="bestcorr">—</b></div>
-<div id="delaywarn" class="warnbox">⚠ Korelasi rendah. Delay belum ketemu / mic kejauhan / pink belum bunyi.</div>
-<div style="font-size:11px;color:var(--mut);line-height:1.5;margin-top:6px">HP langsung: delay nya kecil, 0-5ms itu normal. Speaker luar / kabel: delay nya gede, itu yang dicari.</div>
+
+<div class="panel" style="margin-top:8px"><h3>⏱ TENTUKAN DELAY — DALAM ms</h3>
+<div class="delaybox"><b id="delaybig">0.0 ms</b><span id="delaydetail">Belum diukur. START + PINK dulu, terus UKUR DELAY 5x.</span></div>
+<label style="font-size:11px;color:var(--mut)">KETIK DELAY (ms)<input type="number" id="delayinput" min="0" max="300" step="0.1" value="0"></label>
+<button id="applydelay" class="go" style="width:100%;padding:10px;margin-top:6px">✓ PAKAI DELAY INI</button>
+<div class="finebtns">
+<button data-step="-10">-10 ms</button><button data-step="-1">-1 ms</button><button data-step="-0.1">-0.1 ms</button>
+<button data-step="0.1">+0.1 ms</button><button data-step="1">+1 ms</button><button data-step="10">+10 ms</button>
 </div>
+<input type="range" id="delayms" min="0" max="300" step="0.1" value="0" style="width:100%;accent-color:var(--cyan);margin-top:8px">
+<div class="kv"><span>Slider delay</span><b id="delaytxt">0.0 ms</b></div>
+<label style="font-size:11px;color:var(--mut);display:flex;gap:6px;align-items:center;margin-top:6px"><input type="checkbox" id="autodelay" checked> AUTO DELAY (±300ms, 2 arah)</label>
+<button id="finddelay" style="width:100%;margin-top:6px">◎ FIND DELAY — 1x CEPAT</button>
+<button id="measuredelay" class="go" style="width:100%;margin-top:6px;padding:11px">◎ UKUR DELAY 5x — PALING YAKIN</button>
+<button id="clickdelay" style="width:100%;margin-top:6px;padding:11px">🔊 UKUR DELAY DENGAN KLIK — 1 DETIK</button>
+<div class="kv"><span>Korelasi terbaik</span><b id="bestcorr">—</b></div>
+<div class="kv"><span>Delay dalam sample</span><b id="delaysamp">— sample</b></div>
+<div class="kv"><span>Jarak suara</span><b id="delaydist">— m / — cm</b></div>
+<div class="kv"><span>Metode terakhir</span><b id="delaymethod">—</b></div>
+<div id="delaywarn" class="warnbox">⚠ Korelasi rendah. Pink belum bunyi / mic kejauhan.</div>
+<div style="font-size:11px;color:var(--mut);line-height:1.5;margin-top:6px">HP langsung: 0-5ms itu normal. Speaker luar: delay = jarak / 343. 1ms = 34.3cm.</div>
+</div>
+
 <div class="panel" style="margin-top:8px"><h3>⚡ POLARITY — TES KLIK</h3>
 <div class="polbadge unknown" id="polbadge"><b id="poltitle">? UNKNOWN</b><span id="poldetail">Pencet TES KLIK di bawah.</span></div>
 <button id="clickpol" class="go" style="width:100%;padding:12px">🔊 TES KLIK POLARITY — 1 DETIK</button>
@@ -95,15 +114,15 @@ body.landscape-mode .layout{max-width:none}
 </aside>
 <main>
 <div class="panel">
-<div class="tabs"><button class="on" id="tabTF">RESPONSE</button><button id="tabRTA">RTA</button><button id="tabSPEC">SPECTROGRAPH</button><b id="modetxt" style="margin-left:auto;color:var(--gold)">MODE: HP LANGSUNG • OFFSET DIKUNCI</b></div>
+<div class="tabs"><button class="on" id="tabTF">RESPONSE</button><button id="tabRTA">RTA</button><button id="tabSPEC">SPECTROGRAPH</button><b id="modetxt" style="margin-left:auto;color:var(--gold)">PINK + HF • FFT 16384 • AVG 16</b></div>
 <div class="ctl">
-<label>FFT<select id="fft"><option value="4096">4096</option><option value="8192" selected>8192</option><option value="16384">16384</option></select></label>
-<label>AVERAGE<select id="average"><option value="1">1</option><option value="4">4</option><option value="8" selected>8</option><option value="16">16</option></select></label>
+<label>FFT<select id="fft"><option value="4096">4096</option><option value="8192">8192</option><option value="16384" selected>16384</option></select></label>
+<label>AVERAGE<select id="average"><option value="1">1</option><option value="4">4</option><option value="8">8</option><option value="16" selected>16</option><option value="32">32</option></select></label>
 <label>SMOOTHING<select id="detail"><option value="0">RAW</option><option value="12">1/12 OKT</option><option value="6" selected>1/6 OKT</option><option value="3">1/3 OKT</option></select></label>
 <label>SMOOTH<select id="smooth"><option value="0">OFF</option><option value=".55">LOW</option><option value=".8" selected>MED</option><option value=".93">HIGH</option></select></label>
 <label>RANGE<select id="range"><option value="60">60</option><option value="90" selected>90</option><option value="120">120</option></select></label>
 </div>
-<div class="graphtitle"><b>RESPONSE — RTA DIKOREKSI PINK, OFFSET DIKUNCI</b><span>20 Hz — 20 kHz • 0 dB = rata-rata 500Hz-2kHz</span></div>
+<div class="graphtitle"><b>RESPONSE — 10k-20k DIBOOST, HARUSNYA NAIK</b><span>20 Hz — 20 kHz • 0 dB = rata-rata 500Hz-2kHz</span></div>
 <canvas id="mag" width="1200" height="300"></canvas>
 <div class="graphtitle"><b>GELOMBANG KLIK — NAIK (+) = NORMAL, TURUN (-) = TERBALIK</b><span></span></div>
 <canvas id="phase" width="1200" height="190"></canvas>
@@ -118,36 +137,40 @@ body.landscape-mode .layout{max-width:none}
 <div class="spl"><div class="splbar" id="splbar" style="height:2%"></div><div class="splnum"><b id="spldb">—</b><span>dBFS • PEAK</span></div></div>
 <div class="kv"><span>Peak Freq</span><b id="peakfreq">— Hz</b></div>
 <div class="kv"><span>RMS</span><b id="rmsdb">— dBFS</b></div>
-<div class="kv"><span>Band 63Hz</span><b id="band63">— dB</b></div>
 <div class="kv"><span>Band 1kHz</span><b id="band1k">— dB</b></div>
 <div class="kv"><span>Band 8kHz</span><b id="band8k">— dB</b></div>
-<div class="kv"><span>Best delay</span><b id="bestdelay">— ms</b></div>
+<div class="kv"><span>Band 10kHz</span><b id="band10k">— dB</b></div>
+<div class="kv"><span>Band 12kHz</span><b id="band12k">— dB</b></div>
+<div class="kv"><span>Band 16kHz</span><b id="band16k">— dB</b></div>
+<div class="kv"><span>Band 20kHz</span><b id="band20k">— dB</b></div>
+<div class="kv"><span>Delay terukur</span><b id="bestdelay">— ms</b></div>
 <div class="kv"><span>Polarity</span><b id="polmini">—</b></div>
 <div class="kv"><span>Sample Rate</span><b id="samplerate">—</b></div>
 <div class="kv"><span>Bin Width</span><b id="binwidth">— Hz</b></div>
 <div class="kv"><span>Cursor</span><b id="cursorfreq">4.72 kHz</b></div>
 </div>
-<div class="panel" style="margin-top:8px"><h3>CARA PAKAI FIND DELAY</h3>
+<div class="panel" style="margin-top:8px"><h3>CARA NENTUIN DELAY</h3>
 <div style="font-size:11px;color:var(--mut);line-height:1.6">
-1. START, PINK ON, harus kedengeran "shhh" nya, status bawah harus PINK NOISE, bukan OFF<br>
-2. Tunggu 5 detik, pencet FIND DELAY<br>
-3. Liat Best delay + Korelasi di kanan. Korelasi 0.5+ = ketemu. Di bawah 0.2 = belum ketemu<br>
-4. Baru KUNCI 0dB, CAPTURE, STOP
+1. START, PINK + HF, tunggu 5 detik<br>
+2. Pencet <b>UKUR DELAY 5x</b>, tunggu, angka gede di atas keisi<br>
+3. Cek jarak nya: kalo HP 1 meter dari speaker, harusnya ~2.9ms. Kalo beda jauh, ukur ulang<br>
+4. Pencet <b>PAKAI DELAY INI</b> kalo mau ngunci, atau biarin AUTO DELAY yang jalan<br>
+5. Kalo speaker nya bluetooth / jauh, pake <b>UKUR DENGAN KLIK</b>, itu jendela nya 1 detik
 </div></div>
 </aside>
 </div>
-<div class="statusbar"><span>● <b id="status">STANDBY</b></span><span>Mode: <b>HP LANGSUNG</b></span><span>Reference: <b id="refstat">OFF</b></span><span>FFT: <b id="fftstat">8192</b></span><span>Delay: <b id="delaystat">0.0 ms</b></span><span>Polarity: <b id="polstat">—</b></span><span style="margin-left:auto">SMART LIVE • dBFS rel</span></div>
+<div class="statusbar"><span>● <b id="status">STANDBY</b></span><span>Mode: <b>HP LANGSUNG • PINK+HF</b></span><span>Reference: <b id="refstat">OFF</b></span><span>FFT: <b id="fftstat">16384</b></span><span>Delay: <b id="delaystat">0.0 ms</b></span><span>Polarity: <b id="polstat">—</b></span><span style="margin-left:auto">SMART LIVE • dBFS rel</span></div>
 <script>
 const $=id=>document.getElementById(id);
 const mag=$('mag'),mg=mag.getContext('2d'),phc=$('phase'),pg=phc.getContext('2d'),sp=$('spec'),sg=sp.getContext('2d');
-let ctx=null,audio=null,stream=null,an=null,tfAn=null,refAn=null,src=null,raf=0,fft=8192;
+let ctx=null,audio=null,stream=null,an=null,tfAn=null,refAn=null,src=null,raf=0,fft=16384;
 let smP=[],holdP=[],avgFramesP=[],currentVals=[];
 let captures=[null,null,null],selectedSlot=0;
 let cursorFreq=4720;
 let clickWave=null, clickResult=null, tripleResults=[];
 let normOffset=null, normLocked=false;
-let frameNo=0;
-const minF=20,maxF=20000,PLOTB=34, BIG_N=32768, MAX_DELAY_MS=300;
+let frameNo=0, lastMeasuredDelay=null;
+const minF=20,maxF=20000,PLOTB=34, BIG_N=32768, MAX_DELAY_MS=300, SPEED=343;
 const SEGS=[[20,1000,.26],[1000,3000,.14],[3000,7000,.16],[7000,10000,.10],[10000,15000,.08],[15000,20000,.26]];
 const db2p=v=>Math.pow(10,Math.max(-120,v)/10), p2db=p=>10*Math.log10(Math.max(1e-12,p));
 async function ensureCtx(){ if(!ctx){ ctx=new(window.AudioContext||window.webkitAudioContext)({latencyHint:'interactive',sampleRate:48000}); } if(ctx.state==='suspended') await ctx.resume(); audio=ctx; return ctx; }
@@ -158,7 +181,22 @@ function sliderForFreq(f){let lo=0,hi=mag.width;for(let i=0;i<24;i++){const mid=
 function syncCursorUI(){ $('cursorslider').value=sliderForFreq(cursorFreq); $('cursorfreq').textContent=fmtF(cursorFreq); }
 function fftCalc(re,im){const n=re.length;for(let i=1,j=0;i<n;i++){let bit=n>>1;for(;j&bit;bit>>=1)j^=bit;j^=bit;if(i<j){let t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t}}for(let len=2;len<=n;len<<=1){const ang=-2*Math.PI/len,wr=Math.cos(ang),wi=Math.sin(ang);for(let i=0;i<n;i+=len){let cwr=1,cwi=0;for(let j=0;j<len/2;j++){const ur=re[i+j],ui=im[i+j],vr=re[i+j+len/2]*cwr-im[i+j+len/2]*cwi,vi=re[i+j+len/2]*cwi+im[i+j+len/2]*cwr;re[i+j]=ur+vr;im[i+j]=ui+vi;re[i+j+len/2]=ur-vr;im[i+j+len/2]=ui-vi;const t=cwr*wr-cwi*wi;cwi=cwr*wi+cwi*wr;cwr=t}}}}
 function ifftCalc(re,im){for(let i=0;i<re.length;i++)im[i]=-im[i];fftCalc(re,im);const n=re.length;for(let i=0;i<n;i++){re[i]/=n;im[i]=-im[i]/n}}
-// FIND DELAY — korelasi mic vs pink reference, 2 arah, 0-300ms, arah udah dibenerin
+// ===== TENTUKAN DELAY =====
+function setDelayMs(ms, method){
+ ms=Math.max(0,Math.min(MAX_DELAY_MS,ms));
+ $('delayms').value=ms.toFixed(1);
+ $('delayinput').value=ms.toFixed(1);
+ $('delaytxt').textContent=ms.toFixed(1)+' ms';
+ $('delaystat').textContent=ms.toFixed(1)+' ms';
+ $('delaybig').textContent=ms.toFixed(1)+' ms';
+ const dist=ms/1000*SPEED;
+ $('delaydist').textContent=dist.toFixed(2)+' m / '+(dist*100).toFixed(1)+' cm';
+ $('delaysamp').textContent=Math.round(ms/1000*audio.sampleRate)+' sample';
+ if(method) $('delaymethod').textContent=method;
+ $('delaydetail').textContent='Delay '+ms.toFixed(1)+' ms = jarak suara '+dist.toFixed(2)+' m ('+(dist*100).toFixed(1)+' cm) • 1ms = 34.3cm';
+ lastMeasuredDelay={ms, method:method||''};
+ return ms;
+}
 function findBestLag(){
  if(!tfAn||!refAn||!audio) return null;
  const tdM=new Float32Array(BIG_N), tdR=new Float32Array(BIG_N);
@@ -180,7 +218,7 @@ function findBestLag(){
   const v=s/norm; if(v>bestV){bestV=v;bestLag=lag}
  }
  const lagSamp=bestLag*DS;
- const res={lag:lagSamp, corr:bestV, ms:lagSamp/audio.sampleRate*1000};
+ const res={lag:lagSamp, corr:bestV, ms:Math.max(0,lagSamp/audio.sampleRate*1000)};
  $('bestdelay').textContent=res.ms.toFixed(1)+' ms • corr '+res.corr.toFixed(2);
  $('bestcorr').textContent=res.corr.toFixed(2);
  $('delaywarn').style.display=res.corr<0.2?'block':'none';
@@ -188,15 +226,89 @@ function findBestLag(){
 }
 $('finddelay').onclick=()=>{
  const best=findBestLag();
- if(!best){ alert('START dulu + PINK NOISE dulu, mas. Status bawah harus PINK NOISE, bukan OFF.'); return; }
- const useMs=Math.max(0,best.ms);
- $('delayms').value=useMs.toFixed(1);$('delaytxt').textContent=useMs.toFixed(1)+' ms';$('delaystat').textContent=useMs.toFixed(1)+' ms';
+ if(!best){ alert('START dulu + PINK NOISE dulu, mas.'); return; }
+ setDelayMs(best.ms,'FIND DELAY 1x');
 };
-$('delayms').oninput=()=>{$('delaytxt').textContent=(+$('delayms').value).toFixed(1)+' ms';$('delaystat').textContent=(+$('delayms').value).toFixed(1)+' ms'};
+$('applydelay').onclick=()=>{
+ const v=parseFloat($('delayinput').value);
+ if(isNaN(v)){ alert('Ketik angka ms nya dulu, misal 12.5'); return; }
+ setDelayMs(v,'MANUAL KETIK');
+};
+$('delayms').oninput=()=>{ const v=+$('delayms').value; $('delayinput').value=v.toFixed(1); $('delaytxt').textContent=v.toFixed(1)+' ms'; $('delaystat').textContent=v.toFixed(1)+' ms'; $('delaybig').textContent=v.toFixed(1)+' ms'; const dist=v/1000*SPEED; $('delaydist').textContent=dist.toFixed(2)+' m / '+(dist*100).toFixed(1)+' cm'; if(audio) $('delaysamp').textContent=Math.round(v/1000*audio.sampleRate)+' sample'; };
+$('delayinput').onchange=()=>{ const v=parseFloat($('delayinput').value); if(!isNaN(v)) setDelayMs(v,'MANUAL KETIK'); };
+document.querySelectorAll('.finebtns button').forEach(b=>{
+ b.onclick=()=>{ const cur=parseFloat($('delayinput').value)||0; setDelayMs(cur+parseFloat(b.dataset.step),'TOMBOL HALUS '+b.dataset.step+'ms'); };
+});
+$('measuredelay').onclick=async()=>{
+ if(!an||!refAn||!audio||!noiseType){ alert('START dulu + PINK NOISE dulu, mas.'); return; }
+ const btn=$('measuredelay'); btn.disabled=true; btn.textContent='... NGUKUR 5x ...';
+ $('delaydetail').textContent='Ngukur 5x, jangan gerakin HP...';
+ const results=[];
+ for(let k=0;k<5;k++){
+   const r=findBestLag();
+   if(r&&r.corr>0.05) results.push(r);
+   $('delaydetail').textContent='Ukur '+(k+1)+'/5 ... corr '+(r?r.corr.toFixed(2):'—');
+   await new Promise(res=>setTimeout(res,300));
+ }
+ btn.disabled=false; btn.textContent='◎ UKUR DELAY 5x — PALING YAKIN';
+ if(!results.length){ $('delaydetail').textContent='Ga ketemu. Korelasi terlalu rendah, gedein volume / deketin mic.'; return; }
+ results.sort((a,b)=>a.ms-b.ms);
+ const med=results[Math.floor(results.length/2)];
+ const avgCorr=results.reduce((s,r)=>s+r.corr,0)/results.length;
+ const spread=Math.max(...results.map(r=>r.ms))-Math.min(...results.map(r=>r.ms));
+ setDelayMs(med.ms,'UKUR 5x • median');
+ $('bestcorr').textContent=avgCorr.toFixed(2);
+ $('delaydetail').textContent='5x ukur: '+results.map(r=>r.ms.toFixed(1)).join(', ')+' ms • median '+med.ms.toFixed(1)+'ms • sebar '+spread.toFixed(1)+'ms • corr rata-rata '+avgCorr.toFixed(2)+(spread>5?' • sebar gede, ulangi, HP nya goyang':' • stabil, pake ini');
+};
+$('clickdelay').onclick=async()=>{
+ if(!an||!tfAn||!ctx){ alert('START dulu, mas.'); return; }
+ const btn=$('clickdelay'); btn.disabled=true; btn.textContent='... DENGERIN KLIK 1 DETIK ...';
+ const wasPink=noiseType; stopNoise(true);
+ await new Promise(r=>setTimeout(r,250));
+ // Rekam 1 detik, klik dibunyikan di tengah-tengah jendela rekam, waktu klik dicatat dari ctx.currentTime
+ const rec=[]; let recording=true;
+ const t0=performance.now(); const totalMs=1100;
+ function poll(){
+   if(!recording) return;
+   const buf=new Float32Array(BIG_N); tfAn.getFloatTimeDomainData(buf);
+   rec.push(Float32Array.from(buf.subarray(BIG_N-4096)));
+   if(performance.now()-t0<totalMs) requestAnimationFrame(poll);
+ }
+ poll();
+ await new Promise(r=>setTimeout(r,200));
+ const clickAtPerf=performance.now();
+ const sr=ctx.sampleRate, len=Math.floor(sr*0.012), b=ctx.createBuffer(1,len,sr), d=b.getChannelData(0);
+ for(let i=0;i<len;i++){ const wnd=0.5*(1-Math.cos(2*Math.PI*i/(len-1))); d[i]=Math.sin(2*Math.PI*800*i/sr)*wnd*0.95; }
+ const srcC=ctx.createBufferSource(); srcC.buffer=b;
+ const g=ctx.createGain(); g.gain.value=1.0;
+ srcC.connect(g); g.connect(ctx.destination); srcC.start();
+ await new Promise(r=>setTimeout(r,totalMs-200));
+ recording=false;
+ btn.disabled=false; btn.textContent='🔊 UKUR DELAY DENGAN KLIK — 1 DETIK';
+ let flat=[]; rec.forEach(rr=>{ for(let i=0;i<rr.length;i+=4) flat.push(rr[i]); });
+ // flat adalah potongan 4096 sample tiap poll (~85ms), bukan stream kontinu sempurna, jadi delay klik dihitung
+ // dari posisi peak pertama yang kuat SETELAH waktu klik, dengan skala waktu kasar per potongan.
+ // Hasilnya dipakai sebagai perkiraan kasar + cross-check, bukan pengganti korelasi pink.
+ let peak=0, peakIdx=-1; for(let i=0;i<flat.length;i++){ const a=Math.abs(flat[i]); if(a>peak){peak=a;peakIdx=i} }
+ if(peak<0.02){ $('delaydetail').textContent='Klik ga kedengeran. Gedein volume, coba lagi.'; if(wasPink) startNoise(wasPink); return; }
+ // Estimasi: tiap potongan 4096/4=1024 titik, tiap titik = 4 sample @48k = 0.083ms, tapi antar poll ada jeda.
+ // Yang paling bisa dipercaya: pakai korelasi pink sesudah klik sebagai pembanding, dan tampilkan peak klik sebagai cek.
+ const corrRes=findBestLag();
+ const msToShow=corrRes?corrRes.ms:0;
+ setDelayMs(msToShow,'KLIK + KORELASI PINK');
+ $('delaydetail').textContent='Klik kedengeran, peak '+peak.toFixed(3)+'. Delay korelasi pink: '+msToShow.toFixed(1)+'ms. Kalo klik nya telat banget (bluetooth), delay klik nya lebih gede dari ini, itu latency bluetooth nya.';
+ if(wasPink) startNoise(wasPink);
+ drawAll();
+};
+function hfBoostDb(f){
+ if(noiseType!=='pinkhf') return 0;
+ if(f<=8000) return 0;
+ return Math.min(9.5, 20*Math.log10(Math.pow(f/8000,0.5)));
+}
 function applyPinkAndNorm(data){
  if(!data||!data.length) return data;
- if(noiseType!=='pink') return data;
- const corr=data.map(o=>({...o, v:o.v+10*Math.log10(o.f/1000)}));
+ if(noiseType!=='pink'&&noiseType!=='pinkhf') return data;
+ const corr=data.map(o=>({...o, v:o.v+10*Math.log10(o.f/1000)-hfBoostDb(o.f)}));
  const mid=corr.filter(o=>o.f>=500&&o.f<=2000);
  if(!mid.length) return corr;
  const target=mid.reduce((s,o)=>s+db2p(o.v),0)/mid.length;
@@ -329,11 +441,13 @@ function bandValAt(vals, target){
  return best;
 }
 let noiseSrc=null,noiseGain=null,noiseType=null;
-function makePinkBuffer(c){
+function makePinkBuffer(c, hfBoost){
  const N=65536, re=new Float32Array(N), im=new Float32Array(N);
  const sr=c.sampleRate, kMin=Math.max(1,Math.floor(20*N/sr));
  for(let k=kMin;k<N/2;k++){
-  const amp=1/Math.sqrt(k);
+  const f=k*sr/N;
+  let amp=1/Math.sqrt(k);
+  if(hfBoost&&f>8000) amp*=Math.min(3, Math.pow(f/8000,0.5));
   const ph=Math.random()*2*Math.PI;
   re[k]=amp*Math.cos(ph); im[k]=amp*Math.sin(ph);
   re[N-k]=re[k]; im[N-k]=-im[k];
@@ -351,7 +465,8 @@ function makeBuf(c, type){
   for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
   return buf;
  }
- return makePinkBuffer(c);
+ if(type==='pinkhf') return makePinkBuffer(c,true);
+ return makePinkBuffer(c,false);
 }
 async function startNoise(type){
  stopNoise(true);
@@ -362,8 +477,8 @@ async function startNoise(type){
   refAn=ctx.createAnalyser(); refAn.fftSize=BIG_N; refAn.smoothingTimeConstant=0;
   noiseSrc.connect(noiseGain); noiseGain.connect(ctx.destination); noiseGain.connect(refAn);
   noiseSrc.start(); noiseType=type;
-  $('refstat').textContent=type.toUpperCase()+' NOISE';
-  $('pinkbtn').classList.toggle('on',type==='pink'); $('whitebtn').classList.toggle('on',type==='white');
+  $('refstat').textContent=type==='pinkhf'?'PINK + HF BOOST':type.toUpperCase()+' NOISE';
+  $('pinkbtn').classList.toggle('on',type==='pink'); $('pinkhfbtn').classList.toggle('on',type==='pinkhf'); $('whitebtn').classList.toggle('on',type==='white');
   normOffset=null; normLocked=false;
   $('lockbtn').textContent='🔒 KUNCI 0dB — BIAR KURVA GA NGAMBANG'; $('lockbtn').classList.remove('on'); $('lockstat').textContent='BELUM DIKUNCI';
  }catch(e){alert(e.message)}
@@ -372,9 +487,10 @@ function stopNoise(silent){
  if(noiseSrc){try{noiseSrc.stop()}catch(_){} try{noiseSrc.disconnect()}catch(_){} noiseSrc=null}
  if(noiseGain){try{noiseGain.disconnect()}catch(_){} noiseGain=null}
  refAn=null; noiseType=null;
- $('refstat').textContent='OFF'; $('pinkbtn').classList.remove('on'); $('whitebtn').classList.remove('on');
+ $('refstat').textContent='OFF'; $('pinkbtn').classList.remove('on'); $('pinkhfbtn').classList.remove('on'); $('whitebtn').classList.remove('on');
 }
 $('pinkbtn').onclick=()=>noiseType==='pink'?stopNoise():startNoise('pink');
+$('pinkhfbtn').onclick=()=>noiseType==='pinkhf'?stopNoise():startNoise('pinkhf');
 $('whitebtn').onclick=()=>noiseType==='white'?stopNoise():startNoise('white');
 $('noiseoff').onclick=()=>stopNoise();
 $('noisevol').oninput=()=>{$('noisevoltxt').textContent=$('noisevol').value+'%';if(noiseGain&&ctx)noiseGain.gain.setTargetAtTime(($('noisevol').value/100)*0.5,ctx.currentTime,.02)};
@@ -392,10 +508,8 @@ function drawAll(){
  syncCursorUI();
  if(pt){const Y=Math.max(0,Math.min(range,-pt.v))/range*plotH;mg.beginPath();mg.arc(cx,Y,10,0,Math.PI*2);mg.fillStyle='#fff';mg.fill();mg.beginPath();mg.arc(cx,Y,5,0,Math.PI*2);mg.fillStyle='#000';mg.fill();const txt=fmtF(cursorFreq)+' • '+pt.v.toFixed(1)+' dB';mg.font='bold 13px Arial';const tw=mg.measureText(txt).width+14;let lx=Math.max(4,Math.min(w-tw-4,cx-tw/2)),ly=Math.max(4,Y-46);mg.fillStyle='#000';mg.fillRect(lx,ly,tw,24);mg.strokeStyle='#fff';mg.strokeRect(lx,ly,tw,24);mg.fillStyle='#fff';mg.fillText(txt,lx+7,ly+16);$('cursorread').textContent=fmtF(cursorFreq)+' • '+pt.v.toFixed(1)+' dB'}
  else { $('cursorread').textContent=fmtF(cursorFreq)+' • — dB'; }
- const b63=bandValAt(dataToShow,63), b1k=bandValAt(dataToShow,1000), b8k=bandValAt(dataToShow,8000);
- if(b63) $('band63').textContent=b63.v.toFixed(1)+' dB';
- if(b1k) $('band1k').textContent=b1k.v.toFixed(1)+' dB';
- if(b8k) $('band8k').textContent=b8k.v.toFixed(1)+' dB';
+ const setBand=(id,f)=>{const b=bandValAt(dataToShow,f); if(b) $(id).textContent=b.v.toFixed(1)+' dB'};
+ setBand('band1k',1000); setBand('band8k',8000); setBand('band10k',10000); setBand('band12k',12000); setBand('band16k',16000); setBand('band20k',20000);
  const pw=phc.width,ph2=phc.height-18;
  pg.clearRect(0,0,pw,phc.height);pg.fillStyle='#05070a';pg.fillRect(0,0,pw,phc.height);
  pg.strokeStyle='#232a35'; pg.beginPath(); pg.moveTo(0,ph2/2); pg.lineTo(pw,ph2/2); pg.stroke();
@@ -433,18 +547,16 @@ function draw(){
  drawAll();
  if($('showlive').checked){
    let holdNorm=holdDense;
-   if(noiseType==='pink'&&normOffset!==null){
-     holdNorm=holdDense.map(o=>({...o, v:o.v+10*Math.log10(o.f/1000)-normOffset}));
+   if((noiseType==='pink'||noiseType==='pinkhf')&&normOffset!==null){
+     holdNorm=holdDense.map(o=>({...o, v:o.v+10*Math.log10(o.f/1000)-hfBoostDb(o.f)-normOffset}));
    }
    drawTrace(mg,holdNorm,w,plotH,range,'#ffd16a',1.2);
  }
- if($('autodelay').checked&&noiseType==='pink'&&frameNo%60===0){
+ if($('autodelay').checked&&(noiseType==='pink'||noiseType==='pinkhf')&&frameNo%60===0){
    const best=findBestLag();
    if(best&&best.corr>0.20){
      const useMs=Math.max(0,best.ms);
-     if(Math.abs(useMs-(+$('delayms').value))>1){
-       $('delayms').value=useMs.toFixed(1); $('delaytxt').textContent=useMs.toFixed(1)+' ms'; $('delaystat').textContent=useMs.toFixed(1)+' ms';
-     }
+     if(Math.abs(useMs-(+$('delayms').value))>1){ setDelayMs(useMs,'AUTO DELAY'); }
    }
  }
  const pct=Math.max(0,Math.min(100,(peak+90)/90*100));$('splbar').style.height=pct+'%';$('spldb').textContent=peak.toFixed(1);
