@@ -58,7 +58,7 @@ body.landscape-mode .layout{max-width:none}
 <aside>
 <div class="panel"><h3>MEASUREMENT LIST</h3>
 <div class="meas"><span class="sw" style="background:var(--cyan)"></span><b>Mic 1 — LIVE<small>Measurement • RTA / TF</small></b><input type="checkbox" id="showlive" checked></div>
-<div class="meas"><span class="sw" style="background:#fb923c"></span><b>Ref — Pink Noise<small>Reference • 1 jam dgn mic</small></b><input type="checkbox" id="showref" checked></div>
+<div class="meas"><span class="sw" style="background:#fb923c"></span><b>Ref — Pink Noise<small>Reference • 1 jam dgn mic • pink baru</small></b><input type="checkbox" id="showref" checked></div>
 <div class="meas"><span class="sw" style="background:var(--red)"></span><b>Trace A<small id="capAinfo">Empty</small></b><input type="checkbox" id="showA" checked></div>
 <div class="meas"><span class="sw" style="background:var(--purple)"></span><b>Trace B<small id="capBinfo">Empty</small></b><input type="checkbox" id="showB" checked></div>
 <div class="meas"><span class="sw" style="background:var(--green)"></span><b>Trace C<small id="capCinfo">Empty</small></b><input type="checkbox" id="showC" checked></div>
@@ -68,7 +68,7 @@ body.landscape-mode .layout{max-width:none}
 <div class="panel" style="margin-top:8px"><h3>🔊 REFERENCE GENERATOR</h3>
 <div class="noisebar"><button id="pinkbtn">🩷 PINK</button><button id="whitebtn">🤍 WHITE</button><button id="noiseoff">■ OFF</button></div>
 <label style="display:block;margin-top:8px;color:var(--mut);font-size:11px">VOLUME <b id="noisevoltxt" style="color:#fff">25%</b><input type="range" id="noisevol" min="0" max="100" value="25" style="width:100%;accent-color:#fb923c"></label>
-<div style="font-size:11px;color:var(--mut);line-height:1.5">Pink ON = TF + Polarity. 1 AudioContext buat mic + noise, biar sinkron.</div>
+<div style="font-size:11px;color:var(--mut);line-height:1.5">Pink baru = dibikin dari spektrum 1/f, loop mulus tanpa patahan. White tetep seperti kemarin.</div>
 </div>
 <div class="panel" style="margin-top:8px"><h3>DELAY FINDER</h3>
 <div class="kv"><span>Delay</span><b id="delaytxt">0.0 ms</b></div>
@@ -98,7 +98,7 @@ body.landscape-mode .layout{max-width:none}
 <label>RANGE<select id="range"><option value="60">60</option><option value="90" selected>90</option><option value="120">120</option></select></label>
 <label>COH. MIN<select id="cohmin"><option value="0.3">0.30</option><option value="0.5" selected>0.50</option><option value="0.7">0.70</option></select></label>
 </div>
-<div class="graphtitle"><b>MAGNITUDE — TRANSFER / RTA</b><span>20 Hz — 20 kHz • dBFS rel. • TF dihalusin 1/6 oktaf</span></div>
+<div class="graphtitle"><b>MAGNITUDE — TRANSFER / RTA</b><span>20 Hz — 20 kHz • TF pink: averaging pelan + 1/6 oktaf</span></div>
 <canvas id="mag" width="1200" height="300"></canvas>
 <div class="graphtitle"><b>PHASE — 0° = NORMAL, ±180° = TERBALIK</b><span id="cohwarn" style="color:#ffd16a"></span></div>
 <canvas id="phase" width="1200" height="190"></canvas>
@@ -119,13 +119,9 @@ body.landscape-mode .layout{max-width:none}
 <div class="kv"><span>Bin Width</span><b id="binwidth">— Hz</b></div>
 <div class="kv"><span>Cursor</span><b id="cursorfreq">4.72 kHz</b></div>
 </div>
-<div class="panel" style="margin-top:8px"><h3>CARA CEK POLARITY</h3>
+<div class="panel" style="margin-top:8px"><h3>KENAPA PINK BEDA SAMA WHITE?</h3>
 <div style="font-size:11px;color:var(--mut);line-height:1.6">
-1. START dulu, baru PINK ON 25%<br>
-2. Mic 1 meter di depan speaker, jangan gerak<br>
-3. Biarin AUTO DELAY jalan, coherence harus naik ke 0.7+<br>
-4. Pencet CHECK POLARITY 1 DETIK<br>
-5. Kalo TERBALIK: balik kabel + / -, cek lagi sampe NORMAL
+Pink turun -3dB/oktaf, di atas 10k energi nya kecil, jadi coherence di high wajar lebih rendah dari white. Yang penting 100 Hz - 8 kHz coherence nya 0.7+, kurva nya halus kayak white. Di atas 12k yang masih agak bergerigi itu normal, jangan dibaca.
 </div></div>
 </aside>
 </div>
@@ -133,11 +129,10 @@ body.landscape-mode .layout{max-width:none}
 <script>
 const $=id=>document.getElementById(id);
 const mag=$('mag'),mg=mag.getContext('2d'),phc=$('phase'),pg=phc.getContext('2d'),sp=$('spec'),sg=sp.getContext('2d');
-// SATU CONTEXT UNTUK SEMUA. Ini kunci sinkronnya. Jangan bikin 2 AudioContext.
 let ctx=null,audio=null,stream=null,an=null,tfAn=null,refAn=null,src=null,raf=0,fft=8192;
 let smP=[],holdP=[],avgFramesP=[],currentVals=[];
 let captures=[null,null,null],selectedSlot=0;
-let cursorFreq=4720, invertPhase=false, checkingPol=false, polResult=null, lastAutoDelay=0;
+let cursorFreq=4720, invertPhase=false, checkingPol=false, polResult=null;
 const minF=20,maxF=20000,PLOTB=34;
 const SEGS=[[20,1000,.26],[1000,3000,.14],[3000,7000,.16],[7000,10000,.10],[10000,15000,.08],[15000,20000,.26]];
 const db2p=v=>Math.pow(10,Math.max(-120,v)/10), p2db=p=>10*Math.log10(Math.max(1e-12,p));
@@ -146,6 +141,7 @@ function xfreq(f,w){f=Math.max(minF,Math.min(maxF,f));let s=0;for(let i=0;i<SEGS
 function freqAtX(x,w){const r=Math.max(0,Math.min(1,x/w));let s=0;for(let i=0;i<SEGS.length;i++){let[a,b,pw]=SEGS[i];if(r<=s+pw||i===SEGS.length-1)return a*Math.exp(((r-s)/pw)*Math.log(b/a));s+=pw}return maxF}
 function fmtF(f){return f>=1000?(f/1000).toFixed(2)+' kHz':f.toFixed(0)+' Hz'}
 function fftCalc(re,im){const n=re.length;for(let i=1,j=0;i<n;i++){let bit=n>>1;for(;j&bit;bit>>=1)j^=bit;j^=bit;if(i<j){let t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t}}for(let len=2;len<=n;len<<=1){const ang=-2*Math.PI/len,wr=Math.cos(ang),wi=Math.sin(ang);for(let i=0;i<n;i+=len){let cwr=1,cwi=0;for(let j=0;j<len/2;j++){const ur=re[i+j],ui=im[i+j],vr=re[i+j+len/2]*cwr-im[i+j+len/2]*cwi,vi=re[i+j+len/2]*cwi+im[i+j+len/2]*cwr;re[i+j]=ur+vr;im[i+j]=ui+vi;re[i+j+len/2]=ur-vr;im[i+j+len/2]=ui-vi;const t=cwr*wr-cwi*wi;cwi=cwr*wi+cwi*wr;cwr=t}}}}
+function ifftCalc(re,im){for(let i=0;i<re.length;i++)im[i]=-im[i];fftCalc(re,im);const n=re.length;for(let i=0;i<n;i++){re[i]/=n;im[i]=-im[i]/n}}
 let TF={Sxx:null,Syy:null,SxyR:null,SxyI:null,count:0};
 function resetTF(){TF={Sxx:null,Syy:null,SxyR:null,SxyI:null,count:0}}
 function updateTF(){
@@ -159,14 +155,16 @@ function updateTF(){
  fftCalc(reM,imM); fftCalc(reR,imR);
  const H=N/2;
  if(!TF.Sxx){TF.Sxx=new Float64Array(H);TF.Syy=new Float64Array(H);TF.SxyR=new Float64Array(H);TF.SxyI=new Float64Array(H)}
- // averaging pelan 0.08, biar TF stabil, ga loncat-loncat kayak di screenshot kemarin
- const a=0.08;
+ // pink: averaging lebih pelan lagi, 0.04, biar high yang energi kecil ga loncat
+ const a=noiseType==='pink'?0.04:0.08;
  for(let k=1;k<H;k++){const f=k*audio.sampleRate/N; if(f<minF||f>maxF) continue;const xx=reR[k]*reR[k]+imR[k]*imR[k], yy=reM[k]*reM[k]+imM[k]*imM[k];const xr=reR[k]*reM[k]+imR[k]*imM[k], xi=reR[k]*imM[k]-imR[k]*reM[k]; TF.Sxx[k]=TF.Sxx[k]*(1-a)+xx*a; TF.Syy[k]=TF.Syy[k]*(1-a)+yy*a; TF.SxyR[k]=TF.SxyR[k]*(1-a)+xr*a; TF.SxyI[k]=TF.SxyI[k]*(1-a)+xi*a}
  TF.count++;
 }
-// TF dihalusin 1/6 oktaf: magnitude rata-rata power, phase rata-rata circular. Ini yang bikin ga bergerigi.
 function smoothTF(raw){
- const perOct=+$('detail').value||6; if(!perOct) return raw;
+ // pink: paksa minimal 1/6 oktaf, walau user pilih RAW, biar ga bergerigi
+ let perOct=+$('detail').value||0;
+ if(noiseType==='pink'&&perOct!==0&&perOct>6) perOct=6;
+ if(!perOct) perOct=6;
  return raw.map(o=>{
   const lo=o.f*Math.pow(2,-1/(2*perOct)), hi=o.f*Math.pow(2,1/(2*perOct));
   let sP=0,c=0,sx=0,sy=0,cohS=0;
@@ -256,12 +254,29 @@ function densifyPower(freqs,pArr){const out=[],W=mag.width;for(let x=0;x<=W;x+=6
 function pointOnLine(data,f){if(!data||!data.length)return null;const cx=xfreq(f,mag.width);const pts=data.map(o=>({f:o.f,v:o.v,x:o.x??xfreq(o.f,mag.width),phase:o.phase,coh:o.coh}));if(cx<=pts[0].x)return pts[0];if(cx>=pts[pts.length-1].x)return pts[pts.length-1];for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1];if(cx>=a.x&&cx<=b.x){const t=b.x===a.x?0:(cx-a.x)/(b.x-a.x);return{f,v:a.v+(b.v-a.v)*t,x:cx,phase:a.phase+(b.phase-a.phase)*t,coh:a.coh+(b.coh-a.coh)*t}}}return pts[0]}
 function cursorData(){if(currentVals.length)return currentVals;const av=captures.map((cap,i)=>({cap,i})).filter(x=>x.cap);const ch=av[selectedSlot]||av[av.length-1];return ch?ch.cap.data:[]}
 let noiseSrc=null,noiseGain=null,noiseType=null;
-function makeBuf(c, type){
- // buffer 4 detik, biar loop nya ga kepotong tiap 2 detik dan TF nya stabil
- const len=c.sampleRate*4, buf=c.createBuffer(1,len,c.sampleRate), d=buf.getChannelData(0);
- if(type==='white'){for(let i=0;i<len;i++)d[i]=Math.random()*2-1}
- else{let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;for(let i=0;i<len;i++){const w=Math.random()*2-1;b0=.99886*b0+.0555179*w;b1=.99332*b1+.0750759*w;b2=.969*b2+.153852*w;b3=.8665*b3+.3104856*w;b4=.55*b4+.5329522*w;b5=-.7616*b5+.016898*w;const o=b0+b1+b2+b3+b4+b5+b6+w*.5362;b6=w*.115926;d[i]=o*.11}}
+// PINK BARU: bikin di frekuensi, 1/sqrt(f), phase acak, IFFT. Loop mulus, ga ada patahan, ga ada ekor filter.
+function makePinkBuffer(c){
+ const N=65536, re=new Float32Array(N), im=new Float32Array(N);
+ for(let k=1;k<N/2;k++){
+  const amp=1/Math.sqrt(k);
+  const ph=Math.random()*2*Math.PI;
+  re[k]=amp*Math.cos(ph); im[k]=amp*Math.sin(ph);
+  re[N-k]=re[k]; im[N-k]=-im[k];
+ }
+ ifftCalc(re,im);
+ const buf=c.createBuffer(1,N,c.sampleRate), d=buf.getChannelData(0);
+ let rms=0; for(let i=0;i<N;i++) rms+=re[i]*re[i]; rms=Math.sqrt(rms/N)||1;
+ const gain=0.35/rms;
+ for(let i=0;i<N;i++) d[i]=re[i]*gain;
  return buf;
+}
+function makeBuf(c, type){
+ if(type==='white'){
+  const len=c.sampleRate*2, buf=c.createBuffer(1,len,c.sampleRate), d=buf.getChannelData(0);
+  for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+  return buf;
+ }
+ return makePinkBuffer(c);
 }
 async function startNoise(type){
  stopNoise(true);
@@ -293,7 +308,7 @@ $('checkpol').onclick=async()=>{
  checkingPol=true; resetTF();
  $('poltitle').textContent='... NGUKUR 1 DETIK'; $('poldetail').textContent='Jangan gerakin mic / speaker, biarin pink noise bunyi 1 detik.';
  $('checkpol').disabled=true;
- await new Promise(r=>setTimeout(r,1000));
+ await new Promise(r=>setTimeout(r,1500));
  for(let i=0;i<8;i++) updateTF();
  const tf=tfData(); const res=polarityFromTF(tf); const corr=corrSign();
  if(res&&res.state!=='unknown'&&corr!==null){
@@ -356,7 +371,6 @@ function draw(){
  const pct=Math.max(0,Math.min(100,(peak+90)/90*100));$('splbar').style.height=pct+'%';$('spldb').textContent=peak.toFixed(1);
  $('peakfreq').textContent=peakFreq.toFixed(0)+' Hz';$('rmsdb').textContent=p2db(cntP?sumP/cntP:1e-12).toFixed(1)+' dBFS';
  if(frameNo%3===0) updateTF();
- // AUTO DELAY tiap ~1 detik, cuma kalo dicentang dan pink ON
  if($('autodelay').checked&&noiseType==='pink'&&frameNo%60===0){
   const best=findBestLag();
   if(best&&best.corr>0.25&&Math.abs(best.ms-(+$('delayms').value))>0.4){
