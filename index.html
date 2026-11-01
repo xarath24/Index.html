@@ -23,7 +23,8 @@ select{background:#222b37;color:#e8eaf0;border:1px solid #4a5566;border-radius:6
 .layout{display:grid;grid-template-columns:250px minmax(640px,1fr) 170px;gap:8px;padding:6px 8px;max-width:1600px;margin:auto;min-width:900px;align-items:stretch;height:calc(100dvh - 42px - 30px)}
 .leftCol{display:flex;flex-direction:column;min-height:0;height:100%}
 .panel{background:#14181f;border:1px solid #2b323e;border-radius:8px;padding:7px 9px}
-main .panel{height:100%;overflow:hidden;display:flex;flex-direction:column}
+main{display:flex;min-height:0}
+main .panel{flex:1;height:100%;overflow:hidden;display:flex;flex-direction:column;min-height:0}
 .listBox{flex:1;display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden}
 .listBox h3{font-size:14px;color:#fff;letter-spacing:1px;flex:0 0 auto;margin-bottom:4px}
 .listBox h3 span{color:#8b95a5;font-size:9px;letter-spacing:0;display:block;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -33,10 +34,10 @@ main .panel{height:100%;overflow:hidden;display:flex;flex-direction:column}
 #caplist::-webkit-scrollbar-thumb{background:#3fd4ec;border-radius:5px;border:1px solid #0a0c10}
 #caplist::-webkit-scrollbar-thumb:active{background:#fff}
 h3{margin:0 0 6px;font-size:11px;letter-spacing:1px;color:#8b95a5}
-canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-resize;touch-action:none;flex:0 0 auto}
-#mag{aspect-ratio:1200/180}
-#freqscale{aspect-ratio:1200/36;background:#0b0f14;border-top:1px solid #2b323e;border-radius:0 0 4px 4px}
-#phase{aspect-ratio:1200/115}
+canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-resize;touch-action:none;min-height:0}
+#mag{flex:1 1 0}
+#freqscale{flex:0 0 auto;height:26px;background:#0b0f14;border-top:1px solid #2b323e;border-radius:0 0 4px 4px}
+#phase{flex:1 1 0}
 .title{display:flex;justify-content:space-between;font-size:11px;color:#8b95a5;margin:4px 0 3px;flex:0 0 auto}
 .title b{color:#dbe2ec}
 .ctl{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;align-items:stretch;flex:0 0 auto}
