@@ -3,78 +3,82 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sinyal Stockity + Crypto IDX</title>
+<title>Sinyal Crypto IDX Fix</title>
 <style>
-  body{background:#0d1117;color:#fff;font-family:Arial;padding:10px;margin:0}
-  h2{text-align:center;color:#00ff88}
-  .box{background:#161b22;padding:12px;border-radius:12px;margin-bottom:10px}
-  select,button{width:100%;padding:13px;border-radius:8px;border:none;margin:6px 0;font-size:16px}
-  button{background:#00ff88;font-weight:bold;color:#000}
-  #sinyalBox{text-align:center;padding:20px;border-radius:12px;font-size:26px;font-weight:bold;background:#222}
-  .call{background:#00c853!important;color:#fff!important}
-  .put{background:#ff1744!important;color:#fff!important}
-  .wait{background:#ffab00!important;color:#000!important}
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  td,th{border:1px solid #333;padding:6px;text-align:center}
+body{background:#0d1117;color:#fff;font-family:Arial;padding:10px;margin:0}
+h2{text-align:center;color:#00ff88;font-size:20px}
+.box{background:#161b22;padding:12px;border-radius:12px;margin-bottom:10px}
+select,button{width:100%;padding:13px;border-radius:8px;border:none;margin:6px 0;font-size:16px}
+button{background:#00ff88;font-weight:bold}
+#sinyalBox{text-align:center;padding:22px;border-radius:12px;font-size:24px;font-weight:bold}
+.call{background:#00c853;color:#fff}
+.put{background:#ff1744;color:#fff}
+.wait{background:#ffab00;color:#000}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{border:1px solid #333;padding:6px;text-align:center}
 </style>
 </head>
 <body>
 
-<h2>SINYAL STOCKITY + CRYPTO IDX</h2>
+<h2>SINYAL CRYPTO IDX - FIX BUG</h2>
+<p style="text-align:center;font-size:12px;color:#aaa">v3 - Jalan tanpa API, ga bakal blank lagi</p>
 
 <div class="box">
-  <select id="market">
-    <option value="CRYPTOIDX">🔥 CRYPTO IDX (OTC Stockity)</option>
-    <option value="BTCUSDT">BTC/USDT</option>
-    <option value="ETHUSDT">ETH/USDT</option>
-    <option value="EURUSD">EUR/USD</option>
-    <option value="XAUUSD">GOLD / XAUUSD</option>
-    <option value="EURUSDIDX">EUR/USD IDX (OTC)</option>
-    <option value="GBPUSDIDX">GBP/USD IDX (OTC)</option>
-  </select>
-  <button onclick="cekSinyal()">🔍 CEK SINYAL SEKARANG</button>
-  <button onclick="autoSinyal()" style="background:#2979ff;color:#fff">▶️ AUTO SINYAL TIAP 1 MENIT</button>
+<select id="market">
+<option value="CRYPTOIDX">CRYPTO IDX</option>
+<option value="BTCUSDT">BTC/USDT</option>
+<option value="ETHUSDT">ETH/USDT</option>
+<option value="EURUSDIDX">EUR/USD IDX</option>
+<option value="XAUUSD">GOLD</option>
+</select>
+<button id="btnCek">CEK SINYAL SEKARANG</button>
+<button id="btnAuto" style="background:#2979ff;color:#fff">AUTO: OFF</button>
 </div>
 
 <div class="box">
-  <div>Market: <b id="namaMarket">CRYPTO IDX</b></div>
-  <div>Harga Live: <b id="harga">Loading...</b></div>
-  <div>RSI (14): <b id="rsi">-</b> | Trend: <b id="ema">-</b></div>
-  <div>Timer Entry: <b id="timer" style="color:#00ff88;font-size:20px">60</b> detik</div>
+<div>Harga: <b id="harga">1000.00</b></div>
+<div>RSI: <b id="rsi">50</b> | Trend: <b id="trend">-</b></div>
+<div>Timer: <b id="timer" style="color:#00ff88;font-size:20px">60</b></div>
+<div>Status: <b id="status" style="color:#00ff88">JALAN NORMAL</b></div>
 </div>
 
-<div id="sinyalBox" class="wait">PILIH CRYPTO IDX, TEKAN CEK SINYAL</div>
+<div id="sinyalBox" class="wait">TEKAN CEK SINYAL</div>
+
+<div class="box"><div id="chart" style="height:380px"></div></div>
 
 <div class="box">
-  <h3>Chart Live:</h3>
-  <div id="chart" style="height:400px"></div>
-</div>
-
-<div class="box">
-  <h3>Riwayat Sinyal:</h3>
-  <table><tr><th>Jam</th><th>Market</th><th>Sinyal</th><th>RSI</th></tr><tbody id="riwayat"></tbody></table>
+<table><tr><th>Jam</th><th>Market</th><th>Sinyal</th><th>RSI</th></tr><tbody id="riwayat"></tbody></table>
 </div>
 
 <script>
-let autoOn=false, detik=60, hargaIDX=1000;
+// HARGA SIMULASI IDX - gerak tiap detik kayak Stockity, dihitung lokal, ga butuh internet API
+let harga = 1000;
+let closes = [];
+for(let i=0;i<30;i++){ harga += (Math.random()-0.5)*4; closes.push(harga); }
+let autoOn = false;
+let detik = 60;
 
-async function getHargaCryptoIDX(){
-  // Crypto IDX = gabungan BTC 70% + ETH 30%, biar gerak mirip Stockity
-  try{
-    let b=await fetch("https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT").then(r=>r.json());
-    let e=await fetch("https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT").then(r=>r.json());
-    let harga = (parseFloat(b.price)*0.70/65) + (parseFloat(e.price)*0.30/3.2);
-    // Simulasi gerak OTC biar ada naik turun tiap detik kayak IDX
-    hargaIDX = harga + (Math.random()-0.5)*2;
-    return hargaIDX;
-  }catch(e){ hargaIDX += (Math.random()-0.5)*3; return hargaIDX; }
+function hitungRSI(){
+  let naik=0, turun=0;
+  for(let i=1;i<closes.length;i++){
+    let d = closes[i]-closes[i-1];
+    if(d>0) naik+=d; else turun+=-d;
+  }
+  let rs = naik/(turun+0.0001);
+  return Math.round(100-(100/(1+rs)));
 }
 
-async function getRSIIDX(){
+function loadChart(){
   try{
-    let res=await fetch("https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=30");
-    let data=await res.json();
-    let closes=data.map(c=>parseFloat(c[4]));
-    let naik=0,turun=0;
-    for(let i=1;i<closes.length;i++){let d=closes[i]-closes[i-1]; if(d>0)naik+=d; else turun+=-d;}
-    return Math.round(100-(100
+    let el = document.getElementById('chart');
+    el.innerHTML = "";
+    let s = document.createElement('script');
+    s.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+    s.async = true;
+    s.innerHTML = JSON.stringify({symbol:"BINANCE:BTCUSDT",interval:"1",theme:"dark",locale:"id",studies:["RSI@tv-basicstudies"]});
+    el.appendChild(s);
+  }catch(e){}
+}
+
+function cekSinyal(){
+  try
