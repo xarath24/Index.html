@@ -28,8 +28,8 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
 #phase{aspect-ratio:1200/190}
 .title{display:flex;justify-content:space-between;font-size:11px;color:#8b95a5;margin:8px 0 4px}
 .title b{color:#dbe2ec}
-.ctl{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:flex-end}
-.ctl label{font-size:10px;color:#8b95a5;display:flex;flex-direction:column;gap:3px}
+.ctl{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:stretch}
+.ctl label{font-size:10px;color:#8b95a5;display:flex;flex-direction:column;gap:3px;justify-content:flex-end}
 .kv{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #2b323e}
 .kv b{color:#fff}.kv span{color:#8b95a5}
 .kv b.ok{color:#4ade80}.kv b.bad{color:#f87171}
@@ -41,10 +41,13 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 .capitem{display:flex;align-items:center;gap:6px;padding:6px 4px;border-bottom:1px solid #2b323e}
 .capitem .dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
 .capitem .nm{flex:1;min-width:0}
-.capitem .nm b{display:block;color:#fff;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.capitem .nm b{display:block;color:#fff;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text}
+.capitem .nm b:hover{color:#3fd4ec;text-decoration:underline}
 .capitem .nm span{color:#8b95a5;font-size:10px;display:block}
 .capitem .nm span.pol-ok{color:#4ade80}.capitem .nm span.pol-bad{color:#f87171}
 .capitem button{padding:4px 7px;font-size:11px}
+.renameBtn{background:#222b37;border-color:#3fd4ec;color:#3fd4ec}
+.renameInput{width:100%;background:#090d12;color:#fff;border:1px solid #3fd4ec;border-radius:5px;padding:4px 6px;font-size:11px;font-weight:700;outline:none}
 .capempty{color:#8b95a5;font-size:11px;line-height:1.6;padding:4px 0}
 .findres{font-weight:800;color:#fff;white-space:nowrap}
 .findres small{color:#8b95a5;font-weight:400}
@@ -75,6 +78,12 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 .clipTxt{font-weight:900;font-size:12px;color:#8b95a5;letter-spacing:.5px}
 .clipTxt.on{color:#f87171}
 .clipHint{margin-left:auto;font-size:10px;color:#8b95a5}
+.cursorTop{flex:1;min-width:280px;background:#090d12;border:1px solid #2b323e;border-radius:8px;padding:6px 12px;display:flex;gap:16px;align-items:center;justify-content:flex-end;white-space:nowrap;overflow:hidden}
+.cursorTop .lab{font-size:10px;color:#8b95a5;letter-spacing:1px}
+.cursorTop .freq{font-weight:900;font-size:16px;color:#fff}
+.cursorTop .db{font-weight:900;font-size:16px;color:#3fd4ec}
+.cursorTop .ph{font-weight:900;font-size:16px;color:#34d399}
+.cursorTop .sep{color:#4a5566}
 :fullscreen body{background:#0a0c10}
 </style>
 </head>
@@ -129,6 +138,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <h3>📸 CAPTURE — TAK TERBATAS</h3>
       <button id="capturebtn" class="cap" style="width:100%;padding:12px">📸 CAPTURE KURVA INI</button>
       <button id="clearcap" class="danger" style="width:100%;padding:8px;margin-top:6px">🗑 HAPUS SEMUA CAPTURE</button>
+      <div style="color:#8b95a5;font-size:10px;margin-top:6px">Pencet nama capture / tombol ✏️ buat ganti nama sendiri, misal jadi box pahratel.</div>
       <div id="caplist" style="margin-top:6px"></div>
     </div>
 
@@ -184,6 +194,14 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
             <option value="120">120</option>
           </select>
         </label>
+        <div class="cursorTop" id="cursorTop">
+          <span class="lab">CURSOR</span>
+          <span class="freq" id="ctFreq">4.19 kHz</span>
+          <span class="sep">•</span>
+          <span class="db" id="ctDb">— dB</span>
+          <span class="sep">•</span>
+          <span class="ph" id="ctPhase">Phase —°</span>
+        </div>
       </div>
 
       <div class="title"><b>MAGNITUDE</b><span>20 Hz — 20 kHz • GARIS TENGAH = 0 dB</span></div>
@@ -214,9 +232,11 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         2. START, lampu SIGNAL ijo nyala kalo mic nangkep suara<br>
         3. PINK ON, lampu pink nyala, volume 100%, mic 1 m<br>
         4. Kalo lampu CLIP merah nyala, kecilin volume / jauhin mic<br>
-        5. Liat kiri grafik phase, tulisan kecil: NORMAL / TERBALIK<br>
-        6. Pencet 🔍 FIND DELAY, hasil nya nongol di atas grafik phase<br>
-        7. Capture, OFF, lampu mati, phase capture + cursor tetep aktif<br><br>
+        5. Geser cursor, liat atas: freq + dB + derajat phase nya<br>
+        6. Liat kiri grafik phase, tulisan kecil: NORMAL / TERBALIK<br>
+        7. Pencet 🔍 FIND DELAY, hasil nya nongol di atas grafik phase<br>
+        8. Capture, pencet nama nya, ubah jadi box pahratel, dll<br>
+        9. OFF, lampu mati, phase capture + cursor tetep aktif<br><br>
         Garis ijo tengah = 0 dB / 0°.
       </div>
     </div>
@@ -374,6 +394,40 @@ function refreshPolarityAfterOff(){
   else setPolarityUI(null,null,null);
 }
 
+function startRename(cp,nameEl){
+  if(nameEl.querySelector('input'))return;
+  const oldName=cp.name;
+  const input=document.createElement('input');
+  input.className='renameInput';
+  input.type='text';
+  input.value=oldName;
+  input.maxLength=40;
+  nameEl.textContent='';
+  nameEl.appendChild(input);
+  input.focus();
+  input.select();
+  let done=false;
+  const save=(cancel)=>{
+    if(done)return;done=true;
+    const v=input.value.trim();
+    if(!cancel&&v&&v!==oldName){
+      cp.name=v;
+      toast('Capture diganti jadi: '+v);
+    }else if(!cancel&&!v){
+      toast('Nama kosong, balik ke nama lama.');
+    }
+    renderCaptures();
+  };
+  input.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();save(false)}
+    else if(e.key==='Escape'){save(true)}
+    e.stopPropagation();
+  });
+  input.addEventListener('blur',()=>save(false));
+  input.addEventListener('click',e=>e.stopPropagation());
+  input.addEventListener('pointerdown',e=>e.stopPropagation());
+}
+
 function renderCaptures(){
   const el=$('caplist');$('capcount').textContent=S.captures.length;
   if(!S.captures.length){el.innerHTML='<div class="capempty">Belum ada capture.<br>Pencet CAPTURE pas kurva nya lagi bagus.</div>';refreshPolarityAfterOff();return}
@@ -382,9 +436,12 @@ function renderCaptures(){
     const row=document.createElement('div');row.className='capitem';
     const pol=cp.polarity?('<span class="'+(cp.polarity==='TERBALIK'?'pol-bad':'pol-ok')+'">Polarity: '+cp.polarity+(cp.polarity==='TERBALIK'?' ⚠':' ✓')+(cp.phaseAvg!=null?' ('+cp.phaseAvg.toFixed(0)+'°)':'')+'</span>'):'<span>Polarity: —</span>';
     const dl=cp.delayMs!=null?('<span>Delay: '+cp.delayMs.toFixed(3)+' ms</span>'):'';
-    row.innerHTML='<span class="dot" style="background:'+cp.color+'"></span><label style="display:flex;align-items:center;gap:4px"><input type="checkbox" '+(cp.show?'checked':'')+' style="accent-color:'+cp.color+'"></label><div class="nm"><b>'+cp.name+'</b><span>'+cp.time+' • '+(cp.mode||'RTA')+'</span>'+pol+dl+'</div><button>Hapus</button>';
+    row.innerHTML='<span class="dot" style="background:'+cp.color+'"></span><label style="display:flex;align-items:center;gap:4px"><input type="checkbox" '+(cp.show?'checked':'')+' style="accent-color:'+cp.color+'"></label><div class="nm"><b title="Pencet buat ganti nama">'+cp.name+'</b><span>'+cp.time+' • '+(cp.mode||'RTA')+'</span>'+pol+dl+'</div><button class="renameBtn" title="Ganti nama">✏️</button><button>Hapus</button>';
     row.querySelector('input').onchange=e=>{cp.show=e.target.checked;refreshPolarityAfterOff();drawAll()};
-    row.querySelector('button').onclick=()=>{S.captures.splice(idx,1);renderCaptures();refreshPolarityAfterOff();drawAll();toast('Capture dihapus')};
+    const nameEl=row.querySelector('.nm b');
+    nameEl.onclick=e=>{e.stopPropagation();startRename(cp,nameEl)};
+    row.querySelector('.renameBtn').onclick=e=>{e.stopPropagation();startRename(cp,nameEl)};
+    row.querySelectorAll('button')[1].onclick=()=>{S.captures.splice(idx,1);renderCaptures();refreshPolarityAfterOff();drawAll();toast('Capture dihapus')};
     el.appendChild(row);
   });
   refreshPolarityAfterOff();
@@ -400,7 +457,7 @@ $('capturebtn').onclick=()=>{
     polarity:pol.state,phaseAvg:pol.avg,cohAvg:pol.cohAvg,
     delayMs:S.foundDelay!=null?S.foundDelay:calcDelayIn(S.phaseRaw,S.coh,S.delayLo,S.delayHi),
     mag:S.live.map(o=>({f:o.f,v:o.v,x:o.x})),phase:S.phase.map(o=>({f:o.f,v:o.v,x:o.x})),phaseRaw:S.phaseRaw.map(o=>({f:o.f,v:o.v,x:o.x}))});
-  renderCaptures();drawAll();toast('Capture '+S.capN+' tersimpan');
+  renderCaptures();drawAll();toast('Capture '+S.capN+' tersimpan — pencet namanya buat ganti nama');
 };
 $('clearcap').onclick=()=>{
   if(!S.captures.length){toast('Belum ada capture.');return}
@@ -551,20 +608,6 @@ $('pinkbtn').onclick=()=>{autoLandscape();S.pink?stopPink():startPink()};
 $('noiseoff').onclick=stopPink;
 $('noisevol').oninput=e=>{$('voltxt').textContent=e.target.value+'%';if(S.noiseGain&&S.ctx)S.noiseGain.gain.setTargetAtTime((e.target.value/100)*0.5,S.ctx.currentTime,.02)};
 
-function drawLabelOnCurve(c,cx,cy,W,H,txt,strokeCol){
-  c.font='bold 16px Arial';
-  const tw=c.measureText(txt).width+22;
-  const centerX=Math.max(tw/2+4,Math.min(W-tw/2-4,cx));
-  const centerY=Math.max(16+4,Math.min(H-16-4,cy));
-  const lx=centerX-tw/2, ly=centerY-16;
-  c.fillStyle='rgba(0,0,0,0.85)';
-  c.beginPath();c.roundRect(lx,ly,tw,32,7);c.fill();
-  c.strokeStyle=strokeCol||'#3fd4ec';c.lineWidth=2;
-  c.beginPath();c.roundRect(lx,ly,tw,32,7);c.stroke();
-  c.fillStyle='#fff';c.textAlign='center';c.textBaseline='middle';
-  c.fillText(txt,centerX,centerY);
-  c.textAlign='left';c.textBaseline='alphabetic';
-}
 function drawZeroLine(c,w,h,range){
   const y=yMag(0,range,h);
   c.strokeStyle='#22ff88';c.lineWidth=3;
@@ -695,10 +738,8 @@ function drawAll(){
     const Y=yMag(pt.v,range,h);
     mg.beginPath();mg.arc(cx,Y,9,0,Math.PI*2);mg.fillStyle='#fff';mg.fill();
     $('cursorread').textContent=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB';
-    drawLabelOnCurve(mg,cx,Y,w,h,fmtF(S.cursor)+'  •  '+pt.v.toFixed(1)+' dB',ptSrc?ptSrc.color:'#3fd4ec');
   }else{
     $('cursorread').textContent=fmtF(S.cursor)+' • — dB';
-    drawLabelOnCurve(mg,cx,h/2,w,h,fmtF(S.cursor),'#3fd4ec');
   }
   drawScale();
   const pw=phc.width,phH=phc.height;
@@ -739,19 +780,20 @@ function drawAll(){
       const Y=yPh(Math.max(minPh,Math.min(maxPh,pp.v)));
       pg.beginPath();pg.arc(cx,Y,8,0,Math.PI*2);pg.fillStyle='#fff';pg.fill();
       $('phasecursor').textContent=pp.v.toFixed(0)+'°';
-      const capCol=livePhase?'#34d399':(lastVisibleCapture()?lastVisibleCapture().color:'#34d399');
-      drawLabelOnCurve(pg,cx,Y,pw,phH,fmtF(S.cursor)+'  •  '+pp.v.toFixed(0)+'°',capCol);
       if(pt)$('cursorread').textContent=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB • Phase '+pp.v.toFixed(0)+'°';
+    }else{
+      $('phasecursor').textContent='—';
     }
   }else{
     $('phasecursor').textContent='—';
     pg.strokeStyle='#fff';pg.lineWidth=3;pg.beginPath();pg.moveTo(cx,0);pg.lineTo(cx,phH);pg.stroke();
     drawPolarityBadge(pg,pw);
-    pg.fillStyle='#fff';pg.font='bold 15px Arial';pg.textAlign='center';
-    pg.fillText(fmtF(S.cursor),cx,24);pg.textAlign='left';
     pg.fillStyle='#8b95a5';pg.font='bold 13px Arial';pg.textAlign='center';
     pg.fillText('NO REFERENCE — HIDUPKAN PINK NOISE',pw/2,phH/2+28);pg.textAlign='left';
   }
+  $('ctFreq').textContent=fmtF(S.cursor);
+  $('ctDb').textContent=pt?pt.v.toFixed(1)+' dB':'— dB';
+  $('ctPhase').textContent='Phase '+(pp?pp.v.toFixed(0)+'°':'—°');
 }
 function computeTF(){
   const N=S.fft,tdM=new Float32Array(N),tdR=new Float32Array(N);
