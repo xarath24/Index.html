@@ -134,7 +134,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         2. Pencet PINK, volume 30%<br>
         3. Pink lewat kabel AUX ke speaker<br>
         4. HP / mic 1 meter di depan speaker<br>
-        5. Geser garis putih, angka nya tetap di tengah grafik, ga ikut lari.
+        5. Geser garis putih, kotak tulisan di tengah grafik ikut garis nya.
       </div>
     </div>
   </aside>
@@ -221,17 +221,19 @@ $('pinkbtn').onclick=()=>S.pink?stopPink():startPink();
 $('noiseoff').onclick=stopPink;
 $('noisevol').oninput=e=>{$('voltxt').textContent=e.target.value+'%';if(S.noiseGain&&S.ctx)S.noiseGain.gain.setTargetAtTime((e.target.value/100)*0.5,S.ctx.currentTime,.02)};
 
-/* TULISAN TENGAH, SELALU DI TENGAH GRAFIK */
-function drawCenterLabel(c,W,H,txt){
+/* TULISAN DI TENGAH CURSOR, NGIKUTIN CURSOR */
+function drawCursorCenterLabel(c,cx,W,H,txt){
   c.font='bold 20px Arial';
   const tw=c.measureText(txt).width+28;
-  const lx=W/2-tw/2, ly=H/2-19;
-  c.fillStyle='rgba(0,0,0,0.82)';
+  /* tengah kotak = posisi cursor, cuma ditahan biar ga kepotong pinggir */
+  const centerX=Math.max(tw/2+4,Math.min(W-tw/2-4,cx));
+  const lx=centerX-tw/2, ly=H/2-19;
+  c.fillStyle='rgba(0,0,0,0.85)';
   c.beginPath();c.roundRect(lx,ly,tw,38,8);c.fill();
   c.strokeStyle='#3fd4ec';c.lineWidth=2;
   c.beginPath();c.roundRect(lx,ly,tw,38,8);c.stroke();
   c.fillStyle='#fff';c.textAlign='center';c.textBaseline='middle';
-  c.fillText(txt,W/2,H/2);
+  c.fillText(txt,centerX,H/2);
   c.textAlign='left';c.textBaseline='alphabetic';
 }
 function drawCursorLabel(c,cx,W,txt,y,bg,fg2){
@@ -251,7 +253,6 @@ function drawScale(){
   MAJORS.forEach(f=>{
     const x=xfreq(f,W);
     c.strokeStyle='#8b95a5';c.lineWidth=2;c.beginPath();c.moveTo(x,18);c.lineTo(x,32);c.stroke();
-    /* SEMUA TULISAN RATA TENGAH DI BAWAH TICK NYA: 20, 50, 100, dst */
     c.fillStyle='#8b95a5';c.font='bold 13px Arial';c.textAlign='center';
     c.fillText(f===20?'20':f===20000?'20 kHz':fmtLab(f),Math.max(18,Math.min(W-32,x)),50);
   });
@@ -315,11 +316,11 @@ function drawAll(){
     const Y=yMag(pt.v,range,h);
     mg.beginPath();mg.arc(cx,Y,9,0,Math.PI*2);mg.fillStyle='#fff';mg.fill();
     $('cursorread').textContent=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB';
-    /* INI YANG MAS MAU: TULISAN DI TENGAH-TENGAH, GESER PUN TETAP DI TENGAH */
-    drawCenterLabel(mg,w,h,fmtF(S.cursor)+'  •  '+pt.v.toFixed(1)+' dB');
+    /* DI TENGAH CURSOR, NGIKUTIN CURSOR */
+    drawCursorCenterLabel(mg,cx,w,h,fmtF(S.cursor)+'  •  '+pt.v.toFixed(1)+' dB');
   }else{
     $('cursorread').textContent=fmtF(S.cursor)+' • — dB';
-    drawCenterLabel(mg,w,h,fmtF(S.cursor));
+    drawCursorCenterLabel(mg,cx,w,h,fmtF(S.cursor));
   }
   drawScale();
   const pw=phc.width,phH=phc.height,yFor=d=>((180-d)/360)*phH;
