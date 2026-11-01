@@ -24,9 +24,15 @@ label{font-size:11px;color:var(--muted)}canvas{display:block;width:100%;backgrou
 .stats{display:flex;gap:8px;flex-wrap:wrap}.stat{background:#090d12;border-radius:7px;padding:7px 10px;min-width:105px;flex:1}.stat small{display:block;color:var(--muted);font-size:10px}.stat strong{font-size:15px}
 .status{font-size:12px;color:#7ee0ad;margin-left:auto}
 @media(max-width:520px){header{align-items:flex-start}}
+body.landscape-mode main{max-width:none;padding:8px}
+body.landscape-mode #spectrum{height:min(68vh,560px)}
+body.landscape-mode #waterfall{height:min(30vh,240px)}
+body.landscape-mode .toolbar{position:sticky;top:0;z-index:5}
+body.landscape-mode header h1{font-size:15px}
+@media(orientation:landscape){#spectrum{height:min(68vh,560px)}#waterfall{height:min(30vh,240px)}}
 </style></head>
 <body>
-<header><div><h1>SMART RTA LIVE</h1><div class="sub">REAL-TIME SPECTRUM • WATERFALL • AUDIO ANALYZER</div></div><div id="status" class="status">STANDBY</div></header>
+<header><div><h1>SMART RTA LIVE</h1><div class="sub">REAL-TIME SPECTRUM • WATERFALL • AUDIO ANALYZER</div></div><div style="display:flex;align-items:center;gap:8px"><button id="landscape">↔ LANDSCAPE</button><div id="status" class="status">STANDBY</div></div></header>
 <main>
 <section class="toolbar">
 <button class="go" id="start">▶ START LIVE</button><button id="stop" disabled>■ STOP</button>
@@ -89,6 +95,19 @@ function draw(){
  wc.putImageData(row,0,water.height-1);
  $('peakdb').textContent=peak.toFixed(1)+' dBFS';$('peakfreq').textContent=(peakBin*audio.sampleRate/fft).toFixed(0)+' Hz';raf=requestAnimationFrame(draw);
 }
+$('landscape').onclick=async()=>{
+ try{
+  if(!document.fullscreenElement && document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
+  if(screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape');
+  document.body.classList.add('landscape-mode');
+  $('landscape').textContent='↔ LANDSCAPE ON';
+ }catch(e){
+  document.body.classList.toggle('landscape-mode');
+  $('landscape').textContent=document.body.classList.contains('landscape-mode')?'↔ LANDSCAPE LAYOUT':'↔ LANDSCAPE';
+  alert('Rotasi otomatis tidak didukung browser/perangkat ini. Putar HP secara manual ke posisi mendatar. Tampilan akan menyesuaikan.');
+ }
+};
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement && screen.orientation?.unlock)screen.orientation.unlock()});
 $('start').onclick=async()=>{
  try{
   if(!navigator.mediaDevices?.getUserMedia)throw Error('Browser tidak mendukung akses mikrofon. Buka file melalui HTTPS.');
