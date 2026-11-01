@@ -14,7 +14,7 @@ button,select{background:#222b37;color:var(--txt);border:1px solid #566171;borde
 button.go{background:#087e91;border-color:#13b5c9}button:disabled{opacity:.45}
 label{font-size:11px;color:var(--muted)}
 canvas{display:block;width:100%;height:auto;background:#030507;border-radius:5px;max-width:100%}
-#spectrum{aspect-ratio:1200/980}
+#spectrum{aspect-ratio:1200/560}
 #waterfall{aspect-ratio:1200/300;height:auto}
 .capturebar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
 .capturebar button{padding:10px 14px}
@@ -26,7 +26,7 @@ canvas{display:block;width:100%;height:auto;background:#030507;border-radius:5px
 .status{font-size:12px;color:#7ee0ad;margin-left:auto}
 @media(max-width:520px){header{align-items:flex-start}}
 body.landscape-mode main{max-width:none;padding:8px}
-body.landscape-mode #spectrum{aspect-ratio:1200/760}
+body.landscape-mode #spectrum{aspect-ratio:1200/420}
 body.landscape-mode #waterfall{aspect-ratio:1200/240}
 body.landscape-mode .toolbar{position:sticky;top:0;z-index:5}
 body.landscape-mode header h1{font-size:15px}
@@ -41,7 +41,7 @@ body.landscape-mode header h1{font-size:15px}
 <label>RANGE<br><select id="range"><option value="60">60 dB</option><option value="90" selected>90 dB</option><option value="120">120 dB</option></select></label>
 <label>SMOOTH<br><select id="smooth"><option value="0">OFF</option><option value=".55">LOW</option><option value=".8" selected>MED</option><option value=".93">HIGH</option></select></label>
 </section>
-<section class="panel"><div class="title"><b>MAGNITUDE / FREQUENCY RESPONSE</b><span>20 Hz — 20 kHz</span></div><canvas id="spectrum" width="1200" height="980"></canvas>
+<section class="panel"><div class="title"><b>MAGNITUDE / FREQUENCY RESPONSE</b><span>20 Hz — 20 kHz</span></div><canvas id="spectrum" width="1200" height="560"></canvas>
 <div class="stats">
  <div class="stat"><small>CURSOR FREQUENCY</small><strong id="cursorfreq">Geser garis pada grafik</strong></div>
  <div class="stat"><small>LEVEL DI TITIK</small><strong id="cursorlevel">— dBFS</strong></div>
