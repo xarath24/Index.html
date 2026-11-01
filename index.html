@@ -38,6 +38,8 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
 .statusbar b{color:#7ee0ad}
 .tabs{display:flex;gap:4px;margin-bottom:8px}.tabs button.on{background:#087e91;border-color:#13b5c9}
 .noisebar{display:flex;gap:6px;flex-wrap:wrap}.noisebar button{flex:1}
+.modebox{border:2px solid #3fd4ec;border-radius:8px;padding:8px;background:#082f3a;margin-bottom:8px}
+.modebtns{display:flex;flex-direction:column;gap:6px}.modebtns button{width:100%;text-align:left;padding:10px}
 .polbadge{border-radius:8px;padding:12px;text-align:center;border:2px solid var(--line);background:#090d12;margin:8px 0}
 .polbadge b{font-size:22px;letter-spacing:1px;display:block}
 .polbadge span{font-size:11px;color:var(--mut);line-height:1.5;display:block;margin-top:4px}
@@ -65,31 +67,46 @@ body.landscape-mode .layout{max-width:none}
 <button class="go" id="capture" style="width:100%;padding:10px">📸 CAPTURE LIVE → SLOT</button>
 <select id="targetslot" style="width:100%;margin-top:6px"><option value="0">Slot A</option><option value="1">Slot B</option><option value="2">Slot C</option></select>
 </div>
+
+<div class="panel" style="margin-top:8px"><h3>MODE PAKAI — PILIH SESUAI SPEAKER</h3>
+<div class="modebox"><b id="modename" style="color:#fff">🔵 TF BLUETOOTH</b><div id="modedesc" style="font-size:11px;color:#cbd5e1;line-height:1.5;margin-top:4px">Pink lewat bluetooth, delay sampe 500ms. Coherence bisa naik-turun, itu bluetooth nya.</div></div>
+<div class="modebtns">
+<button id="modeHP">📱 HP LANGSUNG — speaker HP sendiri</button>
+<button id="modeTF">🎛 TF KABEL — pink lewat kabel AUX</button>
+<button id="modeBT" class="go">🔵 TF BLUETOOTH — pink lewat bluetooth</button>
+</div>
+</div>
+
 <div class="panel" style="margin-top:8px"><h3>🔊 REFERENCE GENERATOR</h3>
 <div class="noisebar"><button id="pinkbtn">🩷 PINK</button><button id="whitebtn">🤍 WHITE</button><button id="noiseoff">■ OFF</button></div>
 <label style="display:block;margin-top:8px;color:var(--mut);font-size:11px">VOLUME <b id="noisevoltxt" style="color:#fff">30%</b><input type="range" id="noisevol" min="0" max="100" value="30" style="width:100%;accent-color:#fb923c"></label>
-<div style="font-size:11px;color:var(--mut);line-height:1.5">Pink ON = Transfer Function + Polarity. Pink OFF = RTA.</div>
+<div style="font-size:11px;color:var(--mut);line-height:1.5" id="noisenote">Bluetooth: volume HP 80-90%, volume speaker bluetooth juga gedein, jangan pelan.</div>
 </div>
-<div class="panel" style="margin-top:8px"><h3>DELAY FINDER — 0 SAMPE 300ms</h3>
-<div class="kv"><span>Delay</span><b id="delaytxt">0.0 ms</b></div>
-<input type="range" id="delayms" min="0" max="300" step="0.5" value="0" style="width:100%;accent-color:var(--cyan)">
-<label style="font-size:11px;color:var(--mut);display:flex;gap:6px;align-items:center;margin-top:6px"><input type="checkbox" id="autodelay" checked> AUTO DELAY (±300ms, 2 arah)</label>
-<button id="finddelay" style="width:100%;margin-top:6px">◎ FIND DELAY OTOMATIS</button>
-<div id="delaywarn" class="warnbox">⚠ Coherence rendah. Delay belum pas / mic kejauhan.</div>
-</div>
+
 <div class="panel" style="margin-top:8px"><h3>⚡ POLARITY — CEK KEBALIK</h3>
-<div class="polbadge unknown" id="polbadge"><b id="poltitle">? UNKNOWN</b><span id="poldetail">Hidupkan PINK NOISE dulu, baru polarity bisa dibaca.</span></div>
-<button id="checkpol" class="go" style="width:100%;padding:10px">◎ CHECK POLARITY — 1 DETIK</button>
+<div class="polbadge unknown" id="polbadge"><b id="poltitle">? UNKNOWN</b><span id="poldetail">Pilih mode dulu. HP: TES KLIK. TF / Bluetooth: CHECK POLARITY TF.</span></div>
+<button id="clickpol" class="go" style="width:100%;padding:11px">🔊 TES KLIK POLARITY — BUAT HP LANGSUNG</button>
+<button id="checkpol" class="go" style="width:100%;padding:10px;margin-top:6px">◎ CHECK POLARITY TF — 1 DETIK</button>
 <button id="invertbtn" style="width:100%;margin-top:6px">⇅ INVERT PHASE (TES) : OFF</button>
+<div class="kv"><span>Metode</span><b id="polmethod">—</b></div>
+<div class="kv"><span>Gelombang pertama</span><b id="firstwave">—</b></div>
 <div class="kv"><span>Phase rata-rata</span><b id="phaseavg">—°</b></div>
 <div class="kv"><span>Korelasi mic/ref</span><b id="corrval">—</b></div>
 <div class="kv"><span>Confidence</span><b id="confval">—%</b></div>
-<div id="poladvice" style="font-size:11px;color:var(--mut);line-height:1.5;margin-top:6px">Phase 0° = normal. Phase ±180° = kebalik.</div>
+<div id="poladvice" style="font-size:11px;color:var(--mut);line-height:1.5;margin-top:6px">Phase 0° = normal. Phase ±180° = kebalik. Klik naik (+) = normal, turun (-) = kebalik.</div>
+</div>
+
+<div class="panel" style="margin-top:8px"><h3 id="delaytitle">DELAY FINDER — 0 SAMPE 500ms</h3>
+<div class="kv"><span>Delay</span><b id="delaytxt">0.0 ms</b></div>
+<input type="range" id="delayms" min="0" max="500" step="0.5" value="0" style="width:100%;accent-color:var(--cyan)">
+<label style="font-size:11px;color:var(--mut);display:flex;gap:6px;align-items:center;margin-top:6px"><input type="checkbox" id="autodelay" checked> AUTO DELAY</label>
+<button id="finddelay" style="width:100%;margin-top:6px">◎ FIND DELAY OTOMATIS</button>
+<div id="delaywarn" class="warnbox">⚠ Coherence rendah. Delay belum pas / mic kejauhan / bluetooth goyang.</div>
 </div>
 </aside>
 <main>
 <div class="panel">
-<div class="tabs"><button class="on" id="tabTF">TRANSFER FUNCTION</button><button id="tabRTA">RTA</button><button id="tabSPEC">SPECTROGRAPH</button><b id="modetxt" style="margin-left:auto;color:var(--gold)">MODE: RTA — HIDUPKAN PINK NOISE UNTUK TF</b></div>
+<div class="tabs"><button class="on" id="tabTF">TRANSFER FUNCTION</button><button id="tabRTA">RTA</button><button id="tabSPEC">SPECTROGRAPH</button><b id="modetxt" style="margin-left:auto;color:var(--gold)">MODE: TF BLUETOOTH</b></div>
 <div class="ctl">
 <label>FFT<select id="fft"><option value="2048">2048</option><option value="4096">4096</option><option value="8192" selected>8192</option><option value="16384">16384</option></select></label>
 <label>AVERAGE<select id="average"><option value="1">1</option><option value="4">4</option><option value="8" selected>8</option><option value="16">16</option></select></label>
@@ -100,7 +117,7 @@ body.landscape-mode .layout{max-width:none}
 </div>
 <div class="graphtitle"><b>MAGNITUDE — TRANSFER / RTA</b><span>20 Hz — 20 kHz • dBFS rel.</span></div>
 <canvas id="mag" width="1200" height="300"></canvas>
-<div class="graphtitle"><b>PHASE — 0° = NORMAL, ±180° = TERBALIK</b><span id="cohwarn" style="color:#ffd16a"></span></div>
+<div class="graphtitle"><b id="phasetitle">PHASE — 0° = NORMAL, ±180° = TERBALIK</b><span id="cohwarn" style="color:#ffd16a"></span></div>
 <canvas id="phase" width="1200" height="190"></canvas>
 <div class="cursorctl"><button id="curleft">◀</button><input type="range" id="cursorslider" min="0" max="1000" value="660"><button id="curright">▶</button><b id="cursorread" style="white-space:nowrap">4.72 kHz • — dB • —°</b></div>
 <div class="legend"><span><i style="background:var(--cyan)"></i>LIVE / TF</span><span><i style="background:var(--gold)"></i>PEAK HOLD</span><span><i style="background:var(--green)"></i>COHERENCE</span><span><i style="background:var(--red)"></i>TRACE A</span><span><i style="background:var(--purple)"></i>TRACE B</span></div>
@@ -120,18 +137,18 @@ body.landscape-mode .layout{max-width:none}
 <div class="kv"><span>Bin Width</span><b id="binwidth">— Hz</b></div>
 <div class="kv"><span>Cursor</span><b id="cursorfreq">4.72 kHz</b></div>
 </div>
-<div class="panel" style="margin-top:8px"><h3>CARA CEK POLARITY</h3>
-<div style="font-size:11px;color:var(--mut);line-height:1.6">
-1. START + PINK ON, volume 30%<br>
-2. Pink lewat kabel AUX ke speaker luar, mic HP 1 meter di depan speaker<br>
-3. Jangan pake speaker HP sendiri / bluetooth buat TF, coherence nya bakal rendah<br>
-4. FIND DELAY dulu, coherence harus naik ke 0.6+<br>
-5. Pencet CHECK POLARITY 1 DETIK<br>
-6. Kalo TERBALIK: balik kabel + / -, cek lagi sampe NORMAL
+<div class="panel" style="margin-top:8px"><h3 id="howtitle">CARA PAKAI BLUETOOTH</h3>
+<div style="font-size:11px;color:var(--mut);line-height:1.6" id="howtext">
+1. Pilih TF BLUETOOTH (udah default)<br>
+2. Sambungin bluetooth, START + PINK 30%<br>
+3. Volume HP 80-90%, speaker 1-2 meter<br>
+4. Tunggu 10-15 detik, jangan gerakin HP<br>
+5. Pencet FIND DELAY, tunggu Best delay nya berhenti gerak<br>
+6. Coherence nya harus naik, walau ga setinggi kabel
 </div></div>
 </aside>
 </div>
-<div class="statusbar"><span>● <b id="status">STANDBY</b></span><span>Input: Mic 1</span><span>Reference: <b id="refstat">OFF</b></span><span>FFT: <b id="fftstat">8192</b></span><span>Delay: <b id="delaystat">0.0 ms</b></span><span>Sync: <b id="syncstat">1 CONTEXT</b></span><span>Polarity: <b id="polstat">—</b></span><span style="margin-left:auto">SMART LIVE • dBFS rel, bukan SPL terkalibrasi</span></div>
+<div class="statusbar"><span>● <b id="status">STANDBY</b></span><span>Mode: <b id="modestat">TF BLUETOOTH</b></span><span>Reference: <b id="refstat">OFF</b></span><span>FFT: <b id="fftstat">8192</b></span><span>Delay: <b id="delaystat">0.0 ms</b></span><span>Sync: <b id="syncstat">1 CONTEXT</b></span><span>Polarity: <b id="polstat">—</b></span><span style="margin-left:auto">SMART LIVE • dBFS rel, bukan SPL terkalibrasi</span></div>
 <script>
 const $=id=>document.getElementById(id);
 const mag=$('mag'),mg=mag.getContext('2d'),phc=$('phase'),pg=phc.getContext('2d'),sp=$('spec'),sg=sp.getContext('2d');
@@ -139,10 +156,15 @@ let ctx=null,audio=null,stream=null,an=null,tfAn=null,refAn=null,src=null,raf=0,
 let smP=[],holdP=[],avgFramesP=[],currentVals=[];
 let captures=[null,null,null],selectedSlot=0;
 let cursorFreq=4720, invertPhase=false, checkingPol=false, polResult=null;
+let mode='BT';
+let clickWave=null, clickResult=null;
 let dbg={refRMS:0,micRMS:0,cohLow:0,cohMid:0,cohHigh:0,corr:0,tfCount:0,bestLag:0,bestCorr:0};
-const minF=20,maxF=20000,PLOTB=34, TF_N=8192, BIG_N=32768, MAX_DELAY_MS=300;
+const minF=20,maxF=20000,PLOTB=34, BIG_N=32768;
 const SEGS=[[20,1000,.26],[1000,3000,.14],[3000,7000,.16],[7000,10000,.10],[10000,15000,.08],[15000,20000,.26]];
 const db2p=v=>Math.pow(10,Math.max(-120,v)/10), p2db=p=>10*Math.log10(Math.max(1e-12,p));
+function maxDelayMs(){ return mode==='BT'?500:300; }
+function tfN(){ return mode==='BT'?4096:8192; }
+function tfAlpha(){ return mode==='BT'?0.015:0.04; }
 async function ensureCtx(){ if(!ctx){ ctx=new(window.AudioContext||window.webkitAudioContext)({latencyHint:'interactive',sampleRate:48000}); } if(ctx.state==='suspended') await ctx.resume(); audio=ctx; return ctx; }
 function xfreq(f,w){f=Math.max(minF,Math.min(maxF,f));let s=0;for(let i=0;i<SEGS.length;i++){let[a,b,pw]=SEGS[i];if(f<=b||i===SEGS.length-1)return(s+Math.log(f/a)/Math.log(b/a)*pw)*w;s+=pw}return w}
 function freqAtX(x,w){const r=Math.max(0,Math.min(1,x/w));let s=0;for(let i=0;i<SEGS.length;i++){let[a,b,pw]=SEGS[i];if(r<=s+pw||i===SEGS.length-1)return a*Math.exp(((r-s)/pw)*Math.log(b/a));s+=pw}return maxF}
@@ -154,26 +176,47 @@ function ifftCalc(re,im){for(let i=0;i<re.length;i++)im[i]=-im[i];fftCalc(re,im)
 let TF={Sxx:null,Syy:null,SxyR:null,SxyI:null,count:0};
 function resetTF(){TF={Sxx:null,Syy:null,SxyR:null,SxyI:null,count:0}}
 function rmsOf(arr){let s=0;for(let i=0;i<arr.length;i++)s+=arr[i]*arr[i];return Math.sqrt(s/arr.length)}
+function setMode(m){
+ mode=m; resetTF(); clickWave=null;
+ $('modeHP').className=m==='HP'?'go':'';
+ $('modeTF').className=m==='TF'?'go':'';
+ $('modeBT').className=m==='BT'?'go':'';
+ const md=maxDelayMs();
+ $('delayms').max=md; $('delaytitle').textContent='DELAY FINDER — 0 SAMPE '+md+'ms';
+ $('modestat').textContent=m==='HP'?'HP LANGSUNG':m==='TF'?'TF KABEL':'TF BLUETOOTH';
+ $('modetxt').textContent=m==='HP'?'MODE: HP LANGSUNG — RTA (TF OFF)':m==='TF'?'MODE: TF KABEL — TRANSFER FUNCTION':'MODE: TF BLUETOOTH — TRANSFER FUNCTION (500ms)';
+ $('phasetitle').textContent=m==='HP'?'GELOMBANG KLIK — TES POLARITY HP':'PHASE — 0° = NORMAL, ±180° = TERBALIK';
+ if(m==='HP'){ $('modename').textContent='📱 MODE HP LANGSUNG'; $('modedesc').textContent='Speaker HP sendiri. TF dimatiin, RTA doang. Polarity pake TES KLIK.'; $('howtitle').textContent='CARA PAKAI HP LANGSUNG'; $('howtext').innerHTML='1. START, PINK 30%, volume HP 70-80%<br>2. Taruh HP di meja, jangan dipegang<br>3. Magnitude = response speaker HP<br>4. Polarity: matiin pink, pencet TES KLIK'; $('noisenote').textContent='HP langsung: volume HP 70-80%.'; }
+ else if(m==='TF'){ $('modename').textContent='🎛 MODE TF KABEL'; $('modedesc').textContent='Pink lewat kabel AUX ke speaker luar. TF + phase jalan normal, delay 0-300ms.'; $('howtitle').textContent='CARA CEK POLARITY'; $('howtext').innerHTML='1. START + PINK ON, volume 30%<br>2. Pink lewat kabel AUX, mic 1 meter<br>3. FIND DELAY, coherence harus 0.6+<br>4. CHECK POLARITY 1 DETIK'; $('noisenote').textContent='Pink ON = Transfer Function + Polarity.'; }
+ else { $('modename').textContent='🔵 MODE TF BLUETOOTH'; $('modedesc').textContent='Pink lewat bluetooth, delay sampe 500ms. Coherence bisa naik-turun, itu bluetooth nya.'; $('howtitle').textContent='CARA PAKAI BLUETOOTH'; $('howtext').innerHTML='1. Sambungin bluetooth, START + PINK 30%<br>2. Volume HP 80-90%, speaker 1-2 meter<br>3. Tunggu 10-15 detik, jangan gerakin HP<br>4. FIND DELAY, tunggu Best delay berhenti gerak<br>5. Coherence harus naik, walau ga setinggi kabel'; $('noisenote').textContent='Bluetooth: volume HP 80-90%, volume speaker bluetooth juga gedein, jangan pelan.'; }
+ if($('delayms').value>md){ $('delayms').value=0; $('delaytxt').textContent='0.0 ms'; $('delaystat').textContent='0.0 ms'; }
+ if(!an) drawAll();
+}
+$('modeHP').onclick=()=>setMode('HP');
+$('modeTF').onclick=()=>setMode('TF');
+$('modeBT').onclick=()=>setMode('BT');
 function alignedSegments(){
+ const N=tfN();
  const tdM=new Float32Array(BIG_N), tdR=new Float32Array(BIG_N);
  tfAn.getFloatTimeDomainData(tdM); refAn.getFloatTimeDomainData(tdR);
  const delaySamp=Math.round((+$('delayms').value/1000)*audio.sampleRate);
- const end=BIG_N, micStart=end-TF_N, refStart=end-TF_N-delaySamp;
+ const end=BIG_N, micStart=end-N, refStart=end-N-delaySamp;
  if(refStart<0) return null;
- const mSeg=tdM.subarray(micStart,end), rSeg=tdR.subarray(refStart,refStart+TF_N);
+ const mSeg=tdM.subarray(micStart,end), rSeg=tdR.subarray(refStart,refStart+N);
  dbg.micRMS=rmsOf(mSeg); dbg.refRMS=rmsOf(rSeg);
- return {mSeg,rSeg};
+ return {mSeg,rSeg,N};
 }
 function updateTF(){
+ if(mode==='HP') return;
  if(!tfAn||!refAn||noiseType!=='pink'||!audio) return;
  const seg=alignedSegments(); if(!seg) return;
- const {mSeg,rSeg}=seg, N=TF_N;
+ const {mSeg,rSeg,N}=seg;
  const reM=new Float32Array(N),imM=new Float32Array(N),reR=new Float32Array(N),imR=new Float32Array(N);
  for(let i=0;i<N;i++){const wnd=0.5*(1-Math.cos(2*Math.PI*i/(N-1)));reM[i]=mSeg[i]*wnd;reR[i]=rSeg[i]*wnd}
  fftCalc(reM,imM); fftCalc(reR,imR);
  const H=N/2;
- if(!TF.Sxx){TF.Sxx=new Float64Array(H);TF.Syy=new Float64Array(H);TF.SxyR=new Float64Array(H);TF.SxyI=new Float64Array(H)}
- const a=0.04;
+ if(!TF.Sxx||TF.Sxx.length!==H){TF.Sxx=new Float64Array(H);TF.Syy=new Float64Array(H);TF.SxyR=new Float64Array(H);TF.SxyI=new Float64Array(H)}
+ const a=tfAlpha();
  for(let k=1;k<H;k++){const f=k*audio.sampleRate/N; if(f<minF||f>maxF) continue;const xx=reR[k]*reR[k]+imR[k]*imR[k], yy=reM[k]*reM[k]+imM[k]*imM[k];const xr=reR[k]*reM[k]+imR[k]*imM[k], xi=reR[k]*imM[k]-imR[k]*reM[k]; TF.Sxx[k]=TF.Sxx[k]*(1-a)+xx*a; TF.Syy[k]=TF.Syy[k]*(1-a)+yy*a; TF.SxyR[k]=TF.SxyR[k]*(1-a)+xr*a; TF.SxyI[k]=TF.SxyI[k]*(1-a)+xi*a}
  TF.count++; dbg.tfCount=TF.count;
 }
@@ -190,9 +233,11 @@ function smoothTF(raw){
  });
 }
 function tfData(){
+ if(mode==='HP') return null;
  if(!TF.Sxx||TF.count<5||!audio) return null;
+ const N=tfN();
  const out=[];
- for(let k=1;k<TF.Sxx.length;k++){const f=k*audio.sampleRate/TF_N; if(f<minF||f>maxF)continue;const coh=(TF.SxyR[k]*TF.SxyR[k]+TF.SxyI[k]*TF.SxyI[k])/Math.max(1e-18,TF.Sxx[k]*TF.Syy[k]);const mag=Math.sqrt(TF.SxyR[k]*TF.SxyR[k]+TF.SxyI[k]*TF.SxyI[k])/Math.max(1e-18,TF.Sxx[k]);let v=20*Math.log10(Math.max(1e-6,mag));let phase=Math.atan2(TF.SxyI[k],TF.SxyR[k])*180/Math.PI; if(invertPhase){phase+=180; if(phase>180)phase-=360} out.push({f,v,phase,coh:Math.min(1,coh)})}
+ for(let k=1;k<TF.Sxx.length;k++){const f=k*audio.sampleRate/N; if(f<minF||f>maxF)continue;const coh=(TF.SxyR[k]*TF.SxyR[k]+TF.SxyI[k]*TF.SxyI[k])/Math.max(1e-18,TF.Sxx[k]*TF.Syy[k]);const mag=Math.sqrt(TF.SxyR[k]*TF.SxyR[k]+TF.SxyI[k]*TF.SxyI[k])/Math.max(1e-18,TF.Sxx[k]);let v=20*Math.log10(Math.max(1e-6,mag));let phase=Math.atan2(TF.SxyI[k],TF.SxyR[k])*180/Math.PI; if(invertPhase){phase+=180; if(phase>180)phase-=360} out.push({f,v,phase,coh:Math.min(1,coh)})}
  const mid=out.filter(o=>o.f>500&&o.f<2000); const avgP=mid.length?mid.reduce((s,o)=>s+db2p(o.v),0)/mid.length:1; const off=p2db(avgP); out.forEach(o=>o.v=o.v-off);
  const sm=smoothTF(out);
  const avgBand=(a,b)=>{const s=sm.filter(o=>o.f>=a&&o.f<=b);return s.length?s.reduce((x,o)=>x+o.coh,0)/s.length:0};
@@ -203,7 +248,7 @@ function findBestLag(){
  if(!tfAn||!refAn||!audio) return null;
  const tdM=new Float32Array(BIG_N), tdR=new Float32Array(BIG_N);
  tfAn.getFloatTimeDomainData(tdM); refAn.getFloatTimeDomainData(tdR);
- const maxLag=Math.floor(MAX_DELAY_MS/1000*audio.sampleRate);
+ const maxLag=Math.floor(maxDelayMs()/1000*audio.sampleRate);
  const DS=4, n2=Math.floor(BIG_N/DS);
  const m2=new Float32Array(n2), r2=new Float32Array(n2);
  for(let i=0;i<n2;i++){m2[i]=tdM[i*DS]; r2[i]=tdR[i*DS]}
@@ -244,44 +289,84 @@ function polarityFromTF(tf){
  const distTo180=180-Math.abs(avg);
  const inverted=distTo180<45;
  const conf=Math.round(Math.min(99,cohAvg*100*(inverted? (1-distTo180/90) : (1-Math.abs(avg)/90))*1.4));
- return {state: inverted?'inverted':'normal', phaseAvg:avg, conf:Math.max(0,Math.min(99,conf)), coh:cohAvg, n:band.length, distTo180};
+ return {state: inverted?'inverted':'normal', phaseAvg:avg, conf:Math.max(0,Math.min(99,conf)), coh:cohAvg, n:band.length};
 }
-function setPolBadge(res,corr){
+function setPolBadge(state,detail,method,firstWave,phaseTxt,corrTxt,conf){
  const badge=$('polbadge');
- if(!res||res.state==='unknown'){
-  badge.className='polbadge unknown'; $('poltitle').textContent='? UNKNOWN';
-  $('poldetail').textContent='Coherence rendah / pink noise belum jalan. Deketin mic, gedein volume pink, FIND DELAY dulu.';
-  $('polmini').textContent='—'; $('polstat').textContent='—';
-  $('poladvice').textContent='Phase 0° = normal. Phase ±180° = kebalik.';
-  return;
- }
+ badge.className='polbadge '+(state==='normal'?'normal':state==='inverted'?'inverted':'unknown');
+ $('poltitle').textContent=state==='normal'?'✓ NORMAL':state==='inverted'?'✕ TERBALIK':'? UNKNOWN';
+ $('poldetail').textContent=detail;
+ $('polmethod').textContent=method||'—';
+ $('firstwave').textContent=firstWave||'—';
+ $('phaseavg').textContent=phaseTxt||'—°';
+ $('corrval').textContent=corrTxt||'—';
+ $('confval').textContent=(conf==null?'—':conf+'%');
+ $('polmini').textContent=state==='normal'?'NORMAL':state==='inverted'?'TERBALIK':'—';
+ $('polstat').textContent=state==='normal'?'NORMAL':state==='inverted'?'TERBALIK':'—';
+ $('poladvice').textContent=state==='inverted'?'⚠ BALIK kabel speaker + / -, atau balik XLR pin 2-3, atau invert di DSP. Terus CHECK lagi sampe NORMAL.':state==='normal'?'✓ Aman. Jangan dibalik.':'Phase 0° = normal. Klik naik (+) = normal, turun dulu (-) = kebalik.';
+}
+function setPolBadgeTF(res,corr){
+ if(!res||res.state==='unknown'){ setPolBadge('unknown','Coherence rendah / pink belum jalan. Deketin mic, gedein volume, FIND DELAY dulu.','TF','—',null,null,null); return; }
  const inv=res.state==='inverted';
  const corrTxt=corr===null?'—':(corr>=0?'+'+corr.toFixed(2):corr.toFixed(2));
- $('phaseavg').textContent=res.phaseAvg.toFixed(0)+'°';
- $('corrval').textContent=corrTxt;
- $('confval').textContent=res.conf+'%';
- badge.className='polbadge '+(inv?'inverted':'normal');
- $('poltitle').textContent=inv?'✕ TERBALIK':'✓ NORMAL';
- $('poldetail').textContent=inv
-  ? 'Phase rata-rata '+res.phaseAvg.toFixed(0)+'°, deket ±180°. Korelasi '+corrTxt+' (minus). Speaker kebalik.'
-  : 'Phase rata-rata '+res.phaseAvg.toFixed(0)+'°, deket 0°. Korelasi '+corrTxt+' (plus). Speaker normal.';
- $('polmini').textContent=inv?'TERBALIK':'NORMAL'; $('polstat').textContent=inv?'TERBALIK':'NORMAL';
- $('poladvice').textContent=inv
-  ? '⚠ BALIK kabel speaker + / -, atau balik XLR pin 2-3, atau invert di DSP / crossover. Terus CHECK lagi sampe NORMAL.'
-  : '✓ Aman. Jangan dibalik. Kalo 2 speaker, cek satu-satu, yang 1 normal 1 kebalik itu yang bikin bass hilang.';
- if(res.conf<70){$('poldetail').textContent+=' Confidence cuma '+res.conf+'%, jangan 100% percaya, deketin mic dulu.'}
+ setPolBadge(inv?'inverted':'normal', inv?'Phase rata-rata '+res.phaseAvg.toFixed(0)+'°, deket ±180°. Korelasi '+corrTxt+'. Speaker kebalik.':'Phase rata-rata '+res.phaseAvg.toFixed(0)+'°, deket 0°. Korelasi '+corrTxt+'. Speaker normal.','TF','—',res.phaseAvg.toFixed(0)+'°',corrTxt,res.conf);
 }
 function livePolarity(tf){
- if(!tf||noiseType!=='pink'){ if(!checkingPol) setPolBadge(null,null); return }
+ if(mode==='HP') return;
+ if(!tf||noiseType!=='pink'){ if(!checkingPol) setPolBadgeTF(null,null); return }
  const res=polarityFromTF(tf); const corr=corrSign(); dbg.corr=corr||0;
  if(res&&res.state!=='unknown'&&corr!==null){
   if(res.state==='inverted'&&corr>0.25) res.conf=Math.round(res.conf*0.5);
   if(res.state==='normal'&&corr<-0.25) res.conf=Math.round(res.conf*0.5);
   if(res.conf<45) res.state='unknown';
  }
- if(!checkingPol) setPolBadge(res,corr);
+ if(!checkingPol) setPolBadgeTF(res,corr);
  polResult=res;
 }
+async function clickPolarityTest(){
+ if(!an||!tfAn||!ctx){ alert('START dulu, mas.'); return; }
+ const btn=$('clickpol'); btn.disabled=true; btn.textContent='... DENGERIN KLIK ...';
+ $('poltitle').textContent='... TES KLIK ...';
+ const wasPink=noiseType; stopNoise(true);
+ await new Promise(r=>setTimeout(r,250));
+ const rec=[]; let recording=true;
+ const t0=performance.now();
+ function poll(){
+  if(!recording) return;
+  const buf=new Float32Array(BIG_N); tfAn.getFloatTimeDomainData(buf);
+  rec.push(Float32Array.from(buf.subarray(BIG_N-4096)));
+  if(performance.now()-t0<800) requestAnimationFrame(poll);
+ }
+ poll();
+ await new Promise(r=>setTimeout(r,120));
+ const sr=ctx.sampleRate, len=Math.floor(sr*0.012), b=ctx.createBuffer(1,len,sr), d=b.getChannelData(0);
+ for(let i=0;i<len;i++){ const wnd=0.5*(1-Math.cos(2*Math.PI*i/(len-1))); d[i]=Math.sin(2*Math.PI*800*i/sr)*wnd*0.95; }
+ const srcC=ctx.createBufferSource(); srcC.buffer=b;
+ const g=ctx.createGain(); g.gain.value=1.0;
+ srcC.connect(g); g.connect(ctx.destination); srcC.start();
+ await new Promise(r=>setTimeout(r,700));
+ recording=false;
+ btn.disabled=false; btn.textContent='🔊 TES KLIK POLARITY — BUAT HP LANGSUNG';
+ let flat=[]; rec.forEach(r=>{ for(let i=0;i<r.length;i+=4) flat.push(r[i]); });
+ const n0=Math.floor(flat.length*0.2);
+ let noise=0; for(let i=0;i<n0;i++) noise=Math.max(noise,Math.abs(flat[i]));
+ let peak=0, peakIdx=-1; for(let i=0;i<flat.length;i++){ const a=Math.abs(flat[i]); if(a>peak){peak=a;peakIdx=i} }
+ if(peak<0.02){ setPolBadge('unknown','Klik nya ga kedengeran mic. Gedein volume HP, taruh HP di meja, coba lagi.','TES KLIK','—',null,null,null); clickWave=null; if(wasPink) startNoise(wasPink); return; }
+ const thresh=Math.max(noise*3, peak*0.30);
+ let firstIdx=-1;
+ for(let i=0;i<flat.length;i++){ if(Math.abs(flat[i])>=thresh){ firstIdx=i; break; } }
+ if(firstIdx<0) firstIdx=peakIdx;
+ let s=0; for(let i=firstIdx;i<Math.min(flat.length,firstIdx+8);i++) s+=flat[i];
+ const firstSign=s>=0?1:-1;
+ const start=Math.max(0,firstIdx-60), end=Math.min(flat.length,firstIdx+340);
+ clickWave=flat.slice(start,end); clickResult={sign:firstSign, peak, noise};
+ const inverted=firstSign<0;
+ const conf=Math.round(Math.min(95, 55 + (peak/Math.max(0.02,noise))*8));
+ setPolBadge(inverted?'inverted':'normal', inverted?'Gelombang pertama TURUN dulu (-), peak '+peak.toFixed(3)+'. Speaker kebalik.':'Gelombang pertama NAIK dulu (+), peak '+peak.toFixed(3)+'. Speaker normal.','TES KLIK', inverted?'TURUN (-) dulu':'NAIK (+) dulu', 'klik: '+(inverted?'-':'+'), '—', Math.min(95,conf));
+ if(wasPink) startNoise(wasPink);
+ drawAll();
+}
+$('clickpol').onclick=clickPolarityTest;
 function powerAtLog(freqs,pArr,f){if(!freqs.length)return null;if(f<=freqs[0].f)return pArr[0];if(f>=freqs[freqs.length-1].f)return pArr[pArr.length-1];let lo=0,hi=freqs.length-1;while(hi-lo>1){let m=(lo+hi)>>1;if(freqs[m].f<=f)lo=m;else hi=m}const a=freqs[lo],b=freqs[hi],t=(Math.log(f)-Math.log(a.f))/(Math.log(b.f)-Math.log(a.f));return pArr[lo]+(pArr[hi]-pArr[lo])*t}
 function octaveSmooth(dense,perOct){if(!perOct||!dense.length)return dense;const half=1/(2*perOct);return dense.map(o=>{const lo=o.f*Math.pow(2,-half),hi=o.f*Math.pow(2,half);let s=0,c=0;for(const d of dense){if(d.f>=lo&&d.f<=hi){s+=db2p(d.v);c++}}return{f:o.f,v:p2db(c?s/c:db2p(o.v)),x:o.x,phase:o.phase,coh:o.coh}})}
 function densifyPower(freqs,pArr){const out=[],W=mag.width;for(let x=0;x<=W;x+=6){const f=freqAtX(x,W);const p=powerAtLog(freqs,pArr,f);if(p===null)continue;out.push({f,v:p2db(p),x})}return octaveSmooth(out,+$('detail').value||0)}
@@ -337,18 +422,19 @@ function stopNoise(silent){
  if(noiseGain){try{noiseGain.disconnect()}catch(_){} noiseGain=null}
  refAn=null; noiseType=null;
  $('refstat').textContent='OFF'; $('pinkbtn').classList.remove('on'); $('whitebtn').classList.remove('on');
- resetTF(); setPolBadge(null,null);
+ resetTF();
 }
 $('pinkbtn').onclick=()=>noiseType==='pink'?stopNoise():startNoise('pink');
 $('whitebtn').onclick=()=>noiseType==='white'?stopNoise():startNoise('white');
 $('noiseoff').onclick=()=>stopNoise();
 $('noisevol').oninput=()=>{$('noisevoltxt').textContent=$('noisevol').value+'%';if(noiseGain&&ctx)noiseGain.gain.setTargetAtTime(($('noisevol').value/100)*0.5,ctx.currentTime,.02)};
 $('checkpol').onclick=async()=>{
+ if(mode==='HP'){ alert('Mode HP LANGSUNG: pake TES KLIK yang di atas, jangan yang ini.'); return; }
  if(!an||noiseType!=='pink'){alert('START dulu + PINK NOISE dulu, mas.');return}
  checkingPol=true; resetTF();
- $('poltitle').textContent='... NGUKUR 1 DETIK'; $('poldetail').textContent='Jangan gerakin mic / speaker.';
+ $('poltitle').textContent='... NGUKUR 1 DETIK'; $('poldetail').textContent='Jangan gerakin mic / speaker. Bluetooth: tunggu lebih lama, 2 detik.';
  $('checkpol').disabled=true;
- await new Promise(r=>setTimeout(r,1500));
+ await new Promise(r=>setTimeout(r,mode==='BT'?2500:1500));
  for(let i=0;i<8;i++) updateTF();
  const tf=tfData(); const res=polarityFromTF(tf); const corr=corrSign();
  if(res&&res.state!=='unknown'&&corr!==null){
@@ -356,7 +442,7 @@ $('checkpol').onclick=async()=>{
   if(res.state==='normal'&&corr<-0.25) res.conf=Math.round(res.conf*0.5);
   if(res.conf<45) res.state='unknown';
  }
- setPolBadge(res,corr); polResult=res;
+ setPolBadgeTF(res,corr); polResult=res;
  checkingPol=false; $('checkpol').disabled=false;
 };
 $('invertbtn').onclick=()=>{invertPhase=!invertPhase;$('invertbtn').textContent=invertPhase?'⇅ INVERT PHASE (TES) : ON — PHASE +180°':'⇅ INVERT PHASE (TES) : OFF';resetTF()};
@@ -365,9 +451,9 @@ function drawTrace(c,data,w,plotH,range,color,lw){if(!data||!data.length)return;
 function drawAll(){
  const w=mag.width,h=mag.height,plotH=h-PLOTB,range=+$('range').value;
  gridMag(mg,w,h,plotH,range);
- const tf=tfData(); const showTF=tf&&noiseType==='pink';
+ const tf=tfData(); const showTF=tf&&mode!=='HP'&&noiseType==='pink';
  const dataToShow=showTF?tf:currentVals;
- if(tf){mg.beginPath();mg.strokeStyle='#5fd68a';mg.lineWidth=1.6;tf.forEach((o,i)=>{const X=xfreq(o.f,w),Y=plotH-4-o.coh*18;if(i===0)mg.moveTo(X,Y);else mg.lineTo(X,Y)});mg.stroke();mg.fillStyle='#5fd68a';mg.font='11px Arial';mg.fillText('COHERENCE',6,plotH-24)}
+ if(tf&&mode!=='HP'){mg.beginPath();mg.strokeStyle='#5fd68a';mg.lineWidth=1.6;tf.forEach((o,i)=>{const X=xfreq(o.f,w),Y=plotH-4-o.coh*18;if(i===0)mg.moveTo(X,Y);else mg.lineTo(X,Y)});mg.stroke();mg.fillStyle='#5fd68a';mg.font='11px Arial';mg.fillText('COHERENCE',6,plotH-24)}
  if($('showlive').checked) drawTrace(mg,dataToShow,w,plotH,range,'#3fd4ec',2.5);
  captures.forEach((cap,i)=>{if(!cap||!$('show'+'ABC'[i]).checked)return;drawTrace(mg,cap.data,w,plotH,range,['#ff6b6b','#b58cff','#5fd68a'][i],2)});
  const cursorData=cursorSourceData(dataToShow);
@@ -378,18 +464,36 @@ function drawAll(){
  else { $('cursorread').textContent=fmtF(cursorFreq)+' • — dB'; }
  const pw=phc.width,ph2=phc.height-18;
  pg.clearRect(0,0,pw,phc.height);pg.fillStyle='#05070a';pg.fillRect(0,0,pw,phc.height);
- [20,100,500,1000,5000,10000,20000].forEach(f=>{const x=xfreq(f,pw);pg.strokeStyle='#232a35';pg.beginPath();pg.moveTo(x,0);pg.lineTo(x,ph2);pg.stroke()});
- [-180,-90,0,90,180].forEach(d=>{const y=(180-d)/360*ph2;pg.strokeStyle=d===0?'#5fd68a':(Math.abs(d)===180?'#ff6b6b':'#232a35');pg.lineWidth=d===0||Math.abs(d)===180?2:1;pg.beginPath();pg.moveTo(0,y);pg.lineTo(pw,y);pg.stroke();pg.lineWidth=1;pg.fillStyle=d===0?'#5fd68a':(Math.abs(d)===180?'#ff6b6b':'#8b95a5');pg.font='bold 12px Arial';pg.fillText((d===0?'0° NORMAL':(Math.abs(d)===180?'±180° TERBALIK':d+'°')),4,y+11)});
- if(showTF&&tf){
-  pg.beginPath();pg.strokeStyle='#3fd4ec';pg.lineWidth=2.5;tf.forEach((o,i)=>{const X=xfreq(o.f,pw),Y=(180-o.phase)/360*ph2;if(i===0)pg.moveTo(X,Y);else pg.lineTo(X,Y)});pg.stroke();
-  pg.fillStyle='rgba(5,7,10,.55)';let inLow=false,startX=0;tf.forEach(o=>{const low=o.coh<+$('cohmin').value;const X=xfreq(o.f,pw);if(low&&!inLow){inLow=true;startX=X}if(!low&&inLow){pg.fillRect(startX,0,X-startX,ph2);inLow=false}});if(inLow)pg.fillRect(startX,0,pw-startX,ph2);
-  const cohAvg=tf.reduce((s,o)=>s+o.coh,0)/tf.length;$('cohavg').textContent=cohAvg.toFixed(2);$('modetxt').textContent='MODE: TRANSFER FUNCTION • REFERENCE PINK NOISE';
-  $('cohwarn').textContent=cohAvg<0.3?'⚠ COHERENCE '+cohAvg.toFixed(2)+' RENDAH — FIND DELAY / DEKETIN MIC':'';
-  $('delaywarn').style.display=cohAvg<0.3?'block':'none';
-  livePolarity(tf);
+ if(mode==='HP'){
+  pg.strokeStyle='#232a35'; pg.beginPath(); pg.moveTo(0,ph2/2); pg.lineTo(pw,ph2/2); pg.stroke();
+  pg.fillStyle='#5fd68a'; pg.font='bold 12px Arial'; pg.fillText('0  (+) NORMAL di atas garis',4,14);
+  pg.fillStyle='#ff6b6b'; pg.fillText('(-) TERBALIK di bawah garis',4,ph2-4);
+  if(clickWave&&clickWave.length){
+   let mx=0; clickWave.forEach(v=>mx=Math.max(mx,Math.abs(v))); mx=mx||1;
+   pg.beginPath(); pg.strokeStyle='#3fd4ec'; pg.lineWidth=2.5;
+   clickWave.forEach((v,i)=>{ const X=i/(clickWave.length-1)*pw, Y=ph2/2 - (v/mx)*(ph2/2-10); if(i===0)pg.moveTo(X,Y); else pg.lineTo(X,Y); });
+   pg.stroke();
+   pg.fillStyle='#fff'; pg.font='bold 13px Arial';
+   pg.fillText(clickResult&&clickResult.sign>0?'GELOMBANG PERTAMA NAIK (+) = NORMAL':'GELOMBANG PERTAMA TURUN (-) = TERBALIK',10,28);
+  } else {
+   pg.fillStyle='#8b95a5'; pg.font='bold 14px Arial'; pg.textAlign='center';
+   pg.fillText('BELUM TES KLIK — PENCET TES KLIK POLARITY DI KIRI',pw/2,ph2/2); pg.textAlign='left';
+  }
+  $('cohavg').textContent='— (HP mode)';
  } else {
-  pg.fillStyle='#8b95a5';pg.font='bold 15px Arial';pg.textAlign='center';pg.fillText('NO REFERENCE — HIDUPKAN PINK NOISE UNTUK PHASE / POLARITY',pw/2,ph2/2);pg.textAlign='left';$('modetxt').textContent='MODE: RTA — HIDUPKAN PINK NOISE UNTUK TF + POLARITY';$('cohavg').textContent='—';$('cohwarn').textContent='';
-  if(noiseType!=='pink'&&!checkingPol) setPolBadge(null,null);
+  [20,100,500,1000,5000,10000,20000].forEach(f=>{const x=xfreq(f,pw);pg.strokeStyle='#232a35';pg.beginPath();pg.moveTo(x,0);pg.lineTo(x,ph2);pg.stroke()});
+  [-180,-90,0,90,180].forEach(d=>{const y=(180-d)/360*ph2;pg.strokeStyle=d===0?'#5fd68a':(Math.abs(d)===180?'#ff6b6b':'#232a35');pg.lineWidth=d===0||Math.abs(d)===180?2:1;pg.beginPath();pg.moveTo(0,y);pg.lineTo(pw,y);pg.stroke();pg.lineWidth=1;pg.fillStyle=d===0?'#5fd68a':(Math.abs(d)===180?'#ff6b6b':'#8b95a5');pg.font='bold 12px Arial';pg.fillText((d===0?'0° NORMAL':(Math.abs(d)===180?'±180° TERBALIK':d+'°')),4,y+11)});
+  if(showTF&&tf){
+   pg.beginPath();pg.strokeStyle='#3fd4ec';pg.lineWidth=2.5;tf.forEach((o,i)=>{const X=xfreq(o.f,pw),Y=(180-o.phase)/360*ph2;if(i===0)pg.moveTo(X,Y);else pg.lineTo(X,Y)});pg.stroke();
+   pg.fillStyle='rgba(5,7,10,.55)';let inLow=false,startX=0;tf.forEach(o=>{const low=o.coh<+$('cohmin').value;const X=xfreq(o.f,pw);if(low&&!inLow){inLow=true;startX=X}if(!low&&inLow){pg.fillRect(startX,0,X-startX,ph2);inLow=false}});if(inLow)pg.fillRect(startX,0,pw-startX,ph2);
+   const cohAvg=tf.reduce((s,o)=>s+o.coh,0)/tf.length;$('cohavg').textContent=cohAvg.toFixed(2);$('modetxt').textContent=mode==='BT'?'MODE: TF BLUETOOTH • DELAY 0-500ms':'MODE: TF KABEL • REFERENCE PINK NOISE';
+   $('cohwarn').textContent=cohAvg<0.3?'⚠ COHERENCE '+cohAvg.toFixed(2)+' RENDAH':'';
+   $('delaywarn').style.display=cohAvg<0.3?'block':'none';
+   livePolarity(tf);
+  } else {
+   pg.fillStyle='#8b95a5';pg.font='bold 15px Arial';pg.textAlign='center';pg.fillText('NO REFERENCE — HIDUPKAN PINK NOISE UNTUK PHASE / POLARITY',pw/2,ph2/2);pg.textAlign='left';$('modetxt').textContent=mode==='BT'?'MODE: TF BLUETOOTH — HIDUPKAN PINK':'MODE: RTA — HIDUPKAN PINK NOISE UNTUK TF + POLARITY';$('cohavg').textContent='—';$('cohwarn').textContent='';
+   if(noiseType!=='pink'&&!checkingPol&&mode!=='HP') setPolBadgeTF(null,null);
+  }
  }
 }
 function colorFor(v){let t=Math.max(0,Math.min(1,(v+90)/60));const st=[[20,16,48],[67,47,118],[170,76,137],[239,139,143],[255,218,142]];let p=t*4,i=Math.min(3,Math.floor(p)),a=p-i;const c=st[i].map((n,k)=>Math.round(n*(1-a)+st[i+1][k]*a));return c}
@@ -413,12 +517,12 @@ function draw(){
  if($('showlive').checked) drawTrace(mg,holdDense,w,plotH,range,'#ffd16a',1.2);
  const pct=Math.max(0,Math.min(100,(peak+90)/90*100));$('splbar').style.height=pct+'%';$('spldb').textContent=peak.toFixed(1);
  $('peakfreq').textContent=peakFreq.toFixed(0)+' Hz';$('rmsdb').textContent=p2db(cntP?sumP/cntP:1e-12).toFixed(1)+' dBFS';
- if(frameNo%2===0) updateTF();
- if($('autodelay').checked&&noiseType==='pink'&&frameNo%60===0){
+ if(mode!=='HP'&&frameNo%2===0) updateTF();
+ if(mode!=='HP'&&$('autodelay').checked&&noiseType==='pink'&&frameNo%(mode==='BT'?120:60)===0){
   const best=findBestLag();
-  if(best&&best.corr>0.20){
-   const useMs=Math.max(0,best.ms);
-   if(Math.abs(useMs-(+$('delayms').value))>1){
+  if(best&&best.corr>0.15){
+   const useMs=Math.max(0,Math.min(maxDelayMs(),best.ms));
+   if(Math.abs(useMs-(+$('delayms').value))>2){
     $('delayms').value=useMs.toFixed(1); $('delaytxt').textContent=useMs.toFixed(1)+' ms'; $('delaystat').textContent=useMs.toFixed(1)+' ms'; resetTF();
    }
   }
@@ -445,7 +549,7 @@ $('start').onclick=async()=>{
 $('stop').onclick=()=>{cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;src=null;an=null;tfAn=null;$('start').disabled=false;$('stop').disabled=true;$('status').textContent='STOPPED • FROZEN';$('liveind').textContent='● STANDBY';drawAll()};
 $('finddelay').onclick=()=>{
  const best=findBestLag(); if(!best){alert('START dulu + PINK NOISE dulu');return}
- const useMs=Math.max(0,best.ms);
+ const useMs=Math.max(0,Math.min(maxDelayMs(),best.ms));
  $('delayms').value=useMs.toFixed(1);$('delaytxt').textContent=useMs.toFixed(1)+' ms';$('delaystat').textContent=useMs.toFixed(1)+' ms';resetTF();
 };
 $('delayms').oninput=()=>{$('delaytxt').textContent=(+$('delayms').value).toFixed(1)+' ms';$('delaystat').textContent=(+$('delayms').value).toFixed(1)+' ms';resetTF()};
@@ -464,5 +568,6 @@ $('tabRTA').onclick=()=>{stopNoise();$('tabRTA').classList.add('on');$('tabTF').
 $('tabSPEC').onclick=()=>{sp.scrollIntoView({behavior:'smooth'})};
 $('landscape').onclick=async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();if(screen.orientation?.lock)await screen.orientation.lock('landscape');document.body.classList.add('landscape-mode')}catch(e){document.body.classList.toggle('landscape-mode')}};
 ['showlive','showA','showB','showC'].forEach(id=>$(id).addEventListener('change',()=>drawAll()));
+setMode('BT');
 drawAll();
 </script></body></html>
