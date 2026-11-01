@@ -91,12 +91,6 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 .peakBig small{display:block;color:#8b95a5;font-size:10px;letter-spacing:1px;margin-top:2px}
 .peakMeter{height:12px;background:#1f2937;border-radius:6px;overflow:hidden;margin-top:8px;position:relative}
 .peakMeterFill{height:100%;width:0%;background:#22ff88;border-radius:6px;transition:width .06s linear}
-.peakRow{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #2b323e}
-.peakRow span{color:#8b95a5}.peakRow b{color:#fff}
-.peakRow b.hot{color:#f87171}
-.peakClip{display:flex;align-items:center;gap:8px;margin-top:8px}
-.peakClipLamp{width:16px;height:16px;border-radius:50%;background:#3a4452;border:2px solid #6b7280;flex-shrink:0}
-.peakClipLamp.on{background:#ef4444;border-color:#fca5a5;box-shadow:0 0 12px #ef4444,0 0 26px #ef4444;animation:clipBlink .3s infinite alternate}
 .setRow{display:flex;flex-direction:column;gap:7px}
 .setRow label{font-size:10px;color:#8b95a5;display:flex;flex-direction:column;gap:3px}
 :fullscreen body{background:#0a0c10}
@@ -215,16 +209,6 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         <small>PEAK SEKARANG • INPUT MIC</small>
       </div>
       <div class="peakMeter"><div class="peakMeterFill" id="peakFill"></div></div>
-      <div class="peakRow"><span>Peak Hold</span><b id="peakHold">— dBFS</b></div>
-      <div class="peakRow"><span>Peak Freq</span><b id="peakFreqRight">—</b></div>
-      <div class="peakRow"><span>Status</span><b id="peakStatus">STANDBY</b></div>
-      <div class="peakClip">
-        <span id="peakClipLamp" class="peakClipLamp"></span>
-        <b id="peakClipTxt" style="font-size:12px;color:#8b95a5">CLIP</b>
-        <span style="margin-left:auto;font-size:10px;color:#8b95a5">0 dBFS = clip</span>
-      </div>
-      <button id="resetpeak" style="width:100%;padding:8px;margin-top:8px">↻ RESET PEAK HOLD</button>
-      <p style="color:#8b95a5;font-size:10px;line-height:1.6;margin:6px 0 0">Bagus nya di -12 sampai -6 dBFS. Kalo sering 0 dBFS, hasil phase nya ga akurat.</p>
     </div>
 
     <div class="panel" style="margin-top:8px">
@@ -292,43 +276,21 @@ const CAPCOLORS=['#fb923c','#facc15','#f472b6','#a78bfa','#34d399','#f87171','#9
 const S={ctx:null,stream:null,src:null,an:null,refAn:null,noise:null,noiseGain:null,pink:false,running:false,fft:8192,raf:0,
   cursor:4190,live:[],phase:[],phaseRaw:[],coh:[],sm:null,acc:null,accN:0,magOffset:null,captures:[],capN:0,unwrap:false,delayMs:null,
   polarity:null,phaseAvg:null,phSmooth:6,delayLo:200,delayHi:2000,cohAvg:null,foundDelay:null,foundDelayBand:null,foundDelayCoh:null,
-  clipUntil:0,peakHoldDb:-120,peakHoldUntil:0,peakDbHold:-120,peakDbHoldFreq:0,peakDbHoldUntil:0};
+  clipUntil:0,peakHoldDb:-120,peakHoldUntil:0};
 
 function updatePeakPanel(peakDb,peakFreq){
-  const big=$('peakBig'),hold=$('peakHold'),fr=$('peakFreqRight'),st=$('peakStatus'),fill=$('peakFill');
+  const big=$('peakBig'),fill=$('peakFill');
   if(peakDb==null){
     big.textContent='— dBFS';big.className='big';
-    hold.textContent='— dBFS';fr.textContent='—';st.textContent='STANDBY';
     fill.style.width='0%';fill.style.background='#22ff88';
-    $('peakClipLamp').classList.remove('on');$('peakClipTxt').textContent='CLIP';$('peakClipTxt').style.color='#8b95a5';
     return;
   }
-  const now=performance.now();
-  if(peakDb>S.peakDbHold){S.peakDbHold=peakDb;S.peakDbHoldFreq=peakFreq;S.peakDbHoldUntil=now+3000}
-  else if(now>S.peakDbHoldUntil&&S.peakDbHold>-120){S.peakDbHold=Math.max(-120,S.peakDbHold-0.02)}
   big.textContent=peakDb.toFixed(1)+' dBFS';
   big.className='big'+(peakDb>=-1?' hot':peakDb>=-6?' warn':'');
-  hold.textContent=S.peakDbHold<=-119?'— dBFS':S.peakDbHold.toFixed(1)+' dBFS';
-  hold.className=S.peakDbHold>=-1?'hot':'';
-  fr.textContent=peakFreq?Math.round(peakFreq)+' Hz':(S.peakDbHoldFreq?Math.round(S.peakDbHoldFreq)+' Hz':'—');
   const pct=Math.max(0,Math.min(100,(peakDb+60)/60*100));
   fill.style.width=pct+'%';
   fill.style.background=peakDb>=-1?'#ef4444':peakDb>=-6?'#facc15':'#22ff88';
-  if(peakDb>=-1){st.textContent='⚠ CLIP';st.style.color='#f87171'}
-  else if(peakDb>=-12){st.textContent='BAGUS';st.style.color='#4ade80'}
-  else if(peakDb>=-40){st.textContent='KECIL';st.style.color='#facc15'}
-  else{st.textContent='HENING';st.style.color='#8b95a5'}
-  const clipOn=peakDb>=-1||now<S.clipUntil;
-  $('peakClipLamp').classList.toggle('on',clipOn);
-  $('peakClipTxt').textContent=clipOn?'⚠ CLIP!':'CLIP';
-  $('peakClipTxt').style.color=clipOn?'#f87171':'#8b95a5';
 }
-function resetPeakHold(){
-  S.peakDbHold=-120;S.peakDbHoldFreq=0;S.peakDbHoldUntil=0;S.clipUntil=0;
-  if(!S.running)updatePeakPanel(null);
-  else toast('Peak Hold di-reset');
-}
-$('resetpeak').onclick=resetPeakHold;
 updatePeakPanel(null);
 
 function updatePinkLamp(){
