@@ -110,7 +110,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         </label>
       </div>
 
-      <div class="title"><b>MAGNITUDE</b><span>20 Hz — 20 kHz • 0 dB DI TENGAH</span></div>
+      <div class="title"><b>MAGNITUDE</b><span>20 Hz — 20 kHz • GARIS TENGAH = 0 dB</span></div>
       <canvas id="mag" width="1200" height="300"></canvas>
       <canvas id="freqscale" width="1200" height="56"></canvas>
 
@@ -134,7 +134,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         2. Pencet PINK, volume 30%<br>
         3. Pink lewat kabel AUX ke speaker<br>
         4. HP / mic 1 meter di depan speaker<br>
-        5. Geser garis putih, kotak tulisan ikut titik kurva nya naik turun.
+        5. Garis ijo tengah itu 0 dB. Di atas garis = naik, di bawah garis = turun.
       </div>
     </div>
   </aside>
@@ -155,7 +155,6 @@ const phc=$('phase'),pg=phc.getContext('2d');
 const fsc=$('freqscale'),fg=fsc.getContext('2d');
 
 const MINF=20,MAXF=20000;
-/* KANAN DILONGGARIN DIKIT LAGI BIAR GA TERLALU SEMPIT: .10 / .10 / .09 */
 const SEGS=[[20,1000,.33],[1000,3000,.17],[3000,7000,.21],[7000,10000,.10],[10000,15000,.10],[15000,20000,.09]];
 const MAJORS=[20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000];
 const MAJORSET=new Set(MAJORS);
@@ -236,7 +235,14 @@ function drawCursorOnCurve(c,cx,cy,W,H,txt){
   c.fillText(txt,centerX,centerY);
   c.textAlign='left';c.textBaseline='alphabetic';
 }
-/* TULISAN BAWAH DIGESER KE KANAN DARI TICK NYA, BIAR GA SEMPIT / NUMPUK */
+/* GARIS LURUS TENGAH 0 dB, DIGAMBAR PALING ATAS BIAR GA KETUTUP KURVA */
+function drawZeroLine(c,w,h,range){
+  const y=yMag(0,range,h);
+  c.strokeStyle='#22ff88';c.lineWidth=3;
+  c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();
+  c.fillStyle='#22ff88';c.font='bold 13px Arial';c.textAlign='left';
+  c.fillText('0 dB',6,y-6);
+}
 function drawScale(){
   const c=fg,W=fsc.width,H=fsc.height;
   c.clearRect(0,0,W,H);c.fillStyle='#0b0f14';c.fillRect(0,0,W,H);
@@ -245,12 +251,8 @@ function drawScale(){
     c.strokeStyle='#8b95a5';c.lineWidth=2;c.beginPath();c.moveTo(x,0);c.lineTo(x,14);c.stroke();
     const lab=f===20?'20':f===20000?'20 kHz':fmtLab(f);
     c.fillStyle='#8b95a5';c.font='bold 15px Arial';
-    if(f===20000){
-      c.textAlign='right';c.fillText(lab,W-4,38);
-    }else{
-      /* geser ke kanan: tulisan mulai 6px di kanan tick, bukan di tengah tick */
-      c.textAlign='left';c.fillText(lab,Math.min(W-44,x+6),38);
-    }
+    if(f===20000){c.textAlign='right';c.fillText(lab,W-4,38)}
+    else{c.textAlign='left';c.fillText(lab,Math.min(W-44,x+6),38)}
   });
   const cx=xfreq(S.cursor,W);
   c.strokeStyle='#fff';c.lineWidth=3;c.beginPath();c.moveTo(cx,0);c.lineTo(cx,H);c.stroke();
@@ -261,11 +263,12 @@ function gridMag(c,w,h,range){
   FREQS.forEach(f=>{const x=xfreq(f,w);c.strokeStyle=MAJORSET.has(f)?'#3a4452':'#232a35';c.lineWidth=1;c.beginPath();c.moveTo(x,0);c.lineTo(x,h);c.stroke()});
   const half=range/2;c.textAlign='left';
   for(let d=-half;d<=half;d+=10){
+    if(d===0)continue;
     const y=yMag(d,range,h);
-    c.strokeStyle=d===0?'#7ee0ad':'#232a35';c.lineWidth=d===0?2:1;
+    c.strokeStyle='#232a35';c.lineWidth=1;
     c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();
-    c.fillStyle=d===0?'#7ee0ad':'#8b95a5';c.font=d===0?'bold 12px Arial':'12px Arial';
-    c.fillText((d>0?'+'+d:d===0?'0 dB':''+d)+' dB',4,Math.max(11,Math.min(h-2,y+11)));
+    c.fillStyle='#8b95a5';c.font='12px Arial';
+    c.fillText((d>0?'+'+d:''+d)+' dB',4,Math.max(11,Math.min(h-2,y+11)));
   }
 }
 function densify(freqs,pArr,phArr,cohArr){
@@ -305,6 +308,8 @@ function drawAll(){
     mg.beginPath();mg.strokeStyle='#5fd68a';mg.lineWidth=1.5;
     S.coh.forEach((o,i)=>{const Y=h-Math.max(0,Math.min(1,o.v))*22-4;if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke();
   }
+  /* GARIS 0 dB DI ATAS KURVA */
+  drawZeroLine(mg,w,h,range);
   const pt=pointOn(S.live,S.cursor),cx=Math.max(6,Math.min(w-6,xfreq(S.cursor,w)));
   mg.strokeStyle='#fff';mg.lineWidth=3;mg.beginPath();mg.moveTo(cx,0);mg.lineTo(cx,h);mg.stroke();
   if(pt){
@@ -320,10 +325,11 @@ function drawAll(){
   const pw=phc.width,phH=phc.height,yFor=d=>((180-d)/360)*phH;
   pg.clearRect(0,0,pw,phH);pg.fillStyle='#05070a';pg.fillRect(0,0,pw,phH);pg.strokeStyle='#232a35';pg.lineWidth=1;
   FREQS.forEach(f=>{const x=xfreq(f,pw);pg.beginPath();pg.moveTo(x,0);pg.lineTo(x,phH);pg.stroke()});
-  [[180,'±180°','#ff6b6b'],[0,'0°','#5fd68a'],[-180,'±180°','#ff6b6b']].forEach(([d,lab,col])=>{
-    const y=yFor(d);pg.strokeStyle=col;pg.beginPath();pg.moveTo(0,y);pg.lineTo(pw,y);pg.stroke();
-    pg.fillStyle=col;pg.font='bold 11px Arial';pg.fillText(lab,10,d===180?12:y+12);
-  });
+  pg.strokeStyle='#ff6b6b';pg.lineWidth=1;
+  [180,-180].forEach(d=>{const y=yFor(d);pg.beginPath();pg.moveTo(0,y);pg.lineTo(pw,y);pg.stroke();pg.fillStyle='#ff6b6b';pg.font='bold 11px Arial';pg.fillText('±180°',10,d===180?12:y+12)});
+  /* GARIS LURUS TENGAH PHASE 0° JUGA DITEBELIN */
+  pg.strokeStyle='#22ff88';pg.lineWidth=3;pg.beginPath();pg.moveTo(0,yFor(0));pg.lineTo(pw,yFor(0));pg.stroke();
+  pg.fillStyle='#22ff88';pg.font='bold 11px Arial';pg.fillText('0°',10,yFor(0)+12);
   if(S.phase.length&&S.pink){
     pg.beginPath();pg.strokeStyle='#3fd4ec';pg.lineWidth=2.5;let pen=false;
     S.phase.forEach((o,i)=>{
