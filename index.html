@@ -21,7 +21,7 @@ button,select{background:#222b37;color:var(--txt);border:1px solid #566171;borde
 button.go{background:#087e91;border-color:#13b5c9}button:disabled{opacity:.45}
 label{font-size:11px;color:var(--muted)}
 canvas{display:block;width:100%;height:auto;background:#030507;border-radius:5px;max-width:100%}
-#spectrum{aspect-ratio:1200/300}
+#spectrum{aspect-ratio:1200/400}
 #waterfall{aspect-ratio:1200/140;height:auto}
 .capturebar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
 .capturebar button{padding:10px 14px}
@@ -88,8 +88,8 @@ let currentVals=[];let avgFrames=[];
 let cursorFreq=1000,cursorActive=false;
 const minF=20,maxF=20000;
 const PLOT_BOTTOM=48;
-// Pembagian lebar grafik: 20-1k = 20%, 1k-3k = 25% (dirapetin), 3k-10k = 30%, 10k-20k = 25%
-const SEGS=[[20,1000,.20],[1000,3000,.25],[3000,10000,.30],[10000,20000,.25]];
+// Pembagian lebar grafik: 20-1k = 22%, 1k-3k = 18% (lebih rapet), 3k-10k = 35%, 10k-20k = 25%
+const SEGS=[[20,1000,.22],[1000,3000,.18],[3000,10000,.35],[10000,20000,.25]];
 function xfreq(f,w){
  f=Math.max(minF,Math.min(maxF,f));
  let start=0;
