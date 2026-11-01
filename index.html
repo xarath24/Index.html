@@ -2,109 +2,109 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>SMART LIVE — LIKE SMAART • FFT 8192 • TF STABIL</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SMART LIVE — LAPTOP • LIKE SMAART • FFT 8192</title>
 <style>
 *{box-sizing:border-box}
-html,body{margin:0;background:#0a0c10;color:#e8eaf0;font:12px system-ui,Arial}
-body{overflow-x:auto}
+html,body{margin:0;background:#0a0c10;color:#e8eaf0;font:13px system-ui,Arial;height:100%}
+body{min-width:1180px;overflow-x:auto}
 button,select{font:inherit}
-.page{min-width:1120px}
-.topbar{height:48px;background:#10141a;border-bottom:2px solid #3fd4ec;display:flex;align-items:center;gap:14px;padding:0 12px;position:sticky;top:0;z-index:20;white-space:nowrap}
-.logo{font-weight:900;font-size:18px;line-height:1;flex:0 0 auto}.logo b{color:#3fd4ec}.logo span{color:#8b95a5;font-weight:400;font-size:9px;display:block;letter-spacing:3px;margin-top:2px}
-.topbar nav{display:flex;gap:16px;color:#8b95a5}.topbar nav b{color:#fff}
-.topbtns{margin-left:auto;display:flex;gap:6px;align-items:center}
-button{background:#222b37;color:#e8eaf0;border:1px solid #4a5566;border-radius:6px;padding:7px 10px;cursor:pointer;white-space:nowrap}
+.topbar{height:54px;background:#10141a;border-bottom:2px solid #3fd4ec;display:flex;align-items:center;gap:16px;padding:0 16px;position:sticky;top:0;z-index:20;white-space:nowrap}
+.logo{font-weight:900;font-size:21px;line-height:1}.logo b{color:#3fd4ec}.logo span{color:#8b95a5;font-weight:400;font-size:10px;display:block;letter-spacing:4px;margin-top:3px}
+.topbar nav{display:flex;gap:18px;color:#8b95a5;font-size:13px}.topbar nav b{color:#fff}
+.topbtns{margin-left:auto;display:flex;gap:8px;align-items:center}
+button{background:#222b37;color:#e8eaf0;border:1px solid #4a5566;border-radius:6px;padding:8px 13px;cursor:pointer;white-space:nowrap}
+button:hover{border-color:#3fd4ec}
 button.go{background:#087e91;border-color:#13b5c9}button.on{background:#c2410c!important;border-color:#fb923c!important;color:#fff}
 button:disabled{opacity:.45}
-select{background:#222b37;color:#e8eaf0;border:1px solid #4a5566;border-radius:6px;padding:6px}
-.rotatehint{display:none;background:#422006;color:#fde68a;text-align:center;padding:8px;font-weight:700;font-size:12px}
-@media (orientation:portrait) and (max-width:900px){.rotatehint{display:block}}
-.layout{display:grid;grid-template-columns:218px minmax(0,1fr) 190px;gap:8px;padding:8px;max-width:1560px;margin:auto}
-.panel{background:#14181f;border:1px solid #2b323e;border-radius:8px;padding:9px;overflow:hidden}
-h3{margin:0 0 8px;font-size:11px;letter-spacing:1px;color:#8b95a5}
-.meas{display:flex;align-items:center;gap:7px;padding:8px;border:1px solid #2b323e;border-radius:6px;margin-bottom:6px;background:#1a1f28}
-.meas .sw{width:11px;height:11px;border-radius:50%;flex:0 0 auto}
-.meas b{flex:1;font-size:12px}.meas small{display:block;color:#8b95a5;font-weight:400}
-.meas input{accent-color:#3fd4ec;width:16px;height:16px}
-canvas{display:block;width:100%;background:#05070a;cursor:ew-resize;touch-action:none}
-#mag{aspect-ratio:1200/300;border-radius:4px 4px 0 0}
-#freqscale{aspect-ratio:1200/56;border-radius:0 0 4px 4px;background:#0b0f14;border-top:1px solid #2b323e;cursor:ew-resize}
-#phase{aspect-ratio:1200/210;border-radius:4px;margin-top:8px}
-#spec{aspect-ratio:1200/150;cursor:default;border-radius:4px}
-.graphtitle{display:flex;justify-content:space-between;gap:10px;font-size:11px;color:#8b95a5;margin:8px 0 4px;flex-wrap:nowrap;align-items:baseline}.graphtitle b{color:#dbe2ec;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.graphtitle span{flex:0 0 auto;white-space:nowrap}
-.ctl{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:8px}.ctl label{font-size:10px;color:#8b95a5;display:flex;flex-direction:column;gap:3px}
-.tabs{display:flex;gap:4px;flex-wrap:nowrap}.tabs button{padding:8px 14px;font-weight:700;white-space:nowrap}
-.modebar{color:#ffd16a;font-size:11px;font-weight:700;text-align:right;flex:1;min-width:0}
-.spl{height:150px;background:#05070a;border:1px solid #2b323e;border-radius:6px;position:relative;overflow:hidden;margin-bottom:8px}
-.splbar{position:absolute;bottom:0;left:18px;right:18px;background:linear-gradient(to top,#22c55e,#eab308 65%,#ef4444);width:calc(100% - 36px);transition:height .08s}
-.splnum{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;padding-top:10px;text-shadow:0 1px 4px #000}
-.splnum b{font-size:30px}.splnum span{font-size:10px;color:#fff;font-weight:700}
-.kv{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #2b323e;font-size:12px}.kv b{color:#fff}.kv span{color:#8b95a5}
-.cursorctl{display:flex;gap:6px;align-items:center;margin-top:7px;background:#090d12;border:1px solid #2b323e;border-radius:6px;padding:6px}
+select{background:#222b37;color:#e8eaf0;border:1px solid #4a5566;border-radius:6px;padding:7px}
+.kbd{font-size:10px;color:#8b95a5}
+.layout{display:grid;grid-template-columns:280px minmax(0,1fr) 262px;gap:10px;padding:10px;max-width:1920px;margin:auto;align-items:start}
+.panel{background:#14181f;border:1px solid #2b323e;border-radius:8px;padding:11px;overflow:hidden}
+h3{margin:0 0 9px;font-size:11px;letter-spacing:1px;color:#8b95a5}
+.meas{display:flex;align-items:center;gap:8px;padding:9px;border:1px solid #2b323e;border-radius:6px;margin-bottom:6px;background:#1a1f28;cursor:pointer}
+.meas .sw{width:12px;height:12px;border-radius:50%;flex:0 0 auto}
+.meas b{flex:1;font-size:13px}.meas small{display:block;color:#8b95a5;font-weight:400;font-size:11px}
+.meas input{accent-color:#3fd4ec;width:17px;height:17px;cursor:pointer}
+canvas{display:block;width:100%;background:#05070a;cursor:crosshair}
+#mag{aspect-ratio:1400/360;border-radius:4px 4px 0 0}
+#freqscale{aspect-ratio:1400/56;border-radius:0 0 4px 4px;background:#0b0f14;border-top:1px solid #2b323e;cursor:ew-resize}
+#phase{aspect-ratio:1400/250;border-radius:4px;margin-top:10px}
+#spec{aspect-ratio:1400/160;cursor:default;border-radius:4px}
+.graphtitle{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:#8b95a5;margin:9px 0 5px}.graphtitle b{color:#dbe2ec}.graphtitle span{white-space:nowrap}
+.ctl{display:flex;gap:9px;flex-wrap:wrap;align-items:flex-end;margin-top:9px}.ctl label{font-size:10px;color:#8b95a5;display:flex;flex-direction:column;gap:3px}
+.tabs{display:flex;gap:5px}.tabs button{padding:9px 16px;font-weight:700}
+.modebar{color:#ffd16a;font-size:12px;font-weight:700;text-align:right;flex:1}
+.spl{height:170px;background:#05070a;border:1px solid #2b323e;border-radius:6px;position:relative;overflow:hidden;margin-bottom:9px}
+.splbar{position:absolute;bottom:0;left:20px;right:20px;background:linear-gradient(to top,#22c55e,#eab308 65%,#ef4444);width:calc(100% - 40px);transition:height .08s}
+.splnum{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;padding-top:12px;text-shadow:0 1px 4px #000}
+.splnum b{font-size:34px}.splnum span{font-size:11px;color:#fff;font-weight:700}
+.kv{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #2b323e;font-size:13px}.kv b{color:#fff}.kv span{color:#8b95a5}
+.cursorctl{display:flex;gap:8px;align-items:center;margin-top:8px;background:#090d12;border:1px solid #2b323e;border-radius:6px;padding:7px}
 .cursorctl input{flex:1;accent-color:#fff}
-.legend{display:flex;gap:10px;flex-wrap:wrap;color:#8b95a5;font-size:11px;margin-top:7px}.legend i{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:4px}
-.statusbar{background:#10141a;border-top:1px solid #2b323e;padding:7px 12px;display:flex;gap:16px;flex-wrap:nowrap;color:#8b95a5;font-size:11px;position:sticky;bottom:0;white-space:nowrap;overflow-x:auto}
+.legend{display:flex;gap:12px;flex-wrap:wrap;color:#8b95a5;font-size:12px;margin-top:8px}.legend i{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px}
+.statusbar{background:#10141a;border-top:1px solid #2b323e;padding:8px 16px;display:flex;gap:18px;flex-wrap:wrap;color:#8b95a5;font-size:12px;position:sticky;bottom:0}
 .statusbar b{color:#7ee0ad}
-.noisebar{display:grid;grid-template-columns:1fr 1fr;gap:6px}.noisebar button{padding:10px}.noisebar .off{grid-column:1/3}
+.noisebar{display:grid;grid-template-columns:1fr 1fr;gap:6px}.noisebar button{padding:11px}.noisebar .off{grid-column:1/3}
 input[type=range]{width:100%;accent-color:#3fd4ec}
 input[type=range].vol{accent-color:#fb923c}
-.polbadge{border-radius:8px;padding:10px;text-align:center;border:2px solid #eab308;background:#292524;margin:8px 0}
-.polbadge b{font-size:20px;display:block;color:#facc15}.polbadge span{font-size:11px;color:#cbd5e1;display:block;margin-top:3px;line-height:1.5}
+.polbadge{border-radius:8px;padding:12px;text-align:center;border:2px solid #eab308;background:#292524;margin:9px 0}
+.polbadge b{font-size:23px;display:block;color:#facc15}.polbadge span{font-size:12px;color:#cbd5e1;display:block;margin-top:4px;line-height:1.6}
 .polbadge.normal{border-color:#22c55e;background:#052e16}.polbadge.normal b{color:#4ade80}
 .polbadge.inverted{border-color:#ef4444;background:#450a0a}.polbadge.inverted b{color:#f87171}
-.delayrow{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}.delayrow b{color:#fff}
-.checkline{display:flex;gap:7px;align-items:center;font-size:11px;color:#cbd5e1;margin:6px 0}.checkline input{accent-color:#3fd4ec;width:16px;height:16px}
-.stablebox{border:1px solid #22c55e;border-radius:6px;padding:7px;text-align:center;background:#052e16;margin-top:6px;font-size:11px}
+.delayrow{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px}.delayrow b{color:#fff;font-size:16px}
+.checkline{display:flex;gap:8px;align-items:center;font-size:12px;color:#cbd5e1;margin:7px 0}.checkline input{accent-color:#3fd4ec;width:17px;height:17px}
+.stablebox{border:1px solid #22c55e;border-radius:6px;padding:8px;text-align:center;background:#052e16;margin-top:7px;font-size:12px}
 .stablebox b{color:#4ade80}
+.hint{font-size:11px;color:#8b95a5;line-height:1.6;margin-top:7px}
+.bigbtn{width:100%;padding:13px;font-size:13px;font-weight:700}
 </style>
 </head>
 <body>
-<div class="page">
-<div class="rotatehint">↻ PUTAR HP KE LANDSCAPE (MIRING) — BIAR TAMPILAN NYA SAMA KAYAK SCREENSHOT</div>
 <div class="topbar">
-<div class="logo"><b>SMART</b> LIVE <span>MEASUREMENT • LIKE SMAART</span></div>
+<div class="logo"><b>SMART</b> LIVE <span>MEASUREMENT • LIKE SMAART • LAPTOP</span></div>
 <nav><span><b>Measurement</b></span><span>Config</span><span>View</span><span>Trace</span><span>Delay</span></nav>
-<div class="topbtns"><button id="start" class="go">▶ START</button><button id="stop" disabled>■ STOP</button><button id="landscape">↔ FULLSCREEN</button><b id="liveind" style="color:#7ee0ad">● STANDBY</b></div>
+<div class="topbtns"><button id="start" class="go">▶ START <span class="kbd">[Space]</span></button><button id="stop" disabled>■ STOP</button><button id="savepng">💾 SAVE PNG</button><button id="landscape">⛶ FULLSCREEN</button><b id="liveind" style="color:#7ee0ad">● STANDBY</b></div>
 </div>
 
 <div class="layout">
 <aside>
-<div class="panel"><h3>MEASUREMENT LIST</h3>
+<div class="panel"><h3>MEASUREMENT LIST — LAPTOP</h3>
 <div class="meas"><span class="sw" style="background:#3fd4ec"></span><b>Mic 1 — LIVE<small>Measurement • RTA / TF</small></b><input type="checkbox" id="showlive" checked></div>
 <div class="meas"><span class="sw" style="background:#fb923c"></span><b>Ref — Pink Noise<small>Reference • Generator</small></b><input type="checkbox" id="showref" checked></div>
-<div class="meas"><span class="sw" style="background:#ff6b6b"></span><b>Trace A<small id="capAinfo">Empty</small></b><input type="checkbox" id="showA" checked></div>
-<div class="meas"><span class="sw" style="background:#b58cff"></span><b>Trace B<small id="capBinfo">Empty</small></b><input type="checkbox" id="showB" checked></div>
-<div class="meas"><span class="sw" style="background:#5fd68a"></span><b>Trace C<small id="capCinfo">Empty</small></b><input type="checkbox" id="showC" checked></div>
-<button class="go" id="capture" style="width:100%;padding:10px">📸 CAPTURE LIVE → SLOT</button>
+<div class="meas"><span class="sw" style="background:#ff6b6b"></span><b>Trace A<small id="capAinfo">Empty • Tekan [1]</small></b><input type="checkbox" id="showA" checked></div>
+<div class="meas"><span class="sw" style="background:#b58cff"></span><b>Trace B<small id="capBinfo">Empty • Tekan [2]</small></b><input type="checkbox" id="showB" checked></div>
+<div class="meas"><span class="sw" style="background:#5fd68a"></span><b>Trace C<small id="capCinfo">Empty • Tekan [3]</small></b><input type="checkbox" id="showC" checked></div>
+<button class="go bigbtn" id="capture">📸 CAPTURE LIVE → SLOT</button>
 <select id="targetslot" style="width:100%;margin-top:6px"><option value="0" selected>Slot A</option><option value="1">Slot B</option><option value="2">Slot C</option></select>
+<div class="hint">Klik grafik buat geser cursor. Scroll mouse di atas grafik = geser cursor halus. Klik nama trace = nyalain / matiin trace nya.</div>
 </div>
 
-<div class="panel" style="margin-top:8px"><h3>🔊 REFERENCE GENERATOR</h3>
-<div class="noisebar"><button id="pinkbtn">🩷 PINK</button><button id="whitebtn">🤍 WHITE</button><button id="noiseoff" class="off">■ OFF</button></div>
+<div class="panel" style="margin-top:10px"><h3>🔊 REFERENCE GENERATOR</h3>
+<div class="noisebar"><button id="pinkbtn">🩷 PINK <span class="kbd">[P]</span></button><button id="whitebtn">🤍 WHITE</button><button id="noiseoff" class="off">■ OFF</button></div>
 <label style="display:block;margin-top:8px;color:#8b95a5;font-size:11px">VOLUME <b id="noisevoltxt" style="color:#fff">30%</b><input type="range" class="vol" id="noisevol" min="0" max="100" value="30"></label>
-<div style="font-size:11px;color:#8b95a5;line-height:1.5">Pink ON = Transfer Function + Polarity.<br>Pink OFF = RTA doang.</div>
-<div class="stablebox" id="stablebox"><b>TF STABIL: RATA-RATA 12 FRAME</b><br><span style="color:#cbd5e1">Jangan dipegang HP nya 5 detik, biar phase nya diem.</span></div>
+<div style="font-size:12px;color:#8b95a5;line-height:1.5">Pink ON = Transfer Function + Polarity.<br>Pink OFF = RTA doang.</div>
+<div class="stablebox"><b>TF STABIL: RATA-RATA 12 FRAME</b><br><span style="color:#cbd5e1">Tunggu 5 detik, jangan gerak, biar phase nya diem.</span></div>
 </div>
 
-<div class="panel" style="margin-top:8px"><h3>DELAY FINDER — 0 SAMPE 300ms</h3>
+<div class="panel" style="margin-top:10px"><h3>DELAY FINDER — 0 SAMPE 300ms</h3>
 <div class="delayrow"><span>Delay</span><b id="delaybig">0.0 ms</b></div>
 <input type="range" id="delayslider" min="0" max="300" step="0.1" value="0">
 <label class="checkline"><input type="checkbox" id="autodelay" checked> AUTO DELAY (±300ms, 2 arah)</label>
-<button id="finddelay" style="width:100%;padding:10px">◎ FIND DELAY OTOMATIS</button>
+<button id="finddelay" class="bigbtn">◎ FIND DELAY OTOMATIS <span class="kbd">[F]</span></button>
 <div class="kv"><span>Korelasi delay</span><b id="delaycorr">—</b></div>
 <div class="kv"><span>Delay dipakai</span><b id="delayused">0.0 ms</b></div>
-<div style="font-size:11px;color:#eab308;line-height:1.5">Kalo delay masih 0.0 ms, phase PASTI muter-muter. Wajib FIND DELAY dulu.</div>
+<div style="font-size:12px;color:#eab308;line-height:1.5">Kalo delay masih 0.0 ms, phase PASTI muter-muter. Wajib FIND DELAY dulu.</div>
 </div>
 
-<div class="panel" style="margin-top:8px"><h3>⚡ POLARITY — CEK KEBALIK</h3>
+<div class="panel" style="margin-top:10px"><h3>⚡ POLARITY — CEK KEBALIK</h3>
 <div class="polbadge unknown" id="polbadge"><b id="poltitle">? UNKNOWN</b><span id="poldetail">Coherence rendah / pink noise belum jalan. Deketin mic, gedein volume pink, FIND DELAY dulu.</span></div>
-<button id="checkpol" class="go" style="width:100%;padding:12px">◎ CHECK POLARITY — 1 DETIK</button>
-<button id="invertbtn" style="width:100%;padding:10px;margin-top:6px">⇅ INVERT PHASE (TES) : OFF</button>
+<button id="checkpol" class="go bigbtn">◎ CHECK POLARITY — 1 DETIK <span class="kbd">[C]</span></button>
+<button id="invertbtn" class="bigbtn" style="margin-top:6px">⇅ INVERT PHASE (TES) : OFF</button>
 <div class="kv"><span>Phase rata-rata</span><b id="phavg">—°</b></div>
 <div class="kv"><span>Korelasi mic/ref</span><b id="miccorr">—</b></div>
 <div class="kv"><span>Confidence</span><b id="confid">—%</b></div>
-<div style="font-size:11px;color:#8b95a5;line-height:1.5;margin-top:4px">Phase 0° = normal. Phase ±180° = kebalik.</div>
+<div style="font-size:12px;color:#8b95a5;line-height:1.5;margin-top:4px">Phase 0° = normal. Phase ±180° = kebalik.</div>
 </div>
 </aside>
 
@@ -122,15 +122,15 @@ input[type=range].vol{accent-color:#fb923c}
 <label>RANGE<select id="range"><option value="60">60</option><option value="90" selected>90</option><option value="120">120</option></select></label>
 <label>COH. MIN<select id="cohmin"><option value="0">0.00</option><option value="0.5" selected>0.50</option><option value="0.8">0.80</option></select></label>
 </div>
-<div class="graphtitle"><b>MAGNITUDE — TRANSFER / RTA</b><span>20 Hz — 20 kHz • dBFS rel.</span></div>
-<canvas id="mag" width="1200" height="300"></canvas>
-<canvas id="freqscale" width="1200" height="56"></canvas>
+<div class="graphtitle"><b>MAGNITUDE — TRANSFER / RTA</b><span>20 Hz — 20 kHz • dBFS rel. • Klik / drag / scroll mouse</span></div>
+<canvas id="mag" width="1400" height="360"></canvas>
+<canvas id="freqscale" width="1400" height="56"></canvas>
 <div class="graphtitle"><b>PHASE — 0° = NORMAL, ±180° = TERBALIK</b><span id="phasesub">Pink OFF</span></div>
-<canvas id="phase" width="1200" height="210"></canvas>
+<canvas id="phase" width="1400" height="250"></canvas>
 <div class="cursorctl"><button id="curleft">◀</button><input type="range" id="cursorslider" min="0" max="1000" value="980"><button id="curright">▶</button><b id="cursorread" style="white-space:nowrap">14.99 kHz • — dB</b></div>
-<div class="legend"><span><i style="background:#3fd4ec"></i>LIVE / TF</span><span><i style="background:#ffd16a"></i>PEAK HOLD</span><span><i style="background:#5fd68a"></i>COHERENCE</span><span><i style="background:#ff6b6b"></i>TRACE A</span><span><i style="background:#b58cff"></i>TRACE B</span></div>
+<div class="legend"><span><i style="background:#3fd4ec"></i>LIVE / TF</span><span><i style="background:#ffd16a"></i>PEAK HOLD</span><span><i style="background:#5fd68a"></i>COHERENCE</span><span><i style="background:#ff6b6b"></i>TRACE A</span><span><i style="background:#b58cff"></i>TRACE B</span><span><i style="background:#5fd68a"></i>TRACE C</span></div>
 </div>
-<div class="panel" style="margin-top:8px"><div class="graphtitle"><b>LIVE SPECTROGRAPH</b><span>Terbaru di atas • Jalan ke bawah</span></div><canvas id="spec" width="1200" height="150"></canvas></div>
+<div class="panel" style="margin-top:10px"><div class="graphtitle"><b>LIVE SPECTROGRAPH</b><span>Terbaru di atas • Jalan ke bawah</span></div><canvas id="spec" width="1400" height="160"></canvas></div>
 </main>
 
 <aside>
@@ -145,21 +145,28 @@ input[type=range].vol{accent-color:#fb923c}
 <div class="kv"><span>Bin Width</span><b id="binwidth">5.9 Hz</b></div>
 <div class="kv"><span>Cursor</span><b id="cursorfreq">4.19 kHz</b></div>
 </div>
-<div class="panel" style="margin-top:8px"><h3>CARA CEK POLARITY</h3>
-<div style="font-size:11px;color:#8b95a5;line-height:1.7">
+<div class="panel" style="margin-top:10px"><h3>CARA CEK POLARITY — DI LAPTOP</h3>
+<div style="font-size:12px;color:#8b95a5;line-height:1.8">
 1. START + PINK ON, volume 30%<br>
-2. Pink lewat kabel AUX ke speaker, HP 1 meter di depan speaker<br>
-3. Jangan pake speaker HP sendiri / bluetooth buat TF, coherence nya bakal rendah<br>
-4. FIND DELAY dulu, coherence harus naik ke 0.6+<br>
-5. Tunggu 5 detik, jangan gerakin HP, biar TF nya rata-rata dulu<br>
-6. Pencet CHECK POLARITY 1 DETIK<br>
-7. Kalo TERBALIK, balik kabel + / -, cek lagi sampe NORMAL
+2. Pink lewat kabel AUX ke speaker, mic 1 meter di depan speaker<br>
+3. Jangan pake speaker laptop sendiri / bluetooth, coherence nya bakal rendah<br>
+4. Tekan <b style="color:#fff">[F]</b> FIND DELAY, coherence harus naik ke 0.6+<br>
+5. Tunggu 5 detik, jangan gerak, biar TF nya rata-rata dulu<br>
+6. Tekan <b style="color:#fff">[C]</b> CHECK POLARITY 1 DETIK<br>
+7. Kalo TERBALIK, balik kabel + / -, cek lagi sampe NORMAL<br>
+8. Tekan <b style="color:#fff">[1] / [2] / [3]</b> buat capture, <b style="color:#fff">SAVE PNG</b> buat bukti
 </div></div>
+<div class="panel" style="margin-top:10px"><h3>SHORTCUT LAPTOP</h3>
+<div class="kv"><span>START / STOP</span><b>Space</b></div>
+<div class="kv"><span>PINK ON / OFF</span><b>P</b></div>
+<div class="kv"><span>FIND DELAY</span><b>F</b></div>
+<div class="kv"><span>CHECK POLARITY</span><b>C</b></div>
+<div class="kv"><span>CAPTURE A / B / C</span><b>1 / 2 / 3</b></div>
+</div>
 </aside>
 </div>
 
-<div class="statusbar"><span>● <b id="status">STANDBY</b></span><span>Input: <b>Mic 1</b></span><span>Reference: <b id="refstat">OFF</b></span><span>FFT: <b id="fftstat">8192</b></span><span>Delay: <b id="delaystat">0.0 ms</b></span><span>Sync: <b>1 CONTEXT • 48000 Hz</b></span><span>Polarity: <b id="polstat">—</b></span><span style="margin-left:auto">SMART LIVE • dBFS rel, bukan SPL terkalibrasi</span></div>
-</div>
+<div class="statusbar"><span>● <b id="status">STANDBY</b></span><span>Input: <b>Mic 1</b></span><span>Reference: <b id="refstat">OFF</b></span><span>FFT: <b id="fftstat">8192</b></span><span>Delay: <b id="delaystat">0.0 ms</b></span><span>Sync: <b>1 CONTEXT • 48000 Hz</b></span><span>Polarity: <b id="polstat">—</b></span><span>Mode: <b>LAPTOP</b></span><span style="margin-left:auto">SMART LIVE • dBFS rel, bukan SPL terkalibrasi</span></div>
 
 <script>
 const $=id=>document.getElementById(id);
@@ -171,7 +178,6 @@ const MAJORS=new Set([20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000
 const db2p=v=>Math.pow(10,Math.max(-120,v)/10), p2db=p=>10*Math.log10(Math.max(1e-12,p));
 const S={ctx:null,stream:null,src:null,an:null,tfAn:null,refAn:null,raf:0,fft:8192,running:false,mode:'TF',noise:null,noiseGain:null,noiseType:null,
   sm:null,hold:null,live:[],holdVals:[],phase:[],coh:[],caps:[null,null,null],slot:0,cursor:4190,delayMs:0,invert:false,lastPhaseAvg:null,lastCorr:0,lastCoh:0,
-  /* AKUMULATOR TF — INI KUNCI STABIL NYA */
   accRe:null,accIm:null,accXX:null,accYY:null,accN:0,magOffset:null};
 function resetAcc(){S.accRe=null;S.accIm=null;S.accXX=null;S.accYY=null;S.accN=0;S.sm=null;S.hold=null}
 function xfreq(f,w){f=Math.max(MINF,Math.min(MAXF,f));let s=0;for(const[a,b,pw]of SEGS){if(f<=b||a===15000)return(s+Math.log(f/a)/Math.log(b/a)*pw)*w;s+=pw}return w}
@@ -223,18 +229,19 @@ $('noisevol').oninput=e=>{$('noisevoltxt').textContent=e.target.value+'%';if(S.n
 function findLag(){
   if(!S.tfAn||!S.refAn||!S.ctx)return null;
   const m=new Float32Array(BIG),r=new Float32Array(BIG);S.tfAn.getFloatTimeDomainData(m);S.refAn.getFloatTimeDomainData(r);
-  const maxMs=$('autodelay').checked?300:300, maxLag=Math.floor(maxMs/1000*S.ctx.sampleRate),DS=4,n2=Math.floor(BIG/DS),m2=new Float32Array(n2),r2=new Float32Array(n2);
+  const maxLag=Math.floor(300/1000*S.ctx.sampleRate),DS=4,n2=Math.floor(BIG/DS),m2=new Float32Array(n2),r2=new Float32Array(n2);
   for(let i=0;i<n2;i++){m2[i]=m[i*DS];r2[i]=r[i*DS]}
   let dm=0,dr=0;for(let i=0;i<n2;i++){dm+=m2[i]*m2[i];dr+=r2[i]*r2[i]}if(!dm||!dr)return null;
   const norm=Math.sqrt(dm*dr);let best=0,bv=-1;const ml=Math.floor(maxLag/DS);
   for(let lag=-ml;lag<=ml;lag+=2){let s=0,cnt=0;const i0=Math.max(0,-lag),i1=Math.min(n2,n2-lag);for(let i=i0;i<i1;i+=2){s+=m2[i+lag]*r2[i];cnt++}if(!cnt)continue;const v=s/norm;if(v>bv){bv=v;best=lag}}
   return{ms:Math.max(0,best*DS/S.ctx.sampleRate*1000),corr:bv};
 }
-$('finddelay').onclick=()=>{
+function doFindDelay(){
   const r=findLag();if(!r)return alert('START + PINK dulu, mas.');
   setDelay(r.ms,r.corr);
   $('poldetail').textContent='Delay ketemu '+r.ms.toFixed(1)+' ms, corr '+r.corr.toFixed(2)+'. Tunggu 5 detik, jangan gerak, baru CHECK POLARITY.';
-};
+}
+$('finddelay').onclick=doFindDelay;
 $('invertbtn').onclick=()=>{S.invert=!S.invert;$('invertbtn').textContent='⇅ INVERT PHASE (TES) : '+(S.invert?'ON':'OFF');$('invertbtn').classList.toggle('on',S.invert);resetAcc();drawAll();if(S.lastPhaseAvg!==null)runPolarityDisplay()};
 function runPolarityDisplay(){
   if(S.lastPhaseAvg===null)return;
@@ -242,13 +249,14 @@ function runPolarityDisplay(){
   const inv=Math.abs(deg)>90, conf=Math.min(98,Math.round(Math.abs(Math.cos(deg*Math.PI/180))*S.lastCoh*100+ (S.lastCoh>.6?15:0)));
   setPol(inv?'inverted':'normal',inv?'Phase rata-rata '+deg.toFixed(0)+'°, deket ±180°. TERBALIK. Balik kabel + / -, cek lagi.':'Phase rata-rata '+deg.toFixed(0)+'°, deket 0°. NORMAL.',deg,S.lastCorr,conf);
 }
-$('checkpol').onclick=async()=>{
+async function doCheckPol(){
   if(!S.running||!S.noiseType||!S.refAn)return alert('START + PINK dulu, mas. Pink OFF = polarity ga bisa dicek.');
   $('poltitle').textContent='... CEK 1 DETIK ...';
   await new Promise(r=>setTimeout(r,1000));
   if(S.lastCoh<0.5){setPol('unknown','Coherence masih '+S.lastCoh.toFixed(2)+', di bawah 0.50. Deketin mic, gedein volume pink, FIND DELAY dulu, tunggu 5 detik, baru cek lagi.',S.lastPhaseAvg,S.lastCorr,Math.round(S.lastCoh*100));return}
   runPolarityDisplay();
-};
+}
+$('checkpol').onclick=doCheckPol;
 function drawScale(){
   const c=fg,W=fsc.width,H=fsc.height;c.clearRect(0,0,W,H);c.fillStyle='#0b0f14';c.fillRect(0,0,W,H);
   FREQS.forEach(f=>{const x=xfreq(f,W),maj=MAJORS.has(f);c.strokeStyle=maj?'#7ee0ad':'#3a4452';c.lineWidth=maj?2:1;c.beginPath();c.moveTo(x,0);c.lineTo(x,maj?14:9);c.stroke();c.textAlign=f===20000?'right':f===20?'left':'center';if(maj){c.fillStyle='#fff';c.font='bold 15px Arial';c.fillText(f===20?'20':f===20000?'20 kHz':fmtLab(f),f===20000?W-4:f===20?4:x,38)}else{c.fillStyle='#8b95a5';c.font='12px Arial';c.fillText(fmtLab(f),x,30)}});
@@ -270,9 +278,9 @@ function densify(freqs,pArr,phArr,cohArr){
 }
 function pointOnLine(data,f){if(!data.length)return null;const cx=xfreq(f,mag.width);if(cx<=data[0].x)return data[0];if(cx>=data[data.length-1].x)return data[data.length-1];let lo=0,hi=data.length-1;while(hi-lo>1){const m=(lo+hi)>>1;if(data[m].x<=cx)lo=m;else hi=m}const a=data[lo],b=data[hi],t=b.x===a.x?0:(cx-a.x)/(b.x-a.x);return{f,v:a.v+(b.v-a.v)*t,x:cx}}
 function gridMag(c,w,h,range){
-  c.clearRect(0,0,w,h);c.fillStyle='#05070a';c.fillRect(0,0,w,h);c.strokeStyle='#232a35';c.lineWidth=1;c.fillStyle='#8b95a5';c.font='12px Arial';
+  c.clearRect(0,0,w,h);c.fillStyle='#05070a';c.fillRect(0,0,w,h);c.strokeStyle='#232a35';c.lineWidth=1;c.fillStyle='#8b95a5';c.font='13px Arial';
   FREQS.forEach(f=>{const x=xfreq(f,w);c.strokeStyle=MAJORS.has(f)?'#3a4452':'#232a35';c.beginPath();c.moveTo(x,0);c.lineTo(x,h);c.stroke()});
-  c.textAlign='left';for(let d=0;d<=range;d+=10){const y=d/range*h;c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();c.fillText((d===0?'+0':'-'+d)+' dB',4,Math.max(11,y+11))}
+  c.textAlign='left';for(let d=0;d<=range;d+=10){const y=d/range*h;c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();c.fillText((d===0?'+0':'-'+d)+' dB',5,Math.max(12,y+12))}
 }
 function drawTrace(c,data,w,h,range,color,lw){if(!data||!data.length)return;c.beginPath();c.strokeStyle=color;c.lineWidth=lw;for(let i=0;i<data.length;i++){const o=data[i],X=o.x,Y=Math.max(0,Math.min(range,-o.v))/range*h;if(i===0)c.moveTo(X,Y);else c.lineTo(X,Y)}c.stroke()}
 function drawAll(){
@@ -290,20 +298,18 @@ function drawAll(){
   mg.save();mg.strokeStyle='#fff';mg.lineWidth=3;mg.beginPath();mg.moveTo(cx,0);mg.lineTo(cx,h);mg.stroke();mg.restore();
   $('cursorslider').value=sliderForFreq(S.cursor);$('cursorfreq').textContent=fmtF(S.cursor);
   if(pt){const Y=Math.max(0,Math.min(range,-pt.v))/range*h;mg.beginPath();mg.arc(cx,Y,10,0,Math.PI*2);mg.fillStyle='#fff';mg.fill();mg.beginPath();mg.arc(cx,Y,5,0,Math.PI*2);mg.fillStyle='#000';mg.fill();
-    const txt=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB';mg.font='bold 13px Arial';const tw=mg.measureText(txt).width+14;const lx=Math.max(4,Math.min(w-tw-4,cx-tw/2)),ly=Math.max(4,Y-46);
-    mg.fillStyle='#000';mg.fillRect(lx,ly,tw,24);mg.strokeStyle='#fff';mg.strokeRect(lx,ly,tw,24);mg.fillStyle='#fff';mg.fillText(txt,lx+7,ly+16);$('cursorread').textContent=txt}
+    const txt=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB';mg.font='bold 14px Arial';const tw=mg.measureText(txt).width+16;const lx=Math.max(5,Math.min(w-tw-5,cx-tw/2)),ly=Math.max(5,Y-48);
+    mg.fillStyle='#000';mg.fillRect(lx,ly,tw,26);mg.strokeStyle='#fff';mg.strokeRect(lx,ly,tw,26);mg.fillStyle='#fff';mg.fillText(txt,lx+8,ly+18);$('cursorread').textContent=txt}
   else $('cursorread').textContent=fmtF(S.cursor)+' • — dB';
   drawScale();
   const pw=phc.width,phH=phc.height,yFor=d=>((180-d)/360)*phH;
   pg.clearRect(0,0,pw,phH);pg.fillStyle='#05070a';pg.fillRect(0,0,pw,phH);pg.strokeStyle='#232a35';pg.lineWidth=1;
   FREQS.forEach(f=>{const x=xfreq(f,pw);pg.beginPath();pg.moveTo(x,0);pg.lineTo(x,phH);pg.stroke()});
-  [[180,'±180° TERBALIK','#ff6b6b'],[0,'0° NORMAL','#5fd68a'],[-180,'±180° TERBALIK','#ff6b6b']].forEach(([d,lab,col])=>{const y=yFor(d);pg.strokeStyle=col;pg.beginPath();pg.moveTo(0,y);pg.lineTo(pw,y);pg.stroke();pg.fillStyle=col;pg.font='bold 11px Arial';pg.fillText(lab,10,d===180?12:y+12)});
-  pg.fillStyle='#8b95a5';pg.font='11px Arial';pg.fillText('90°',10,yFor(90)+4);pg.fillText('-90°',10,yFor(-90)+4);
+  [[180,'±180° TERBALIK','#ff6b6b'],[0,'0° NORMAL','#5fd68a'],[-180,'±180° TERBALIK','#ff6b6b']].forEach(([d,lab,col])=>{const y=yFor(d);pg.strokeStyle=col;pg.beginPath();pg.moveTo(0,y);pg.lineTo(pw,y);pg.stroke();pg.fillStyle=col;pg.font='bold 12px Arial';pg.fillText(lab,10,d===180?13:y+13)});
+  pg.fillStyle='#8b95a5';pg.font='12px Arial';pg.fillText('90°',10,yFor(90)+4);pg.fillText('-90°',10,yFor(-90)+4);
   if(S.phase.length&&S.noiseType){
-    /* Gambar phase per segmen, putus kalo coherence rendah — jadi ga coret-coret */
     const cohMin=+$('cohmin').value;
-    pg.lineWidth=2.5;pg.strokeStyle='#3fd4ec';
-    let pen=false;
+    pg.lineWidth=2.5;pg.strokeStyle='#3fd4ec';let pen=false;
     S.phase.forEach((o,i)=>{
       const ok=S.coh[i]&&S.coh[i].v>=cohMin, X=o.x,Y=yFor(Math.max(-180,Math.min(180,o.v)));
       if(!ok){pen=false;return}
@@ -313,7 +319,7 @@ function drawAll(){
     pg.strokeStyle='#fff';pg.lineWidth=3;pg.beginPath();pg.moveTo(cx,0);pg.lineTo(cx,phH);pg.stroke();
     const pp=pointOnLine(S.phase,S.cursor);if(pp&&pt)$('cursorread').textContent=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB • Phase '+pp.v.toFixed(0)+'°';
   }else{
-    pg.fillStyle='#8b95a5';pg.font='bold 14px Arial';pg.textAlign='center';
+    pg.fillStyle='#8b95a5';pg.font='bold 15px Arial';pg.textAlign='center';
     pg.fillText('NO REFERENCE — HIDUPKAN PINK NOISE UNTUK PHASE / POLARITY',pw/2,phH/2);pg.textAlign='left';
   }
 }
@@ -324,7 +330,6 @@ function drawSpec(raw,n){
   for(let x=0;x<W;x+=2){const f=freqAtX(x,W),bin=Math.max(1,Math.min(n-1,Math.round(f*S.fft/S.ctx.sampleRate))),m=colorFor(raw[bin]||-120);for(let y=0;y<Sz;y++){for(let dx=0;dx<2&&x+dx<W;dx++){const p=(y*W+x+dx)*4;row.data[p]=m[0];row.data[p+1]=m[1];row.data[p+2]=m[2];row.data[p+3]=255}}}
   sg.putImageData(row,0,0);
 }
-/* TF DENGAN RATA-RATA CROSS-SPECTRUM — BUKAN 1 FRAME */
 function computeTFaveraged(){
   const N=S.fft,tdM=new Float32Array(N),tdR=new Float32Array(N);
   S.an.getFloatTimeDomainData(tdM);S.refAn.getFloatTimeDomainData(tdR);
@@ -349,7 +354,6 @@ function computeTFaveraged(){
     const tr=S.accRe[k]/den, ti=S.accIm[k]/den;
     freqs.push({f});magP.push(tr*tr+ti*ti);
     let deg=Math.atan2(ti,tr)*180/Math.PI;
-    /* Koreksi delay: mic telat delayMs, phase harus DITAMBAH, bukan dikurang — ini yang bikin muter kemarin kebalik */
     deg-=360*f*delaySamp/S.ctx.sampleRate;deg=((deg+180)%360+360)%360-180;
     if(S.invert)deg=deg>0?deg-180:deg+180;
     ph.push(deg);
@@ -368,7 +372,6 @@ function draw(){
   let freqs,pArr,phArr,cohArr;
   if(S.noiseType&&S.refAn&&S.mode==='TF'){
     const tf=computeTFaveraged();freqs=tf.freqs;phArr=tf.ph;cohArr=tf.coh;
-    /* Offset magnitude dikunci PELAN, bukan tiap frame — biar ga ngambang */
     const mid=tf.magP.filter((_,i)=>freqs[i].f>=500&&freqs[i].f<=2000);
     const avgMid=mid.reduce((s,v)=>s+v,0)/Math.max(1,mid.length);
     if(S.magOffset===null)S.magOffset=avgMid;else S.magOffset=S.magOffset*0.98+avgMid*0.02;
@@ -396,7 +399,7 @@ function draw(){
 }
 function setMode(m){S.mode=m;$('tabTF').classList.toggle('on',m==='TF');$('tabRTA').classList.toggle('on',m==='RTA');$('tabSPEC').classList.toggle('on',m==='SPEC');if(m==='SPEC')sp.scrollIntoView({behavior:'smooth'});resetAcc();$('modetxt').textContent=m==='TF'?'MODE: TRANSFER FUNCTION — PINK ON, PHASE + POLARITY AKTIF':m==='RTA'?'MODE: RTA — HIDUPKAN PINK NOISE UNTUK TF + POLARITY':'MODE: SPECTROGRAPH'}
 $('tabTF').onclick=()=>setMode('TF');$('tabRTA').onclick=()=>setMode('RTA');$('tabSPEC').onclick=()=>setMode('SPEC');
-$('start').onclick=async()=>{
+async function doStart(){
   try{
     S.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
     await ensureCtx();
@@ -410,22 +413,43 @@ $('start').onclick=async()=>{
     $('start').disabled=true;$('stop').disabled=false;$('status').textContent='LIVE';$('liveind').textContent='● LIVE';
     $('samplerate').textContent=S.ctx.sampleRate+' Hz';$('binwidth').textContent=(S.ctx.sampleRate/S.fft).toFixed(1)+' Hz';$('fftstat').textContent=S.fft;
     draw();
-  }catch(e){if(S.stream)S.stream.getTracks().forEach(t=>t.stop());$('status').textContent='MIC ERROR';alert('Mic ga bisa dibuka: '+e.message)}
-};
-$('stop').onclick=()=>{S.running=false;cancelAnimationFrame(S.raf);if(S.stream)S.stream.getTracks().forEach(t=>t.stop());S.stream=null;S.an=null;S.tfAn=null;$('start').disabled=false;$('stop').disabled=true;$('status').textContent='STANDBY';$('liveind').textContent='● STANDBY';drawAll()};
+  }catch(e){if(S.stream)S.stream.getTracks().forEach(t=>t.stop());$('status').textContent='MIC ERROR';alert('Mic ga bisa dibuka: '+e.message+'\n\nDi laptop, klik ikon gembok di address bar, izinin Microphone.')}
+}
+function doStop(){S.running=false;cancelAnimationFrame(S.raf);if(S.stream)S.stream.getTracks().forEach(t=>t.stop());S.stream=null;S.an=null;S.tfAn=null;$('start').disabled=false;$('stop').disabled=true;$('status').textContent='STANDBY';$('liveind').textContent='● STANDBY';drawAll()}
+$('start').onclick=doStart;
+$('stop').onclick=doStop;
 $('fft').onchange=()=>{if(S.an&&S.ctx){S.fft=+$('fft').value;S.an.fftSize=S.fft;if(S.refAn)S.refAn.fftSize=S.fft;resetAcc();S.magOffset=null;$('binwidth').textContent=(S.ctx.sampleRate/S.fft).toFixed(1)+' Hz';$('fftstat').textContent=S.fft}};
 $('average').onchange=resetAcc;
 $('detail').onchange=drawAll;
 function moveFromX(x,el){const r=el.getBoundingClientRect();const px=Math.max(0,Math.min(mag.width,(x-r.left)/r.width*mag.width));S.cursor=freqAtX(px,mag.width);drawAll()}
 let drag=false;
-[mag,fsc].forEach(el=>{el.addEventListener('pointerdown',e=>{drag=true;try{el.setPointerCapture(e.pointerId)}catch(err){}moveFromX(e.clientX,el)});el.addEventListener('pointermove',e=>{if(drag)moveFromX(e.clientX,el)});el.addEventListener('pointerup',()=>drag=false);el.addEventListener('pointercancel',()=>drag=false)});
+[mag,fsc,phc].forEach(el=>{el.addEventListener('pointerdown',e=>{drag=true;try{el.setPointerCapture(e.pointerId)}catch(err){}moveFromX(e.clientX,el)});el.addEventListener('pointermove',e=>{if(drag)moveFromX(e.clientX,el)});el.addEventListener('pointerup',()=>drag=false);el.addEventListener('pointercancel',()=>drag=false)});
+[mag,fsc,phc].forEach(el=>el.addEventListener('wheel',e=>{e.preventDefault();const step=e.deltaY>0?1.06:0.94;S.cursor=Math.max(20,Math.min(20000,S.cursor*step));drawAll()},{passive:false}));
 $('cursorslider').addEventListener('input',e=>{S.cursor=freqAtX(+e.target.value/1000*mag.width,mag.width);drawAll()});
 $('curleft').onclick=()=>{S.cursor=Math.max(20,S.cursor-50);drawAll()};
 $('curright').onclick=()=>{S.cursor=Math.min(20000,S.cursor+50);drawAll()};
-$('capture').onclick=()=>{if(!S.live.length)return alert('START dulu.');S.caps[S.slot]={data:S.live.map(o=>({...o}))};const t=new Date();$('cap'+'ABC'[S.slot]+'info').textContent='Tersimpan • '+String(t.getHours()).padStart(2,'0')+'.'+String(t.getMinutes()).padStart(2,'0')+'.'+String(t.getSeconds()).padStart(2,'0');drawAll()};
+function doCapture(slot){
+  if(slot!==undefined)S.slot=slot;
+  if(!S.live.length)return alert('START dulu.');
+  S.caps[S.slot]={data:S.live.map(o=>({...o}))};const t=new Date();$('cap'+'ABC'[S.slot]+'info').textContent='Tersimpan • '+String(t.getHours()).padStart(2,'0')+'.'+String(t.getMinutes()).padStart(2,'0')+'.'+String(t.getSeconds()).padStart(2,'0');$('targetslot').value=String(S.slot);drawAll();
+}
+$('capture').onclick=()=>doCapture();
 $('targetslot').onchange=e=>S.slot=+e.target.value;
-$('landscape').onclick=async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock('landscape')}catch(e){}};
+$('landscape').onclick=async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch(e){}};
+$('savepng').onclick=()=>{
+  const out=document.createElement('canvas');out.width=1400;out.height=360+56+250+40;const oc=out.getContext('2d');oc.fillStyle='#0a0c10';oc.fillRect(0,0,out.width,out.height);oc.drawImage(mag,0,0);oc.drawImage(fsc,0,360);oc.drawImage(phc,0,416);
+  oc.fillStyle='#fff';oc.font='bold 16px Arial';oc.fillText('SMART LIVE • '+fmtF(S.cursor)+' • '+($('cursorread').textContent)+' • Delay '+S.delayMs.toFixed(1)+' ms • Polarity '+$('polmini').textContent+' • '+new Date().toLocaleString(),12,30);
+  const a=document.createElement('a');a.download='smart-live-'+Date.now()+'.png';a.href=out.toDataURL('image/png');a.click();
+};
 ['showlive','showA','showB','showC'].forEach(id=>$(id).addEventListener('change',drawAll));
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'&&e.target.type!=='range')return;
+  if(e.code==='Space'){e.preventDefault();S.running?doStop():doStart()}
+  else if(e.key==='p'||e.key==='P'){S.noiseType==='pink'?stopNoise():startNoise('pink')}
+  else if(e.key==='f'||e.key==='F'){doFindDelay()}
+  else if(e.key==='c'||e.key==='C'){doCheckPol()}
+  else if(e.key==='1'){doCapture(0)}else if(e.key==='2'){doCapture(1)}else if(e.key==='3'){doCapture(2)}
+});
 setDelay(0);setPol('unknown','Coherence rendah / pink noise belum jalan. Deketin mic, gedein volume pink, FIND DELAY dulu.');
 setMode('TF');
 drawAll();
