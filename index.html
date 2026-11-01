@@ -21,8 +21,8 @@ button,select{background:#222b37;color:var(--txt);border:1px solid #566171;borde
 button.go{background:#087e91;border-color:#13b5c9}button:disabled{opacity:.45}
 label{font-size:11px;color:var(--muted)}
 canvas{display:block;width:100%;height:auto;background:#030507;border-radius:5px;max-width:100%}
-#spectrum{aspect-ratio:1200/300}
-#waterfall{aspect-ratio:1200/300;height:auto}
+#spectrum{aspect-ratio:1200/400}
+#waterfall{aspect-ratio:1200/140;height:auto}
 .capturebar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
 .capturebar button{padding:10px 14px}
 .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px}
@@ -34,7 +34,7 @@ canvas{display:block;width:100%;height:auto;background:#030507;border-radius:5px
 @media(max-width:520px){header{align-items:flex-start}.toolbar .tb{padding:8px 7px}}
 body.landscape-mode main{max-width:none;padding:8px}
 body.landscape-mode #spectrum{aspect-ratio:1200/360}
-body.landscape-mode #waterfall{aspect-ratio:1200/240}
+body.landscape-mode #waterfall{aspect-ratio:1200/120}
 body.landscape-mode .toolbar{position:sticky;top:0;z-index:5}
 body.landscape-mode header h1{font-size:15px}
 </style></head>
@@ -67,7 +67,7 @@ body.landscape-mode header h1{font-size:15px}
 </div>
 <div class="legend"><span><i class="dot" style="background:#55d9ed"></i>LIVE</span><span><i class="dot" style="background:#ffd16a"></i>PEAK HOLD</span><span><i class="dot" style="background:#ff6b6b"></i>CAPTURE 1</span><span><i class="dot" style="background:#b58cff"></i>CAPTURE 2</span><span><i class="dot" style="background:#67d69b"></i>CAPTURE 3</span></div>
 <div class="info">Capture menyimpan kurva magnitude saat itu. Kurva tersimpan akan ditampilkan sebagai overlay agar bisa dibandingkan dengan kondisi LIVE atau capture lain.</div></section>
-<section class="panel"><div class="title"><b>LIVE SPECTROGRAM / WATERFALL</b><span>Waktu berjalan ↓</span></div><canvas id="waterfall" width="1200" height="300"></canvas><div class="info">Warna terang menunjukkan energi frekuensi lebih kuat. Waterfall bergerak saat mikrofon menerima suara.</div></section>
+<section class="panel"><div class="title"><b>LIVE SPECTROGRAM / WATERFALL</b><span>Waktu berjalan ↓</span></div><canvas id="waterfall" width="1200" height="140"></canvas><div class="info">Warna terang menunjukkan energi frekuensi lebih kuat. Waterfall bergerak saat mikrofon menerima suara.</div></section>
 <section class="panel"><div class="stats">
 <div class="stat"><small>PEAK LEVEL</small><strong id="peakdb">— dBFS</strong></div>
 <div class="stat"><small>PEAK FREQUENCY</small><strong id="peakfreq">— Hz</strong></div>
