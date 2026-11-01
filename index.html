@@ -155,8 +155,8 @@ const phc=$('phase'),pg=phc.getContext('2d');
 const fsc=$('freqscale'),fg=fsc.getContext('2d');
 
 const MINF=20,MAXF=20000;
-/* 7k KE ATAS DISEMPITIN LAGI: 7-10k .08, 10-15k .08, 15-20k .07 */
-const SEGS=[[20,1000,.36],[1000,3000,.18],[3000,7000,.23],[7000,10000,.08],[10000,15000,.08],[15000,20000,.07]];
+/* KANAN DILONGGARIN DIKIT LAGI BIAR GA TERLALU SEMPIT: .10 / .10 / .09 */
+const SEGS=[[20,1000,.33],[1000,3000,.17],[3000,7000,.21],[7000,10000,.10],[10000,15000,.10],[15000,20000,.09]];
 const MAJORS=[20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000];
 const MAJORSET=new Set(MAJORS);
 const FREQS=[20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000];
@@ -236,14 +236,21 @@ function drawCursorOnCurve(c,cx,cy,W,H,txt){
   c.fillText(txt,centerX,centerY);
   c.textAlign='left';c.textBaseline='alphabetic';
 }
+/* TULISAN BAWAH DIGESER KE KANAN DARI TICK NYA, BIAR GA SEMPIT / NUMPUK */
 function drawScale(){
   const c=fg,W=fsc.width,H=fsc.height;
   c.clearRect(0,0,W,H);c.fillStyle='#0b0f14';c.fillRect(0,0,W,H);
   MAJORS.forEach(f=>{
     const x=xfreq(f,W);
     c.strokeStyle='#8b95a5';c.lineWidth=2;c.beginPath();c.moveTo(x,0);c.lineTo(x,14);c.stroke();
-    c.fillStyle='#8b95a5';c.font='bold 15px Arial';c.textAlign='center';
-    c.fillText(f===20?'20':f===20000?'20 kHz':fmtLab(f),Math.max(18,Math.min(W-32,x)),38);
+    const lab=f===20?'20':f===20000?'20 kHz':fmtLab(f);
+    c.fillStyle='#8b95a5';c.font='bold 15px Arial';
+    if(f===20000){
+      c.textAlign='right';c.fillText(lab,W-4,38);
+    }else{
+      /* geser ke kanan: tulisan mulai 6px di kanan tick, bukan di tengah tick */
+      c.textAlign='left';c.fillText(lab,Math.min(W-44,x+6),38);
+    }
   });
   const cx=xfreq(S.cursor,W);
   c.strokeStyle='#fff';c.lineWidth=3;c.beginPath();c.moveTo(cx,0);c.lineTo(cx,H);c.stroke();
