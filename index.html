@@ -20,7 +20,7 @@ main{padding:10px;max-width:1100px;margin:auto;overflow-x:hidden}.toolbar,.panel
 button,select{background:#222b37;color:var(--txt);border:1px solid #566171;border-radius:7px;padding:9px 11px;font-size:13px}
 button.go{background:#087e91;border-color:#13b5c9}button:disabled{opacity:.45}
 label{font-size:11px;color:var(--muted)}
-canvas{display:block;width:100%;height:auto;background:#030507;border-radius:5px;max-width:100%;cursor:ew-resize}
+canvas{display:block;width:100%;height:auto;background:#030507;border-radius:5px;max-width:100%;cursor:ew-resize;touch-action:none}
 #spectrum{aspect-ratio:1200/400}
 #waterfall{aspect-ratio:1200/140;height:auto}
 .capturebar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
@@ -62,7 +62,7 @@ body.landscape-mode header h1{font-size:15px}
  <div class="stat"><small>CURSOR FREQUENCY</small><strong id="cursorfreq">4.72 kHz</strong></div>
  <div class="stat"><small>LEVEL DI TITIK</small><strong id="cursorlevel">— dBFS</strong></div>
 </div>
-<div class="info">Geser garis putih di grafik, geser slider di atas, atau pencet ◀ ▶ untuk geser halus. Garis selalu nempel di kurva.</div>
+<div class="info">Geser garis putih di grafik, geser slider di atas, atau pencet ◀ ▶ untuk geser halus. Titik putih harus nempel di kurva.</div>
 <div class="capturebar">
  <label style="width:100%">PILIH SLOT TUJUAN (capture baru hanya mengganti slot ini)</label>
  <select id="targetslot"></select>
@@ -96,7 +96,6 @@ let currentVals=[];let avgFrames=[];
 let cursorFreq=4720,cursorActive=true;
 const minF=20,maxF=20000;
 const PLOT_BOTTOM=48;
-// Pembagian lebar: 20-1k 26%, 1k-3k 14% rapet, 3k-7k 16% rapet, 7k-10k 10% rapet, 10k-15k 8% rapet, 15k-20k 26%
 const SEGS=[[20,1000,.26],[1000,3000,.14],[3000,7000,.16],[7000,10000,.10],[10000,15000,.08],[15000,20000,.26]];
 function xfreq(f,w){
  f=Math.max(minF,Math.min(maxF,f));
@@ -135,27 +134,33 @@ function drawCursor(ph,range,levelVal){
  const cx=Math.max(6,Math.min(w-6,xfreq(cursorFreq,w)));
  const y=v=>Math.max(0,Math.min(range,-v))/range*ph;
  sc.save();
- sc.strokeStyle='rgba(255,255,255,.22)';sc.lineWidth=10;
- sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();
+ // garis tegas, tanpa halo blur
  sc.strokeStyle='#ffffff';sc.lineWidth=3;
  sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();
  // pegangan atas
  sc.fillStyle='#ffffff';
- sc.beginPath();sc.moveTo(cx-11,0);sc.lineTo(cx+11,0);sc.lineTo(cx,16);sc.closePath();sc.fill();
- // titik di kurva
+ sc.beginPath();sc.moveTo(cx-12,0);sc.lineTo(cx+12,0);sc.lineTo(cx,17);sc.closePath();sc.fill();
  if(levelVal!==null&&Number.isFinite(levelVal)){
   const cy=y(levelVal);
-  sc.beginPath();sc.arc(cx,cy,9,0,Math.PI*2);sc.fillStyle='#ffffff';sc.fill();
-  sc.beginPath();sc.arc(cx,cy,5,0,Math.PI*2);sc.fillStyle='#000000';sc.fill();
+  // garis pendek mendatar di titik, biar keliatan nempel
+  sc.strokeStyle='#ffffff';sc.lineWidth=3;
+  sc.beginPath();sc.moveTo(cx-16,cy);sc.lineTo(cx+16,cy);sc.stroke();
+  // titik nempel di kurva
+  sc.beginPath();sc.arc(cx,cy,11,0,Math.PI*2);sc.fillStyle='#ffffff';sc.fill();
+  sc.beginPath();sc.arc(cx,cy,6,0,Math.PI*2);sc.fillStyle='#000000';sc.fill();
+  sc.beginPath();sc.arc(cx,cy,2.5,0,Math.PI*2);sc.fillStyle='#ffffff';sc.fill();
+  // label nempel di atas titik, bukan ngambang di atas grafik
+  const txt=fmtFreq(cursorFreq)+'  •  '+levelVal.toFixed(1)+' dB';
+  sc.font='bold 17px Arial';
+  const tw=sc.measureText(txt).width+18;
+  let lx=Math.max(4,Math.min(w-tw-4,cx-tw/2));
+  let ly=Math.max(4,cy-52);
+  sc.fillStyle='#000000';sc.fillRect(lx,ly,tw,28);
+  sc.strokeStyle='#ffffff';sc.lineWidth=2;sc.strokeRect(lx,ly,tw,28);
+  sc.fillStyle='#ffffff';sc.textAlign='left';sc.fillText(txt,lx+9,ly+20);
+  // garis penghubung label ke titik
+  sc.beginPath();sc.moveTo(cx,ly+28);sc.lineTo(cx,cy-11);sc.stroke();
  }
- // label nempel di garis
- const txt=fmtFreq(cursorFreq)+(levelVal!==null&&Number.isFinite(levelVal)?'  •  '+levelVal.toFixed(1)+' dB':'');
- sc.font='bold 16px Arial';
- const tw=sc.measureText(txt).width+16;
- let lx=Math.max(4,Math.min(w-tw-4,cx-tw/2));
- sc.fillStyle='rgba(0,0,0,.85)';sc.fillRect(lx,20,tw,26);
- sc.strokeStyle='#ffffff';sc.lineWidth=1;sc.strokeRect(lx,20,tw,26);
- sc.fillStyle='#ffffff';sc.textAlign='left';sc.fillText(txt,lx+8,38);
  sc.restore();
 }
 function grid(){
@@ -167,8 +172,7 @@ function grid(){
 function colorFor(v){let t=Math.max(0,Math.min(1,(v+95)/75));let stops=[[20,16,48],[67,47,118],[170,76,137],[239,139,143],[255,218,142]];let p=t*4,i=Math.min(3,Math.floor(p)),a=p-i;let c=stops[i].map((n,k)=>Math.round(n*(1-a)+stops[i+1][k]*a));return `rgb(${c[0]},${c[1]},${c[2]})`}
 function syncCursorUI(){
  $('cursorfreq').textContent=fmtFreq(cursorFreq);
- const data=cursorData();
- const near=nearestIn(data,cursorFreq);
+ const near=nearestIn(cursorData(),cursorFreq);
  $('cursorlevel').textContent=near?near.v.toFixed(1)+' dBFS':'— dBFS';
  const s=$('cursorslider');
  const pos=Math.round(xfreq(cursorFreq,spec.width)/spec.width*1000);
@@ -219,6 +223,7 @@ function draw(){
   sc.stroke();
  });
  const near=nearestIn(currentVals,cursorFreq);
+ // cursor digambar PALING AKHIR, di atas kurva, biar titiknya nempel dan ga ketutup
  drawCursor(ph,range,near?near.v:null);
  syncCursorUI();
  let image=wc.getImageData(0,0,water.width,water.height-1);wc.putImageData(image,0,0);
@@ -250,12 +255,12 @@ $('start').onclick=async()=>{
 };
 $('stop').onclick=()=>{cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());if(audio)audio.close();audio=null;stream=null;an=null;currentVals=[];sm=[];hold=[];avgFrames=[];$('status').textContent='STOPPED • HANYA CAPTURE TERSIMPAN';$('inputstate').textContent='OFF';$('start').disabled=false;$('stop').disabled=true;$('capture').disabled=true;drawFrozen()};
 function moveCursor(ev){
+ ev.preventDefault();
  const rect=spec.getBoundingClientRect();
  const px=Math.max(0,Math.min(spec.width,(ev.clientX-rect.left)/rect.width*spec.width));
  setCursor(freqAtX(px,spec.width));
 }
 let draggingCursor=false;
-spec.style.touchAction='none';
 spec.addEventListener('pointerdown',ev=>{
  draggingCursor=true;
  try{spec.setPointerCapture(ev.pointerId)}catch(_){}
