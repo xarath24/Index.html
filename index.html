@@ -21,7 +21,7 @@ button,select{background:#222b37;color:var(--txt);border:1px solid #566171;borde
 button.go{background:#087e91;border-color:#13b5c9}button:disabled{opacity:.45}
 label{font-size:11px;color:var(--muted)}
 canvas{display:block;width:100%;height:auto;background:#030507;border-radius:5px;max-width:100%}
-#spectrum{aspect-ratio:1200/400}
+#spectrum{aspect-ratio:1200/300}
 #waterfall{aspect-ratio:1200/140;height:auto}
 .capturebar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
 .capturebar button{padding:10px 14px}
@@ -88,19 +88,27 @@ let currentVals=[];let avgFrames=[];
 let cursorFreq=1000,cursorActive=false;
 const minF=20,maxF=20000;
 const PLOT_BOTTOM=48;
+// Pembagian lebar grafik: 20-1k = 20%, 1k-3k = 25% (dirapetin), 3k-10k = 30%, 10k-20k = 25%
+const SEGS=[[20,1000,.20],[1000,3000,.25],[3000,10000,.30],[10000,20000,.25]];
 function xfreq(f,w){
  f=Math.max(minF,Math.min(maxF,f));
- const a=Math.log(1000/minF), b=Math.log(10), c=Math.log(maxF/10000);
- const p1=.15, p2=.70;
- if(f<=1000) return (Math.log(f/minF)/a)*p1*w;
- if(f<=10000) return (p1+Math.log(f/1000)/b*p2)*w;
- return (p1+p2+Math.log(f/10000)/c*(1-p1-p2))*w;
+ let start=0;
+ for(let s=0;s<SEGS.length;s++){
+  let a=SEGS[s][0],b=SEGS[s][1],pw=SEGS[s][2];
+  if(f<=b||s===SEGS.length-1) return (start+Math.log(f/a)/Math.log(b/a)*pw)*w;
+  start+=pw;
+ }
+ return w;
 }
 function freqAtX(x,w){
- const r=Math.max(0,Math.min(1,x/w)),p1=.15,p2=.70;
- if(r<=p1) return minF*Math.exp((r/p1)*Math.log(1000/minF));
- if(r<=p1+p2) return 1000*Math.exp(((r-p1)/p2)*Math.log(10));
- return 10000*Math.exp(((r-p1-p2)/(1-p1-p2))*Math.log(2));
+ const r=Math.max(0,Math.min(1,x/w));
+ let start=0;
+ for(let s=0;s<SEGS.length;s++){
+  let a=SEGS[s][0],b=SEGS[s][1],pw=SEGS[s][2];
+  if(r<=start+pw||s===SEGS.length-1) return a*Math.exp(((r-start)/pw)*Math.log(b/a));
+  start+=pw;
+ }
+ return maxF;
 }
 function grid(){
  const w=spec.width,h=spec.height,plotH=h-PLOT_BOTTOM;sc.clearRect(0,0,w,h);sc.fillStyle='#030507';sc.fillRect(0,0,w,h);
