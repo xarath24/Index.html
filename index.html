@@ -48,12 +48,14 @@ body.landscape-mode header h1{font-size:15px}
 </div>
 <div class="info">Sentuh lalu geser garis vertikal pada grafik untuk membaca frekuensi dan level. Rentang sumbu: 20 Hz–20 kHz.</div>
 <div class="capturebar">
- <button id="slot1" class="slotbtn go">SLOT 1</button>
- <button id="slot2" class="slotbtn">SLOT 2</button>
- <button id="slot3" class="slotbtn">SLOT 3</button>
+ <label style="width:100%">PILIH SLOT TUJUAN (capture baru hanya mengganti slot ini)</label>
+ <select id="targetslot"></select>
  <button class="go" id="capture">📸 SIMPAN / GANTI CAPTURE</button>
- <button id="clearcaptures">HAPUS SLOT TERPILIH</button>
- <span id="capturestatus" class="info">Pilih slot, lalu simpan capture. Capture baru akan mengganti isi slot terpilih.</span>
+ <button id="clearcaptures">HAPUS SLOT</button>
+ <button id="showall">TAMPILKAN SEMUA</button>
+ <button id="hideall">SEMBUNYIKAN SEMUA</button>
+ <div id="slotlist" class="slotlist" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;width:100%;margin-top:6px"></div>
+ <span id="capturestatus" class="info">Pilih slot tujuan. Centang slot yang ingin ditampilkan pada grafik. Slot lain tidak akan berubah.</span>
 </div>
 <div class="legend"><span><i class="dot" style="background:#55d9ed"></i>LIVE</span><span><i class="dot" style="background:#ffd16a"></i>PEAK HOLD</span><span><i class="dot" style="background:#ff6b6b"></i>CAPTURE 1</span><span><i class="dot" style="background:#b58cff"></i>CAPTURE 2</span><span><i class="dot" style="background:#67d69b"></i>CAPTURE 3</span></div>
 <div class="info">Capture menyimpan kurva magnitude saat itu. Kurva tersimpan akan ditampilkan sebagai overlay agar bisa dibandingkan dengan kondisi LIVE atau capture lain.</div></section>
@@ -69,7 +71,12 @@ body.landscape-mode header h1{font-size:15px}
 const $=id=>document.getElementById(id);
 const spec=$('spectrum'),sc=spec.getContext('2d'),water=$('waterfall'),wc=water.getContext('2d');
 let audio=null,stream=null,an=null,src=null,raf=0,sm=[],hold=[],frame=0,fft=4096,avgCount=4;
-let captures=[null,null,null];let selectedSlot=0;const captureColors=['#ff6b6b','#b58cff','#67d69b'];let currentVals=[];let avgFrames=[];
+const SLOT_COUNT=10;
+let captures=Array(SLOT_COUNT).fill(null);
+let visibleSlots=Array(SLOT_COUNT).fill(true);
+let selectedSlot=0;
+const captureColors=['#ff6b6b','#b58cff','#67d69b','#56cfe1','#f4a261','#a8dadc','#e9c46a','#cdb4db','#90be6d','#f28482'];
+let currentVals=[];let avgFrames=[];
 let cursorFreq=1000,cursorActive=false;
 const minF=20,maxF=20000;
 // Piecewise log scale: give the important 1 kHz–10 kHz region half of the graph width.
@@ -99,7 +106,7 @@ function drawFrozen(){
  const w=spec.width,h=spec.height,ph=h-36,range=+$('range').value;
  const y=v=>Math.max(0,Math.min(range,-v))/range*ph;
  captures.forEach((cap,ci)=>{
-  if(!cap)return;
+  if(!cap||!visibleSlots[ci])return;
   sc.beginPath();sc.strokeStyle=captureColors[ci];sc.lineWidth=3;
   cap.data.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(o.v);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});
   sc.stroke();
@@ -109,8 +116,9 @@ function drawFrozen(){
   sc.save();sc.setLineDash([]);sc.strokeStyle='rgba(255,255,255,.22)';sc.lineWidth=14;
   sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();
   sc.strokeStyle='#fff';sc.lineWidth=4;sc.beginPath();sc.moveTo(cx,0);sc.lineTo(cx,ph);sc.stroke();sc.restore();
-  const available=captures.filter(Boolean);
-  const data=available.length?available[available.length-1].data:[];
+  const available=captures.map((cap,i)=>({cap,i})).filter(x=>x.cap&&visibleSlots[x.i]);
+  const chosen=available.find(x=>x.i===selectedSlot)||available[available.length-1];
+  const data=chosen?chosen.cap.data:[];
   if(data.length){
    const nearest=data.reduce((best,o)=>Math.abs(o.f-cursorFreq)<Math.abs(best.f-cursorFreq)?o:best,data[0]);
    $('cursorlevel').textContent=nearest.v.toFixed(1)+' dBFS (capture)';
@@ -139,7 +147,7 @@ function draw(){
  currentVals=vals.map((o,i)=>({f:o.f,v:sm[i]}));
  // Draw saved curves on top of the live trace for direct comparison.
  captures.forEach((cap,ci)=>{
-  if(!cap)return;
+  if(!cap||!visibleSlots[ci])return;
   sc.beginPath();sc.strokeStyle=captureColors[ci];sc.lineWidth=2.4;
   cap.data.forEach((o,i)=>{let X=xfreq(o.f,w),Y=y(o.v);if(i===0)sc.moveTo(X,Y);else sc.lineTo(X,Y)});
   sc.stroke();
@@ -209,29 +217,45 @@ spec.addEventListener('lostpointercapture',endCursorDrag);
 $('fft').onchange=()=>{if(an){fft=+$('fft').value;an.fftSize=fft;sm=[];hold=[];avgFrames=[]}};
 $('average').onchange=()=>{avgFrames=[];};
 $('range').onchange=()=>{if(an){cancelAnimationFrame(raf);draw()}else drawFrozen()};
-function refreshSlotButtons(){
- for(let i=0;i<3;i++){
-  const b=$('slot'+(i+1));
-  b.classList.toggle('go',i===selectedSlot);
-  b.textContent='SLOT '+(i+1)+(captures[i]?' ✓':'');
+function refreshSlotControls(){
+ const target=$('targetslot');
+ if(target.options.length!==SLOT_COUNT){
+  target.innerHTML='';
+  for(let i=0;i<SLOT_COUNT;i++){
+   const opt=document.createElement('option');opt.value=i;opt.textContent='Slot '+(i+1);target.appendChild(opt);
+  }
+ }
+ target.value=String(selectedSlot);
+ const list=$('slotlist');list.innerHTML='';
+ for(let i=0;i<SLOT_COUNT;i++){
+  const wrap=document.createElement('label');
+  wrap.style.cssText='display:flex;align-items:center;gap:7px;background:#090d12;border:1px solid #394553;border-radius:7px;padding:7px;color:#e8eaf0;font-size:12px';
+  const check=document.createElement('input');check.type='checkbox';check.checked=visibleSlots[i];
+  check.onchange=()=>{visibleSlots[i]=check.checked;redrawCurrentView()};
+  const text=document.createElement('span');
+  text.textContent='Slot '+(i+1)+(captures[i]?' • tersimpan':' • kosong');
+  text.style.color=captures[i]?captureColors[i]:'#9ca4b1';
+  if(i===selectedSlot)text.style.fontWeight='bold';
+  wrap.append(check,text);list.appendChild(wrap);
  }
 }
-[0,1,2].forEach(i=>$('slot'+(i+1)).onclick=()=>{
- selectedSlot=i;refreshSlotButtons();
- $('capturestatus').textContent='Slot '+(i+1)+' dipilih. Capture berikutnya akan mengganti isi slot ini.';
-});
+function redrawCurrentView(){
+ if(an){cancelAnimationFrame(raf);draw()}else drawFrozen();
+}
+$('targetslot').onchange=()=>{selectedSlot=Number($('targetslot').value);refreshSlotControls()};
 $('capture').onclick=()=>{
  if(!an||!currentVals.length){$('capturestatus').textContent='Tekan START LIVE dan tunggu grafik terbaca sebelum capture.';return}
  captures[selectedSlot]={name:'Capture '+(selectedSlot+1),data:currentVals.map(o=>({...o}))};
- $('capturestatus').textContent='Capture slot '+(selectedSlot+1)+' disimpan/diganti.';
- refreshSlotButtons();
+ $('capturestatus').textContent='Slot '+(selectedSlot+1)+' berhasil disimpan/diganti. Slot lain tidak berubah.';
+ refreshSlotControls();redrawCurrentView();
 };
 $('clearcaptures').onclick=()=>{
  captures[selectedSlot]=null;
- $('capturestatus').textContent='Isi slot '+(selectedSlot+1)+' dihapus.';
- refreshSlotButtons();
- if(an){cancelAnimationFrame(raf);draw()}else drawFrozen();
+ $('capturestatus').textContent='Slot '+(selectedSlot+1)+' dihapus.';
+ refreshSlotControls();redrawCurrentView();
 };
-refreshSlotButtons();
+$('showall').onclick=()=>{visibleSlots.fill(true);refreshSlotControls();redrawCurrentView()};
+$('hideall').onclick=()=>{visibleSlots.fill(false);refreshSlotControls();redrawCurrentView()};
+refreshSlotControls();
 grid();
 </script></body></html>
