@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>SMART LIVE — LIKE SMAART</title>
+<title>SMART LIVE — MAGNITUDE KAYAK AWAL</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#0a0c10;color:#e8eaf0;font:12px system-ui,Arial;overflow-x:hidden}
@@ -49,6 +49,8 @@ input[type=range]{width:100%;accent-color:#fb923c}
 .polbadge.normal{border-color:#22c55e;background:#052e16}.polbadge.normal b{color:#4ade80}
 .polbadge.inverted{border-color:#ef4444;background:#450a0a}.polbadge.inverted b{color:#f87171}
 .polbadge.unknown{border-color:#eab308;background:#292524}.polbadge.unknown b{color:#facc15}
+.lockbox{border:2px solid #3fd4ec;border-radius:8px;padding:9px;text-align:center;background:#082f3a;margin-top:8px}
+.lockbox b{font-size:15px;display:block}.lockbox span{font-size:11px;color:#cbd5e1;display:block;margin-top:3px;line-height:1.5}
 @media(max-width:900px){.layout{grid-template-columns:1fr}.spl{height:110px}}
 </style>
 </head>
@@ -62,7 +64,7 @@ input[type=range]{width:100%;accent-color:#fb923c}
 <div class="layout">
 <aside>
 <div class="panel"><h3>MEASUREMENT LIST</h3>
-<div class="meas"><span class="sw" style="background:#3fd4ec"></span><b>Mic 1 — LIVE<small>Measurement • RTA / TF</small></b><input type="checkbox" id="showlive" checked></div>
+<div class="meas"><span class="sw" style="background:#3fd4ec"></span><b>Mic 1 — LIVE<small>Measurement • RTA</small></b><input type="checkbox" id="showlive" checked></div>
 <div class="meas"><span class="sw" style="background:#fb923c"></span><b>Ref — Pink Noise<small>Reference • Generator</small></b><input type="checkbox" id="showref" checked></div>
 <div class="meas"><span class="sw" style="background:#ff6b6b"></span><b>Trace A<small id="capAinfo">Tersimpan • —</small></b><input type="checkbox" id="showA" checked></div>
 <div class="meas"><span class="sw" style="background:#b58cff"></span><b>Trace B<small id="capBinfo">Tersimpan • —</small></b><input type="checkbox" id="showB" checked></div>
@@ -74,8 +76,10 @@ input[type=range]{width:100%;accent-color:#fb923c}
 <div class="panel" style="margin-top:8px"><h3>🔊 REFERENCE GENERATOR</h3>
 <div class="noisebar"><button id="pinkbtn">🩷 PINK</button><button id="whitebtn">🤍 WHITE</button><button id="noiseoff" class="off">■ OFF</button></div>
 <label style="display:block;margin-top:8px;color:#8b95a5;font-size:11px">VOLUME <b id="noisevoltxt" style="color:#fff">30%</b><input type="range" id="noisevol" min="0" max="100" value="30"></label>
-<div style="font-size:11px;color:#8b95a5;line-height:1.5">Pink ON = Transfer Function + Polarity.<br>Pink OFF = RTA doang.</div>
-<button id="finddelay" style="width:100%;margin-top:8px">◎ FIND DELAY</button>
+<div class="lockbox"><b id="locktitle">KURVA BELUM DIKUNCI</b><span id="lockdetail">Pencet KUNCI 0dB pas kurva udah diem, biar ga ngambang.</span></div>
+<button id="lockbtn" style="width:100%;margin-top:6px;padding:10px">🔒 KUNCI 0dB — BIAR GA NGAMBANG</button>
+<div class="kv"><span>Offset 0dB</span><b id="offtxt">— dB</b></div>
+<button id="finddelay" style="width:100%;margin-top:6px">◎ FIND DELAY</button>
 <div class="kv"><span>Delay</span><b id="delaytxt">0.0 ms</b></div>
 <div class="polbadge unknown" id="polbadge"><b id="poltitle">? UNKNOWN</b><span id="poldetail">Hidupkan PINK untuk phase / polarity.</span></div>
 </div>
@@ -85,17 +89,16 @@ input[type=range]{width:100%;accent-color:#fb923c}
 <div class="panel">
 <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
 <div class="tabs"><button id="tabTF">TRANSFER FUNCTION</button><button id="tabRTA" class="on">RTA</button><button id="tabSPEC">SPECTROGRAPH</button></div>
-<div class="modebar" id="modetxt">MODE: RTA — HIDUPKAN PINK NOISE UNTUK TF + POLARITY</div>
+<div class="modebar" id="modetxt">MAGNITUDE KAYAK AWAL — 1 KURVA, GA NGAMBANG</div>
 </div>
 <div class="ctl">
-<label>FFT<select id="fft"><option value="512">512</option><option value="1024">1024</option><option value="2048">2048</option><option value="4096">4096</option><option value="8192" selected>8192</option><option value="16384">16384</option><option value="32768">32768</option></select></label>
-<label>AVERAGE<select id="average"><option value="1">1</option><option value="4">4</option><option value="8" selected>8</option><option value="16">16</option><option value="32">32</option></select></label>
+<label>FFT<select id="fft"><option value="512">512</option><option value="1024">1024</option><option value="2048">2048</option><option value="4096">4096</option><option value="8192">8192</option><option value="16384" selected>16384 — STABIL</option><option value="32768">32768</option></select></label>
+<label>AVERAGE<select id="average"><option value="1">1 — CEPET</option><option value="4">4</option><option value="8">8</option><option value="16" selected>16 — STABIL</option><option value="32">32</option></select></label>
 <label>SMOOTHING<select id="detail"><option value="0">RAW</option><option value="12">1/12 OKT</option><option value="6" selected>1/6 OKT</option><option value="3">1/3 OKT</option></select></label>
-<label>SMOOTH<select id="smooth"><option value="0">OFF</option><option value=".55">LOW</option><option value=".8" selected>MED</option><option value=".93">HIGH</option></select></label>
+<label>SMOOTH<select id="smooth"><option value="0">OFF</option><option value=".55">LOW</option><option value=".8" selected>MED</option><option value=".93">HIGH — PALING DIEM</option></select></label>
 <label>RANGE<select id="range"><option value="60">60</option><option value="90" selected>90</option><option value="120">120</option></select></label>
-<label>COH. MIN<select id="cohmin"><option value="0">0.00</option><option value="0.5" selected>0.50</option><option value="0.8">0.80</option></select></label>
 </div>
-<div class="graphtitle"><b>MAGNITUDE — TRANSFER / RTA</b><span>20 Hz — 20 kHz • dBFS rel.</span></div>
+<div class="graphtitle"><b>MAGNITUDE — RTA • 20 Hz — 20 kHz</b><span>Biru = LIVE • Kuning = PEAK HOLD • Tengah diem kalo dikunci</span></div>
 <canvas id="mag" width="1200" height="300"></canvas>
 <canvas id="freqscale" width="1200" height="40"></canvas>
 <div class="graphtitle"><b>PHASE — 0° = NORMAL, ±180° = TERBALIK</b><span id="phasesub">Pink OFF</span></div>
@@ -111,25 +114,28 @@ input[type=range]{width:100%;accent-color:#fb923c}
 <div class="spl"><div class="splbar" id="splbar" style="height:2%"></div><div class="splnum"><b id="spldb">—</b><span>dBFS • PEAK</span></div></div>
 <div class="kv"><span>Peak Freq</span><b id="peakfreq">— Hz</b></div>
 <div class="kv"><span>RMS</span><b id="rmsdb">— dBFS</b></div>
-<div class="kv"><span>Coherence avg</span><b id="cohtxt">—</b></div>
+<div class="kv"><span>Band 20 Hz</span><b id="band20">— dB</b></div>
+<div class="kv"><span>Band 1kHz</span><b id="band1k">— dB</b></div>
+<div class="kv"><span>Band 10kHz</span><b id="band10k">— dB</b></div>
+<div class="kv"><span>Band 20kHz</span><b id="band20k">— dB</b></div>
 <div class="kv"><span>Best delay</span><b id="bestdelay">— ms</b></div>
 <div class="kv"><span>Polarity</span><b id="polmini">—</b></div>
 <div class="kv"><span>Sample Rate</span><b id="samplerate">48000 Hz</b></div>
-<div class="kv"><span>Bin Width</span><b id="binwidth">5.9 Hz</b></div>
+<div class="kv"><span>Bin Width</span><b id="binwidth">2.9 Hz</b></div>
 <div class="kv"><span>Cursor</span><b id="cursorfreq">14.99 kHz</b></div>
 </div>
-<div class="panel" style="margin-top:8px"><h3>CARA CEK POLARITY</h3>
+<div class="panel" style="margin-top:8px"><h3>BIAR MAGNITUDE GA NGAMBANG</h3>
 <div style="font-size:11px;color:#8b95a5;line-height:1.6">
 1. START + PINK ON, volume 30%<br>
-2. Pink lewat kabel AUX ke speaker, HP 1 meter di depan mic<br>
-3. Lihat PHASE: deket 0° = NORMAL, deket ±180° = TERBALIK<br>
-4. Coherence harus di atas 0.50, kalo di bawah itu jangan percaya phase nya<br>
-5. Kalo pink OFF, phase nya kosong, itu normal
+2. Tunggu 8 detik, jangan gerakin HP<br>
+3. Pencet <b style="color:#fff">KUNCI 0dB</b>, kurva nya diem di tengah<br>
+4. Baru CAPTURE, baru STOP<br>
+5. Kalo mau liat bentuk nya doang, kunci nya jangan dibuka lagi
 </div></div>
 </aside>
 </div>
 
-<div class="statusbar"><span>● <b id="status">STOPPED • FROZEN</b></span><span>Input: <b>Mic 1</b></span><span>Reference: <b id="refstat">OFF</b></span><span>FFT: <b id="fftstat">8192</b></span><span>Delay: <b id="delaystat">0.0 ms</b></span><span>Sync: <b>1 CONTEXT • 48000 Hz</b></span><span>Polarity: <b id="polstat">—</b></span><span style="margin-left:auto">SMART LIVE • dBFS rel, bukan SPL terkalibrasi</span></div>
+<div class="statusbar"><span>● <b id="status">STOPPED • FROZEN</b></span><span>Input: <b>Mic 1</b></span><span>Reference: <b id="refstat">OFF</b></span><span>FFT: <b id="fftstat">16384</b></span><span>Delay: <b id="delaystat">0.0 ms</b></span><span>Sync: <b>1 CONTEXT • 48000 Hz</b></span><span>Polarity: <b id="polstat">—</b></span><span style="margin-left:auto">SMART LIVE • Magnitude kayak awal, 1 kurva</span></div>
 
 <script>
 const $=id=>document.getElementById(id);
@@ -139,8 +145,8 @@ const SEGS=[[20,1000,.26],[1000,3000,.14],[3000,7000,.16],[7000,10000,.10],[1000
 const FREQS=[20,25,31.5,40,50,63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1500,1600,2000,2500,3000,3150,4000,5000,6300,7000,8000,10000,12500,15000,16000,20000];
 const MAJORS=new Set([20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000]);
 const db2p=v=>Math.pow(10,Math.max(-120,v)/10), p2db=p=>10*Math.log10(Math.max(1e-12,p));
-const S={ctx:null,stream:null,src:null,an:null,tfAn:null,refAn:null,raf:0,fft:8192,running:false,mode:'RTA',noise:null,noiseGain:null,noiseType:null,
-  sm:null,hold:null,live:[],holdVals:[],phase:[],coh:[],caps:[null,null,null],slot:2,cursor:14990};
+const S={ctx:null,stream:null,src:null,an:null,tfAn:null,refAn:null,raf:0,fft:16384,running:false,noise:null,noiseGain:null,noiseType:null,
+  sm:null,hold:null,live:[],holdVals:[],phase:[],caps:[null,null,null],slot:2,cursor:14990,offset:null,locked:false};
 function xfreq(f,w){f=Math.max(MINF,Math.min(MAXF,f));let s=0;for(const[a,b,pw]of SEGS){if(f<=b||a===15000)return(s+Math.log(f/a)/Math.log(b/a)*pw)*w;s+=pw}return w}
 function freqAtX(x,w){const r=Math.max(0,Math.min(1,x/w));let s=0;for(const[a,b,pw]of SEGS){if(r<=s+pw||a===15000)return a*Math.exp(((r-s)/pw)*Math.log(b/a));s+=pw}return MAXF}
 function fmtF(f){return f>=1000?(f/1000).toFixed(2).replace(/0+$/,'').replace(/\.$/,'')+' kHz':Math.round(f)+' Hz'}
@@ -159,19 +165,42 @@ async function startNoise(type){
   S.refAn=c.createAnalyser();S.refAn.fftSize=S.fft;S.refAn.smoothingTimeConstant=0;
   S.noise.connect(S.noiseGain);S.noiseGain.connect(c.destination);S.noiseGain.connect(S.refAn);S.noise.start();
   S.noiseType=type;$('refstat').textContent=type.toUpperCase()+' NOISE';$('pinkbtn').classList.toggle('on',type==='pink');$('whitebtn').classList.toggle('on',type==='white');
-  $('modetxt').textContent='MODE: TRANSFER FUNCTION — PINK ON, PHASE + POLARITY AKTIF';$('phasesub').textContent='Pink ON • Transfer Function';S.sm=null;S.hold=null;
+  $('phasesub').textContent='Pink ON • Phase aktif';S.sm=null;S.hold=null;S.offset=null;S.locked=false;updateLockUI();
 }
 function stopNoise(){
   if(S.noise){try{S.noise.stop()}catch(e){}try{S.noise.disconnect()}catch(e){}S.noise=null}
   if(S.noiseGain){try{S.noiseGain.disconnect()}catch(e){}S.noiseGain=null}
   S.refAn=null;S.noiseType=null;$('refstat').textContent='OFF';$('pinkbtn').classList.remove('on');$('whitebtn').classList.remove('on');
-  $('modetxt').textContent='MODE: RTA — HIDUPKAN PINK NOISE UNTUK TF + POLARITY';$('phasesub').textContent='Pink OFF';S.phase=[];S.coh=[];
-  setPol('unknown','Hidupkan PINK untuk phase / polarity.');
+  $('phasesub').textContent='Pink OFF';S.phase=[];setPol('unknown','Hidupkan PINK untuk phase / polarity.');
 }
 $('pinkbtn').onclick=()=>S.noiseType==='pink'?stopNoise():startNoise('pink');
 $('whitebtn').onclick=()=>S.noiseType==='white'?stopNoise():startNoise('white');
 $('noiseoff').onclick=stopNoise;
 $('noisevol').oninput=e=>{$('noisevoltxt').textContent=e.target.value+'%';if(S.noiseGain&&S.ctx)S.noiseGain.gain.setTargetAtTime((e.target.value/100)*0.5,S.ctx.currentTime,.02)};
+function updateLockUI(){
+  $('lockbtn').textContent=S.locked?'🔓 BUKA KUNCI 0dB':'🔒 KUNCI 0dB — BIAR GA NGAMBANG';
+  $('lockbtn').classList.toggle('on',S.locked);
+  $('locktitle').textContent=S.locked?'✓ KURVA DIKUNCI DI 0dB':'KURVA BELUM DIKUNCI';
+  $('lockdetail').textContent=S.locked?'Tengah nya diem. Bentuk nya doang yang gerak.':'Pencet KUNCI 0dB pas kurva udah diem, biar ga ngambang.';
+  $('offtxt').textContent=S.offset===null?'— dB':S.offset.toFixed(1)+' dB';
+}
+$('lockbtn').onclick=()=>{
+  if(!S.running)return alert('START + PINK dulu, tunggu 8 detik.');
+  if(!S.locked){S.locked=true}else{S.locked=false;S.offset=null}
+  updateLockUI();drawAll();
+};
+/* SATU-SATUNYA koreksi magnitude: pink slope + offset kunci. Ga ada TF, ga ada coherence. */
+function correctMag(dense){
+  if(!dense.length)return dense;
+  // pink slope: +10*log10(f/1000) biar pink yang turun jadi datar. White ga dikoreksi.
+  let out=dense;
+  if(S.noiseType==='pink')out=dense.map(o=>({...o,v:o.v+10*Math.log10(o.f/1000)}));
+  const mid=out.filter(o=>o.f>=500&&o.f<=2000);if(!mid.length)return out;
+  const target=p2db(mid.reduce((s,o)=>s+db2p(o.v),0)/mid.length);
+  if(S.offset===null)S.offset=target;
+  else if(!S.locked)S.offset=S.offset*0.97+target*0.03; // pelan banget, biar ga ngambang
+  return out.map(o=>({...o,v:o.v-S.offset}));
+}
 function findLag(){
   if(!S.tfAn||!S.refAn||!S.ctx)return null;
   const m=new Float32Array(BIG),r=new Float32Array(BIG);S.tfAn.getFloatTimeDomainData(m);S.refAn.getFloatTimeDomainData(r);
@@ -188,8 +217,8 @@ function drawScale(){
   FREQS.forEach(f=>{const x=xfreq(f,W),maj=MAJORS.has(f);c.strokeStyle=maj?'#7ee0ad':'#3a4452';c.lineWidth=maj?2:1;c.beginPath();c.moveTo(x,0);c.lineTo(x,maj?11:7);c.stroke();c.textAlign=f===20000?'right':f===20?'left':'center';if(maj){c.fillStyle='#fff';c.font='bold 14px Arial';c.fillText(f===20?'20':f===20000?'20k':fmtLab(f),f===20000?W-4:f===20?4:x,30)}else{c.fillStyle='#8b95a5';c.font='11px Arial';c.fillText(fmtLab(f),x,24)}});
   const cx=xfreq(S.cursor,W);c.strokeStyle='#fff';c.lineWidth=3;c.beginPath();c.moveTo(cx,0);c.lineTo(cx,H);c.stroke();c.fillStyle='#3fd4ec';c.beginPath();c.moveTo(cx-7,0);c.lineTo(cx+7,0);c.lineTo(cx,9);c.closePath();c.fill();c.textAlign='left';
 }
-function densify(freqs,pArr,phArr,cohArr){
-  const W=mag.width,N=301,out=new Array(N),ph=new Array(N),co=new Array(N);
+function densify(freqs,pArr,phArr){
+  const W=mag.width,N=301,out=new Array(N),ph=new Array(N);
   const logF=new Float64Array(freqs.length),pref=new Float64Array(freqs.length+1);
   for(let i=0;i<freqs.length;i++){logF[i]=Math.log(freqs[i].f);pref[i+1]=pref[i]+pArr[i]}
   const perOct=+$('detail').value||0,half=perOct?1/(2*perOct):0;
@@ -198,17 +227,20 @@ function densify(freqs,pArr,phArr,cohArr){
     if(!perOct){const idx=loIdx(lf);if(idx<=0)v=pArr[0];else if(idx>=freqs.length)v=pArr[freqs.length-1];else{const t=(lf-logF[idx-1])/(logF[idx]-logF[idx-1]||1);v=pArr[idx-1]+(pArr[idx]-pArr[idx-1])*t}}
     else{const lo=loIdx(lf-half*Math.LN2),hi=loIdx(lf+half*Math.LN2);v=(pref[hi]-pref[lo])/Math.max(1,hi-lo)}
     out[k]={f,v:p2db(v),x};
-    if(phArr){const idx=Math.max(0,Math.min(phArr.length-1,loIdx(lf)));ph[k]={f,v:phArr[idx],x};co[k]={f,v:cohArr?cohArr[idx]:0,x}}
+    if(phArr){const idx=Math.max(0,Math.min(phArr.length-1,loIdx(lf)));ph[k]={f,v:phArr[idx],x}}
   }
-  return{mag:out,phase:ph,coh:co};
+  return{mag:out,phase:ph};
 }
 function pointOnLine(data,f){if(!data.length)return null;const cx=xfreq(f,mag.width);if(cx<=data[0].x)return data[0];if(cx>=data[data.length-1].x)return data[data.length-1];let lo=0,hi=data.length-1;while(hi-lo>1){const m=(lo+hi)>>1;if(data[m].x<=cx)lo=m;else hi=m}const a=data[lo],b=data[hi],t=b.x===a.x?0:(cx-a.x)/(b.x-a.x);return{f,v:a.v+(b.v-a.v)*t,x:cx}}
 function gridMag(c,w,h,range){
   c.clearRect(0,0,w,h);c.fillStyle='#05070a';c.fillRect(0,0,w,h);c.strokeStyle='#232a35';c.lineWidth=1;c.fillStyle='#8b95a5';c.font='12px Arial';
   FREQS.forEach(f=>{const x=xfreq(f,w);c.strokeStyle=MAJORS.has(f)?'#3a4452':'#232a35';c.beginPath();c.moveTo(x,0);c.lineTo(x,h);c.stroke()});
   c.textAlign='left';for(let d=0;d<=range;d+=10){const y=d/range*h;c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();c.fillText((d===0?'+0':'-'+d)+' dB',4,Math.max(11,y+11))}
+  // garis 0dB ditebelin, biar keliatan patokan nya
+  c.strokeStyle='#5fd68a';c.lineWidth=2;c.beginPath();c.moveTo(0,0);c.lineTo(w,0);c.stroke();c.lineWidth=1;
 }
 function drawTrace(c,data,w,h,range,color,lw){if(!data||!data.length)return;c.beginPath();c.strokeStyle=color;c.lineWidth=lw;for(let i=0;i<data.length;i++){const o=data[i],X=o.x,Y=Math.max(0,Math.min(range,-o.v))/range*h;if(i===0)c.moveTo(X,Y);else c.lineTo(X,Y)}c.stroke()}
+function bandVal(vals,t){if(!vals.length)return null;let best=vals[0],bd=1e9;for(const o of vals){const d=Math.abs(Math.log(o.f/t));if(d<bd){bd=d;best=o}}return best}
 function drawAll(){
   const w=mag.width,h=mag.height,range=+$('range').value;
   gridMag(mg,w,h,range);
@@ -223,12 +255,13 @@ function drawAll(){
     const txt=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB';mg.font='bold 13px Arial';const tw=mg.measureText(txt).width+14;const lx=Math.max(4,Math.min(w-tw-4,cx-tw/2)),ly=Math.max(4,Y-46);
     mg.fillStyle='#000';mg.fillRect(lx,ly,tw,24);mg.strokeStyle='#fff';mg.strokeRect(lx,ly,tw,24);mg.fillStyle='#fff';mg.fillText(txt,lx+7,ly+16);$('cursorread').textContent=txt}
   else $('cursorread').textContent=fmtF(S.cursor)+' • — dB';
+  const setB=(id,f)=>{const b=bandVal(S.live,f);if(b)$(id).textContent=b.v.toFixed(1)+' dB'};
+  setB('band20',20);setB('band1k',1000);setB('band10k',10000);setB('band20k',20000);
   drawScale();
   const pw=phc.width,phH=phc.height,yFor=d=>((180-d)/360)*phH;
   pg.clearRect(0,0,pw,phH);pg.fillStyle='#05070a';pg.fillRect(0,0,pw,phH);pg.strokeStyle='#232a35';pg.lineWidth=1;
   FREQS.forEach(f=>{const x=xfreq(f,pw);pg.beginPath();pg.moveTo(x,0);pg.lineTo(x,phH);pg.stroke()});
   [[180,'±180° TERBALIK','#ff6b6b'],[0,'0° NORMAL','#5fd68a'],[-180,'±180° TERBALIK','#ff6b6b']].forEach(([d,lab,col])=>{const y=yFor(d);pg.strokeStyle=col;pg.beginPath();pg.moveTo(0,y);pg.lineTo(pw,y);pg.stroke();pg.fillStyle=col;pg.font='bold 11px Arial';pg.fillText(lab,4,d===180?12:y+12)});
-  pg.fillStyle='#8b95a5';pg.font='11px Arial';pg.fillText('90°',4,yFor(90)+4);pg.fillText('-90°',4,yFor(-90)+4);
   if(S.phase.length&&S.noiseType){
     pg.beginPath();pg.strokeStyle='#3fd4ec';pg.lineWidth=2.5;
     S.phase.forEach((o,i)=>{const X=o.x,Y=yFor(Math.max(-180,Math.min(180,o.v)));if(i===0)pg.moveTo(X,Y);else pg.lineTo(X,Y)});pg.stroke();
@@ -246,58 +279,52 @@ function drawSpec(raw,n){
   for(let x=0;x<W;x+=2){const f=freqAtX(x,W),bin=Math.max(1,Math.min(n-1,Math.round(f*S.fft/S.ctx.sampleRate))),m=colorFor(raw[bin]||-120);for(let y=0;y<Sz;y++){for(let dx=0;dx<2&&x+dx<W;dx++){const p=(y*W+x+dx)*4;row.data[p]=m[0];row.data[p+1]=m[1];row.data[p+2]=m[2];row.data[p+3]=255}}}
   sg.putImageData(row,0,0);
 }
-function computeTF(){
+function computePhase(){
   const N=S.fft,tdM=new Float32Array(N),tdR=new Float32Array(N);
   S.an.getFloatTimeDomainData(tdM);S.refAn.getFloatTimeDomainData(tdR);
   const reM=Float32Array.from(tdM),imM=new Float32Array(N),reR=Float32Array.from(tdR),imR=new Float32Array(N);
   for(let i=0;i<N;i++){const wnd=.5*(1-Math.cos(2*Math.PI*i/(N-1)));reM[i]*=wnd;reR[i]*=wnd}
   fftCalc(reM,imM);fftCalc(reR,imR);
-  const freqs=[],magP=[],ph=[],coh=[];
+  const freqs=[],ph=[];
   for(let k=1;k<N/2;k++){const f=k*S.ctx.sampleRate/N;if(f<MINF||f>MAXF)continue;
     const mr=reM[k],mi=imM[k],rr=reR[k],ri=imR[k],den=rr*rr+ri*ri;
-    if(den<1e-12){freqs.push({f});magP.push(db2p(-90));ph.push(0);coh.push(0);continue}
+    if(den<1e-12){freqs.push({f});ph.push(0);continue}
     const tr=(mr*rr+mi*ri)/den,ti=(mi*rr-mr*ri)/den;
-    freqs.push({f});magP.push(tr*tr+ti*ti);ph.push(Math.atan2(ti,tr)*180/Math.PI);
-    const sxx=mr*mr+mi*mi,sxy=Math.hypot(mr*rr+mi*ri,mi*rr-mr*ri);
-    coh.push(sxx>0?Math.min(1,(sxy*sxy)/(sxx*den)):0);
+    freqs.push({f});ph.push(Math.atan2(ti,tr)*180/Math.PI);
   }
-  return{freqs,magP,ph,coh};
+  // polarity dari phase 100-1k doang, simpel
+  let ss=0,cc=0,cnt=0;freqs.forEach((o,i)=>{if(o.f>=100&&o.f<=1000){ss+=Math.sin(ph[i]*Math.PI/180);cc+=Math.cos(ph[i]*Math.PI/180);cnt++}});
+  if(cnt>5){const deg=Math.atan2(ss/cnt,cc/cnt)*180/Math.PI,inv=Math.abs(deg)>90;setPol(inv?'inverted':'normal',inv?'Phase '+deg.toFixed(0)+'°, deket ±180°. TERBALIK.':'Phase '+deg.toFixed(0)+'°, deket 0°. NORMAL.')}
+  return{freqs,ph};
 }
 function draw(){
   if(!S.running||!S.an||!S.ctx)return;
   const n=S.an.frequencyBinCount,raw=new Float32Array(n);S.an.getFloatFrequencyData(raw);
-  let peak=-Infinity,peakBin=1,sumP=0,cntP=0;
-  for(let i=1;i<n;i++){const f=i*S.ctx.sampleRate/S.fft;if(f<MINF||f>MAXF)continue;const v=Number.isFinite(raw[i])?raw[i]:-120;if(v>peak){peak=v;peakBin=i}sumP+=db2p(v);cntP++}
+  const freqs=[],pArr=[];let peak=-Infinity,peakBin=1,sumP=0,cntP=0;
+  for(let i=1;i<n;i++){const f=i*S.ctx.sampleRate/S.fft;if(f<MINF||f>MAXF)continue;const v=Number.isFinite(raw[i])?raw[i]:-120;freqs.push({f});pArr.push(db2p(v));if(v>peak){peak=v;peakBin=i}sumP+=db2p(v);cntP++}
+  if(!freqs.length){S.raf=requestAnimationFrame(draw);return}
   let peakFreq=peakBin*S.ctx.sampleRate/S.fft;
   if(peakBin>1&&peakBin<n-1){const a=raw[peakBin-1],b=raw[peakBin],c=raw[peakBin+1],d=a-2*b+c;if(d!==0)peakFreq=(peakBin+.5*(a-c)/d)*S.ctx.sampleRate/S.fft}
-  let freqs,pArr,phArr,cohArr;
-  if(S.noiseType&&S.refAn&&S.mode!=='RTA'){
-    const tf=computeTF();freqs=tf.freqs;phArr=tf.ph;cohArr=tf.coh;
-    const mid=tf.magP.filter((_,i)=>freqs[i].f>=500&&freqs[i].f<=2000);
-    const avgMid=mid.reduce((s,v)=>s+v,0)/Math.max(1,mid.length);
-    pArr=tf.magP.map(v=>v/Math.max(1e-12,avgMid));
-    $('cohtxt').textContent=(cohArr.reduce((s,v)=>s+v,0)/Math.max(1,cohArr.length)).toFixed(2);
-    let ss=0,cc=0,cnt=0;freqs.forEach((o,i)=>{if(o.f>=100&&o.f<=1000&&cohArr[i]>.5){ss+=Math.sin(phArr[i]*Math.PI/180);cc+=Math.cos(phArr[i]*Math.PI/180);cnt++}});
-    if(cnt>5){const deg=Math.atan2(ss/cnt,cc/cnt)*180/Math.PI,inv=Math.abs(deg)>90;setPol(inv?'inverted':'normal',inv?'Phase rata-rata '+deg.toFixed(0)+'°, deket ±180°. TERBALIK.':'Phase rata-rata '+deg.toFixed(0)+'°, deket 0°. NORMAL.')}
-  }else{
-    freqs=[];pArr=[];phArr=null;cohArr=null;
-    for(let i=1;i<n;i++){const f=i*S.ctx.sampleRate/S.fft;if(f<MINF||f>MAXF)continue;freqs.push({f});pArr.push(db2p(Number.isFinite(raw[i])?raw[i]:-120))}
-    $('cohtxt').textContent='—';
-  }
   const alpha=1/Math.max(1,+$('average').value),sm=+$('smooth').value;
   if(!S.sm||S.sm.length!==pArr.length){S.sm=Float64Array.from(pArr);S.hold=Float64Array.from(pArr)}
-  else{for(let i=0;i<pArr.length;i++){const avg=S.sm[i]*(1-alpha)+pArr[i]*alpha;S.sm[i]=sm*S.sm[i]+(1-sm)*avg;S.hold[i]=Math.max(avg,S.hold[i]*.94)}}
-  const den=densify(freqs,Array.from(S.sm),phArr,cohArr);
-  S.live=den.mag;S.phase=phArr?den.phase:[];S.coh=cohArr?den.coh:[];
-  S.holdVals=densify(freqs,Array.from(S.hold)).mag;
+  else{for(let i=0;i<pArr.length;i++){const avg=S.sm[i]*(1-alpha)+pArr[i]*alpha;S.sm[i]=sm*S.sm[i]+(1-sm)*avg;S.hold[i]=Math.max(avg,S.hold[i]*0.985)}}
+  let phArr=null;
+  if(S.noiseType&&S.refAn){const r=computePhase();phArr=r.ph}
+  const den=densify(freqs,Array.from(S.sm),phArr);
+  S.live=correctMag(den.mag);
+  S.phase=phArr?den.phase:[];
+  // peak hold pake offset yang SAMA, biar ga pisah sama kurva biru
+  const holdDense=densify(freqs,Array.from(S.hold)).mag;
+  S.holdVals=S.offset===null?holdDense:holdDense.map(o=>({...o,v:o.v+(S.noiseType==='pink'?10*Math.log10(o.f/1000):0)-S.offset}));
   drawAll();
   const pct=Math.max(0,Math.min(100,(peak+90)/90*100));$('splbar').style.height=pct+'%';$('spldb').textContent=peak.toFixed(1);
   $('peakfreq').textContent=Math.round(peakFreq)+' Hz';$('rmsdb').textContent=p2db(cntP?sumP/cntP:1e-12).toFixed(1)+' dBFS';
   drawSpec(raw,n);
   S.raf=requestAnimationFrame(draw);
 }
-function setMode(m){S.mode=m;$('tabTF').classList.toggle('on',m==='TF');$('tabRTA').classList.toggle('on',m==='RTA');$('tabSPEC').classList.toggle('on',m==='SPEC');if(m==='SPEC')sp.scrollIntoView({behavior:'smooth'});S.sm=null;S.hold=null}
-$('tabTF').onclick=()=>setMode('TF');$('tabRTA').onclick=()=>setMode('RTA');$('tabSPEC').onclick=()=>setMode('SPEC');
+$('tabTF').onclick=()=>{$('tabTF').classList.add('on');$('tabRTA').classList.remove('on');$('modetxt').textContent='PHASE AKTIF — LIHAT GRAFIK BAWAH'};
+$('tabRTA').onclick=()=>{$('tabRTA').classList.add('on');$('tabTF').classList.remove('on');$('modetxt').textContent='MAGNITUDE KAYAK AWAL — 1 KURVA, GA NGAMBANG'};
+$('tabSPEC').onclick=()=>{sp.scrollIntoView({behavior:'smooth'})};
 $('start').onclick=async()=>{
   try{
     S.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
@@ -307,7 +334,7 @@ $('start').onclick=async()=>{
     S.tfAn=S.ctx.createAnalyser();S.tfAn.fftSize=BIG;S.tfAn.smoothingTimeConstant=0;
     S.src.connect(S.an);S.src.connect(S.tfAn);
     if(S.refAn)S.refAn.fftSize=S.fft;
-    S.sm=null;S.hold=null;S.running=true;
+    S.sm=null;S.hold=null;S.offset=null;S.locked=false;updateLockUI();S.running=true;
     sg.fillStyle='#141030';sg.fillRect(0,0,sp.width,sp.height);
     $('start').disabled=true;$('stop').disabled=false;$('status').textContent='LIVE';$('liveind').textContent='● LIVE';
     $('samplerate').textContent=S.ctx.sampleRate+' Hz';$('binwidth').textContent=(S.ctx.sampleRate/S.fft).toFixed(1)+' Hz';$('fftstat').textContent=S.fft;
@@ -315,7 +342,7 @@ $('start').onclick=async()=>{
   }catch(e){if(S.stream)S.stream.getTracks().forEach(t=>t.stop());$('status').textContent='MIC ERROR';alert('Mic ga bisa dibuka: '+e.message)}
 };
 $('stop').onclick=()=>{S.running=false;cancelAnimationFrame(S.raf);if(S.stream)S.stream.getTracks().forEach(t=>t.stop());S.stream=null;S.an=null;S.tfAn=null;$('start').disabled=false;$('stop').disabled=true;$('status').textContent='STOPPED • FROZEN';$('liveind').textContent='● STANDBY';drawAll()};
-$('fft').onchange=()=>{if(S.an&&S.ctx){S.fft=+$('fft').value;S.an.fftSize=S.fft;if(S.refAn)S.refAn.fftSize=S.fft;S.sm=null;S.hold=null;$('binwidth').textContent=(S.ctx.sampleRate/S.fft).toFixed(1)+' Hz';$('fftstat').textContent=S.fft}};
+$('fft').onchange=()=>{if(S.an&&S.ctx){S.fft=+$('fft').value;S.an.fftSize=S.fft;if(S.refAn)S.refAn.fftSize=S.fft;S.sm=null;S.hold=null;S.offset=null;$('binwidth').textContent=(S.ctx.sampleRate/S.fft).toFixed(1)+' Hz';$('fftstat').textContent=S.fft}};
 $('detail').onchange=drawAll;
 function moveFromX(x,el){const r=el.getBoundingClientRect();const px=Math.max(0,Math.min(mag.width,(x-r.left)/r.width*mag.width));S.cursor=freqAtX(px,mag.width);drawAll()}
 let drag=false;
@@ -327,6 +354,7 @@ $('capture').onclick=()=>{if(!S.live.length)return alert('START dulu.');S.caps[S
 $('targetslot').onchange=e=>S.slot=+e.target.value;
 $('landscape').onclick=async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock('landscape')}catch(e){}};
 ['showlive','showA','showB','showC'].forEach(id=>$(id).addEventListener('change',drawAll));
+updateLockUI();
 drawAll();
 </script>
 </body>
