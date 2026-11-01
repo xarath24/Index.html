@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>SMART LIVE — TANPA PINK NOISE</title>
+<title>SMART LIVE — TANPA PANEL REFERENCE</title>
 <style>
 :root{--bg:#0a0c10;--panel:#14181f;--panel2:#1a1f28;--line:#2b323e;--txt:#e8eaf0;--mut:#8b95a5;--cyan:#3fd4ec;--gold:#ffd16a;--red:#ff6b6b;--purple:#b58cff;--green:#5fd68a}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:12px system-ui,Arial}
@@ -14,7 +14,6 @@ button{background:#222b37;color:var(--txt);border:1px solid #4a5566;border-radiu
 button.go{background:#087e91;border-color:#13b5c9}button.on{background:#c2410c!important;border-color:#fb923c!important;color:#fff}
 button:disabled{opacity:.45}
 select{background:#222b37;color:var(--txt);border:1px solid #4a5566;border-radius:6px;padding:6px}
-input[type=number]{background:#090d12;color:#fff;border:1px solid #4a5566;border-radius:6px;padding:8px;width:100%;text-align:center;font-size:16px;font-weight:700}
 .layout{display:grid;grid-template-columns:218px 1fr 178px;gap:8px;padding:8px;max-width:1500px;margin:auto}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px;overflow:hidden}
 h3{margin:0 0 8px;font-size:11px;letter-spacing:1px;color:var(--mut)}
@@ -36,10 +35,6 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
 .legend{display:flex;gap:10px;flex-wrap:wrap;color:var(--mut);font-size:11px;margin-top:7px}.legend i{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:4px}
 .statusbar{background:#10141a;border-top:1px solid var(--line);padding:7px 12px;display:flex;gap:16px;flex-wrap:wrap;color:var(--mut);font-size:11px;position:sticky;bottom:0}
 .statusbar b{color:#7ee0ad}
-.finebtns{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:6px}.finebtns button{padding:8px 2px}
-.delaybox{border:2px solid #3fd4ec;border-radius:8px;padding:10px;text-align:center;background:#082f3a;margin:8px 0}
-.delaybox b{font-size:26px;display:block}
-.delaybox span{font-size:11px;color:#cbd5e1;line-height:1.5;display:block;margin-top:3px}
 .polbadge{border-radius:8px;padding:12px;text-align:center;border:2px solid var(--line);background:#090d12;margin:8px 0}
 .polbadge b{font-size:22px;display:block}
 .polbadge span{font-size:11px;color:var(--mut);line-height:1.5;display:block;margin-top:4px}
@@ -50,7 +45,7 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
 </style></head>
 <body>
 <div class="topbar">
-<div class="logo"><b>SMART</b> LIVE <span>MIC SAJA • TANPA PINK NOISE</span></div>
+<div class="logo"><b>SMART</b> LIVE <span>MIC SAJA • PANEL REFERENCE DIHAPUS</span></div>
 <div class="topbtns"><button id="start" class="go">▶ START</button><button id="stop" disabled>■ STOP</button><button id="landscape">↔ FULLSCREEN</button><b id="liveind">● STANDBY</b></div>
 </div>
 <div class="layout">
@@ -62,19 +57,7 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
 <div class="meas"><span class="sw" style="background:var(--green)"></span><b>Trace C<small id="capCinfo">Empty</small></b><input type="checkbox" id="showC" checked></div>
 <button class="go" id="capture" style="width:100%;padding:10px">📸 CAPTURE LIVE → SLOT</button>
 <select id="targetslot" style="width:100%;margin-top:6px"><option value="0">Slot A</option><option value="1">Slot B</option><option value="2">Slot C</option></select>
-<div style="font-size:11px;color:var(--mut);line-height:1.5;margin-top:8px">Sumber suara dari luar: pink dari laptop / speaker lain. HP ini cuma ngukur, ga bunyiin pink lagi.</div>
-</div>
-<div class="panel" style="margin-top:8px"><h3>⏱ DELAY — CATATAN MANUAL (ms)</h3>
-<div class="delaybox"><b id="delaybig">0.0 ms</b><span id="delaydetail">Catatan delay dari alat ukur lain / laptop. 1ms = 34.3cm.</span></div>
-<label style="font-size:11px;color:var(--mut)">KETIK DELAY (ms)<input type="number" id="delayinput" min="0" max="300" step="0.1" value="0"></label>
-<button id="applydelay" class="go" style="width:100%;padding:10px;margin-top:6px">✓ PAKAI DELAY INI</button>
-<div class="finebtns">
-<button data-step="-10">-10</button><button data-step="-1">-1</button><button data-step="-0.1">-0.1</button>
-<button data-step="0.1">+0.1</button><button data-step="1">+1</button><button data-step="10">+10</button>
-</div>
-<input type="range" id="delayms" min="0" max="300" step="0.1" value="0" style="width:100%;accent-color:var(--cyan);margin-top:8px">
-<div class="kv"><span>Delay</span><b id="delaytxt">0.0 ms</b></div>
-<div class="kv"><span>Jarak suara</span><b id="delaydist">— m</b></div>
+<div style="font-size:11px;color:var(--mut);line-height:1.5;margin-top:8px">Sumber suara dari luar: pink / musik dari laptop / speaker lain. HP ini cuma ngukur, ga bunyiin apa-apa lagi.</div>
 </div>
 <div class="panel" style="margin-top:8px"><h3>⚡ POLARITY — TES KLIK</h3>
 <div class="polbadge unknown" id="polbadge"><b id="poltitle">? UNKNOWN</b><span id="poldetail">Pencet TES KLIK di bawah. Ini klik pendek, bukan pink noise.</span></div>
@@ -110,15 +93,14 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
 <div class="kv"><span>Band 1kHz</span><b id="band1k">— dB</b></div>
 <div class="kv"><span>Band 10kHz</span><b id="band10k">— dB</b></div>
 <div class="kv"><span>Band 16kHz</span><b id="band16k">— dB</b></div>
-<div class="kv"><span>Delay catatan</span><b id="bestdelay">0.0 ms</b></div>
 <div class="kv"><span>Polarity</span><b id="polmini">—</b></div>
 <div class="kv"><span>Sample Rate</span><b id="samplerate">—</b></div>
 <div class="kv"><span>Bin Width</span><b id="binwidth">— Hz</b></div>
 <div class="kv"><span>Cursor</span><b id="cursorfreq">—</b></div>
 </div>
-<div class="panel" style="margin-top:8px"><h3>CARA PAKAI — TANPA PINK</h3>
+<div class="panel" style="margin-top:8px"><h3>CARA PAKAI</h3>
 <div style="font-size:11px;color:var(--mut);line-height:1.6">
-1. Bunyiin pink / musik dari laptop / speaker luar<br>
+1. Bunyiin suara dari laptop / speaker luar<br>
 2. START di HP ini, taruh HP di meja<br>
 3. Tunggu 8 detik, CAPTURE, STOP<br>
 4. Geser cursor, baca dBFS nya<br>
@@ -126,7 +108,7 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
 </div></div>
 </aside>
 </div>
-<div class="statusbar"><span>● <b id="status">STANDBY</b></span><span>Mode: <b>MIC SAJA • TANPA PINK</b></span><span>FFT: <b id="fftstat">16384</b></span><span>Delay: <b id="delaystat">0.0 ms</b></span><span>Polarity: <b id="polstat">—</b></span></div>
+<div class="statusbar"><span>● <b id="status">STANDBY</b></span><span>Mode: <b>MIC SAJA • TANPA REFERENCE</b></span><span>FFT: <b id="fftstat">16384</b></span><span>Polarity: <b id="polstat">—</b></span></div>
 <script>
 const $=id=>document.getElementById(id);
 const mag=$('mag'),mg=mag.getContext('2d'),phc=$('phase'),pg=phc.getContext('2d'),sp=$('spec'),sg=sp.getContext('2d');
@@ -134,7 +116,7 @@ let ctx=null,stream=null,an=null,tfAn=null,src=null,raf=0,fft=16384,running=fals
 let smP=[],holdP=[],avgFramesP=[],currentVals=[],holdVals=[];
 let captures=[null,null,null],selectedSlot=0,cursorFreq=4720;
 let clickWave=null,clickResult=null;
-const minF=20,maxF=20000,PLOTB=34,BIG_N=32768,MAX_DELAY_MS=300;
+const minF=20,maxF=20000,PLOTB=34,BIG_N=32768;
 const SEGS=[[20,1000,.26],[1000,3000,.14],[3000,7000,.16],[7000,10000,.10],[10000,15000,.08],[15000,20000,.26]];
 const db2p=v=>Math.pow(10,Math.max(-120,v)/10), p2db=p=>10*Math.log10(Math.max(1e-12,p));
 async function ensureCtx(){if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)({latencyHint:'interactive',sampleRate:48000});if(ctx.state==='suspended')await ctx.resume();return ctx}
@@ -142,19 +124,6 @@ function xfreq(f,w){f=Math.max(minF,Math.min(maxF,f));let s=0;for(const[a,b,pw]o
 function freqAtX(x,w){const r=Math.max(0,Math.min(1,x/w));let s=0;for(const[a,b,pw]of SEGS){if(r<=s+pw||a===15000)return a*Math.exp(((r-s)/pw)*Math.log(b/a));s+=pw}return maxF}
 function fmtF(f){return f>=1000?(f/1000).toFixed(2)+' kHz':Math.round(f)+' Hz'}
 function sliderForFreq(f){let lo=0,hi=mag.width;for(let i=0;i<24;i++){const m=(lo+hi)/2;if(freqAtX(m,mag.width)<f)lo=m;else hi=m}return Math.round(lo/mag.width*1000)}
-/* ---- DELAY MANUAL SAJA, tanpa ukur pink ---- */
-function setDelayMs(ms){
-  ms=Math.max(0,Math.min(MAX_DELAY_MS,Number(ms)||0));
-  $('delayms').value=ms.toFixed(1);$('delayinput').value=ms.toFixed(1);
-  $('delaytxt').textContent=ms.toFixed(1)+' ms';$('delaystat').textContent=ms.toFixed(1)+' ms';$('delaybig').textContent=ms.toFixed(1)+' ms';$('bestdelay').textContent=ms.toFixed(1)+' ms';
-  const dist=ms/1000*343;$('delaydist').textContent=dist.toFixed(2)+' m / '+(dist*100).toFixed(1)+' cm';
-  $('delaydetail').textContent='Delay '+ms.toFixed(1)+' ms = '+dist.toFixed(2)+' m • 1ms = 34.3cm';
-}
-$('applydelay').onclick=()=>{const v=parseFloat($('delayinput').value);if(isNaN(v))return alert('Ketik angka ms nya dulu.');setDelayMs(v)};
-$('delayms').oninput=e=>setDelayMs(+e.target.value);
-$('delayinput').onchange=e=>{const v=parseFloat(e.target.value);if(!isNaN(v))setDelayMs(v)};
-document.querySelectorAll('.finebtns button').forEach(b=>b.onclick=()=>setDelayMs((parseFloat($('delayinput').value)||0)+parseFloat(b.dataset.step)));
-/* ---- POLARITY KLIK ---- */
 function setPolBadge(state,detail,first){
   const b=$('polbadge');b.className='polbadge '+state;
   $('poltitle').textContent=state==='normal'?'✓ NORMAL':state==='inverted'?'✕ TERBALIK':'? UNKNOWN';
@@ -198,7 +167,6 @@ async function runClickTests(times){
 }
 $('clickpol').onclick=()=>runClickTests(1);
 $('clickpol3').onclick=()=>runClickTests(3);
-/* ---- GAMBAR: dBFS mentah, tanpa koreksi ---- */
 function powerAtLog(freqs,pArr,f){
   if(!freqs.length)return null;if(f<=freqs[0].f)return pArr[0];if(f>=freqs[freqs.length-1].f)return pArr[pArr.length-1];
   let lo=0,hi=freqs.length-1;while(hi-lo>1){const m=(lo+hi)>>1;if(freqs[m].f<=f)lo=m;else hi=m}
