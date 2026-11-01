@@ -55,7 +55,7 @@ body.landscape-mode .layout{max-width:none}
 </style></head>
 <body>
 <div class="topbar">
-<div class="logo"><b>SMART</b> LIVE <span>HP LANGSUNG • TENTUKAN DELAY ms</span></div>
+<div class="logo"><b>SMART</b> LIVE <span>HP LANGSUNG • FFT 512 - 32768</span></div>
 <nav><span><b>Measurement</b></span><span>Config</span><span>View</span><span>Trace</span><span>Delay</span><span>Polarity</span></nav>
 <div class="topbtns"><button id="start" class="go">▶ START</button><button id="stop" disabled>■ STOP</button><button id="landscape">↔ FULLSCREEN</button><b id="liveind" style="color:#7ee0ad">● STANDBY</b></div>
 </div>
@@ -78,7 +78,6 @@ body.landscape-mode .layout{max-width:none}
 <div class="kv"><span>Offset 0dB</span><b id="offtxt">— dB</b></div>
 <div class="kv"><span>Status kunci</span><b id="lockstat">BELUM DIKUNCI</b></div>
 </div>
-
 <div class="panel" style="margin-top:8px"><h3>⏱ TENTUKAN DELAY — DALAM ms</h3>
 <div class="delaybox"><b id="delaybig">0.0 ms</b><span id="delaydetail">Belum diukur. START + PINK dulu, terus UKUR DELAY 5x.</span></div>
 <label style="font-size:11px;color:var(--mut)">KETIK DELAY (ms)<input type="number" id="delayinput" min="0" max="300" step="0.1" value="0"></label>
@@ -98,9 +97,8 @@ body.landscape-mode .layout{max-width:none}
 <div class="kv"><span>Jarak suara</span><b id="delaydist">— m / — cm</b></div>
 <div class="kv"><span>Metode terakhir</span><b id="delaymethod">—</b></div>
 <div id="delaywarn" class="warnbox">⚠ Korelasi rendah. Pink belum bunyi / mic kejauhan.</div>
-<div style="font-size:11px;color:var(--mut);line-height:1.5;margin-top:6px">HP langsung: 0-5ms itu normal. Speaker luar: delay = jarak / 343. 1ms = 34.3cm.</div>
+<div style="font-size:11px;color:var(--mut);line-height:1.5;margin-top:6px">HP langsung: 0-5ms itu normal. 1ms = 34.3cm.</div>
 </div>
-
 <div class="panel" style="margin-top:8px"><h3>⚡ POLARITY — TES KLIK</h3>
 <div class="polbadge unknown" id="polbadge"><b id="poltitle">? UNKNOWN</b><span id="poldetail">Pencet TES KLIK di bawah.</span></div>
 <button id="clickpol" class="go" style="width:100%;padding:12px">🔊 TES KLIK POLARITY — 1 DETIK</button>
@@ -116,7 +114,7 @@ body.landscape-mode .layout{max-width:none}
 <div class="panel">
 <div class="tabs"><button class="on" id="tabTF">RESPONSE</button><button id="tabRTA">RTA</button><button id="tabSPEC">SPECTROGRAPH</button><b id="modetxt" style="margin-left:auto;color:var(--gold)">PINK + HF • FFT 16384 • AVG 16</b></div>
 <div class="ctl">
-<label>FFT<select id="fft"><option value="4096">4096</option><option value="8192">8192</option><option value="16384" selected>16384</option></select></label>
+<label>FFT<select id="fft"><option value="512">512 — PALING CEPET</option><option value="1024">1024</option><option value="2048">2048</option><option value="4096">4096</option><option value="8192">8192</option><option value="16384" selected>16384 — DETAIL</option><option value="32768">32768</option></select></label>
 <label>AVERAGE<select id="average"><option value="1">1</option><option value="4">4</option><option value="8">8</option><option value="16" selected>16</option><option value="32">32</option></select></label>
 <label>SMOOTHING<select id="detail"><option value="0">RAW</option><option value="12">1/12 OKT</option><option value="6" selected>1/6 OKT</option><option value="3">1/3 OKT</option></select></label>
 <label>SMOOTH<select id="smooth"><option value="0">OFF</option><option value=".55">LOW</option><option value=".8" selected>MED</option><option value=".93">HIGH</option></select></label>
@@ -149,13 +147,12 @@ body.landscape-mode .layout{max-width:none}
 <div class="kv"><span>Bin Width</span><b id="binwidth">— Hz</b></div>
 <div class="kv"><span>Cursor</span><b id="cursorfreq">4.72 kHz</b></div>
 </div>
-<div class="panel" style="margin-top:8px"><h3>CARA NENTUIN DELAY</h3>
+<div class="panel" style="margin-top:8px"><h3>PILIH FFT NYA BUAT APA</h3>
 <div style="font-size:11px;color:var(--mut);line-height:1.6">
-1. START, PINK + HF, tunggu 5 detik<br>
-2. Pencet <b>UKUR DELAY 5x</b>, tunggu, angka gede di atas keisi<br>
-3. Cek jarak nya: kalo HP 1 meter dari speaker, harusnya ~2.9ms. Kalo beda jauh, ukur ulang<br>
-4. Pencet <b>PAKAI DELAY INI</b> kalo mau ngunci, atau biarin AUTO DELAY yang jalan<br>
-5. Kalo speaker nya bluetooth / jauh, pake <b>UKUR DENGAN KLIK</b>, itu jendela nya 1 detik
+<b style="color:#fff">512 / 1024:</b> paling cepet, buat cek live / delay, bass nya kasar<br>
+<b style="color:#fff">4096 / 8192:</b> seimbang, cepet + lumayan detail<br>
+<b style="color:#fff">16384 / 32768:</b> paling detail, buat ukur response beneran, gerak nya agak lambat<br>
+Ganti FFT = average ke-reset, kurva nya mulai dari nol lagi, itu sengaja.
 </div></div>
 </aside>
 </div>
@@ -181,7 +178,6 @@ function sliderForFreq(f){let lo=0,hi=mag.width;for(let i=0;i<24;i++){const mid=
 function syncCursorUI(){ $('cursorslider').value=sliderForFreq(cursorFreq); $('cursorfreq').textContent=fmtF(cursorFreq); }
 function fftCalc(re,im){const n=re.length;for(let i=1,j=0;i<n;i++){let bit=n>>1;for(;j&bit;bit>>=1)j^=bit;j^=bit;if(i<j){let t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t}}for(let len=2;len<=n;len<<=1){const ang=-2*Math.PI/len,wr=Math.cos(ang),wi=Math.sin(ang);for(let i=0;i<n;i+=len){let cwr=1,cwi=0;for(let j=0;j<len/2;j++){const ur=re[i+j],ui=im[i+j],vr=re[i+j+len/2]*cwr-im[i+j+len/2]*cwi,vi=re[i+j+len/2]*cwi+im[i+j+len/2]*cwr;re[i+j]=ur+vr;im[i+j]=ui+vi;re[i+j+len/2]=ur-vr;im[i+j+len/2]=ui-vi;const t=cwr*wr-cwi*wi;cwi=cwr*wi+cwi*wr;cwr=t}}}}
 function ifftCalc(re,im){for(let i=0;i<re.length;i++)im[i]=-im[i];fftCalc(re,im);const n=re.length;for(let i=0;i<n;i++){re[i]/=n;im[i]=-im[i]/n}}
-// ===== TENTUKAN DELAY =====
 function setDelayMs(ms, method){
  ms=Math.max(0,Math.min(MAX_DELAY_MS,ms));
  $('delayms').value=ms.toFixed(1);
@@ -191,7 +187,7 @@ function setDelayMs(ms, method){
  $('delaybig').textContent=ms.toFixed(1)+' ms';
  const dist=ms/1000*SPEED;
  $('delaydist').textContent=dist.toFixed(2)+' m / '+(dist*100).toFixed(1)+' cm';
- $('delaysamp').textContent=Math.round(ms/1000*audio.sampleRate)+' sample';
+ if(audio) $('delaysamp').textContent=Math.round(ms/1000*audio.sampleRate)+' sample';
  if(method) $('delaymethod').textContent=method;
  $('delaydetail').textContent='Delay '+ms.toFixed(1)+' ms = jarak suara '+dist.toFixed(2)+' m ('+(dist*100).toFixed(1)+' cm) • 1ms = 34.3cm';
  lastMeasuredDelay={ms, method:method||''};
@@ -265,7 +261,6 @@ $('clickdelay').onclick=async()=>{
  const btn=$('clickdelay'); btn.disabled=true; btn.textContent='... DENGERIN KLIK 1 DETIK ...';
  const wasPink=noiseType; stopNoise(true);
  await new Promise(r=>setTimeout(r,250));
- // Rekam 1 detik, klik dibunyikan di tengah-tengah jendela rekam, waktu klik dicatat dari ctx.currentTime
  const rec=[]; let recording=true;
  const t0=performance.now(); const totalMs=1100;
  function poll(){
@@ -276,7 +271,6 @@ $('clickdelay').onclick=async()=>{
  }
  poll();
  await new Promise(r=>setTimeout(r,200));
- const clickAtPerf=performance.now();
  const sr=ctx.sampleRate, len=Math.floor(sr*0.012), b=ctx.createBuffer(1,len,sr), d=b.getChannelData(0);
  for(let i=0;i<len;i++){ const wnd=0.5*(1-Math.cos(2*Math.PI*i/(len-1))); d[i]=Math.sin(2*Math.PI*800*i/sr)*wnd*0.95; }
  const srcC=ctx.createBufferSource(); srcC.buffer=b;
@@ -286,17 +280,12 @@ $('clickdelay').onclick=async()=>{
  recording=false;
  btn.disabled=false; btn.textContent='🔊 UKUR DELAY DENGAN KLIK — 1 DETIK';
  let flat=[]; rec.forEach(rr=>{ for(let i=0;i<rr.length;i+=4) flat.push(rr[i]); });
- // flat adalah potongan 4096 sample tiap poll (~85ms), bukan stream kontinu sempurna, jadi delay klik dihitung
- // dari posisi peak pertama yang kuat SETELAH waktu klik, dengan skala waktu kasar per potongan.
- // Hasilnya dipakai sebagai perkiraan kasar + cross-check, bukan pengganti korelasi pink.
- let peak=0, peakIdx=-1; for(let i=0;i<flat.length;i++){ const a=Math.abs(flat[i]); if(a>peak){peak=a;peakIdx=i} }
+ let peak=0; for(let i=0;i<flat.length;i++){ const a=Math.abs(flat[i]); if(a>peak) peak=a; }
  if(peak<0.02){ $('delaydetail').textContent='Klik ga kedengeran. Gedein volume, coba lagi.'; if(wasPink) startNoise(wasPink); return; }
- // Estimasi: tiap potongan 4096/4=1024 titik, tiap titik = 4 sample @48k = 0.083ms, tapi antar poll ada jeda.
- // Yang paling bisa dipercaya: pakai korelasi pink sesudah klik sebagai pembanding, dan tampilkan peak klik sebagai cek.
  const corrRes=findBestLag();
  const msToShow=corrRes?corrRes.ms:0;
  setDelayMs(msToShow,'KLIK + KORELASI PINK');
- $('delaydetail').textContent='Klik kedengeran, peak '+peak.toFixed(3)+'. Delay korelasi pink: '+msToShow.toFixed(1)+'ms. Kalo klik nya telat banget (bluetooth), delay klik nya lebih gede dari ini, itu latency bluetooth nya.';
+ $('delaydetail').textContent='Klik kedengeran, peak '+peak.toFixed(3)+'. Delay korelasi pink: '+msToShow.toFixed(1)+'ms.';
  if(wasPink) startNoise(wasPink);
  drawAll();
 };
