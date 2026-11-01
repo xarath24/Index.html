@@ -22,7 +22,10 @@ select{background:#222b37;color:#e8eaf0;border:1px solid #4a5566;border-radius:6
 .layout{display:grid;grid-template-columns:250px minmax(640px,1fr) 170px;gap:8px;padding:8px;max-width:1600px;margin:auto;min-width:900px;align-items:stretch}
 .leftCol{display:flex;flex-direction:column}
 .panel{background:#14181f;border:1px solid #2b323e;border-radius:8px;padding:9px}
-.capPanel{margin-top:auto}
+.listBox{flex:1;display:flex;flex-direction:column;min-height:0}
+.listBox h3{font-size:14px;color:#fff;letter-spacing:1px}
+.listBox h3 span{color:#8b95a5;font-size:10px;letter-spacing:0;display:block;margin-top:2px}
+#caplist{flex:1;overflow-y:auto;min-height:140px;margin-top:4px}
 h3{margin:0 0 8px;font-size:11px;letter-spacing:1px;color:#8b95a5}
 canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-resize;touch-action:none}
 #mag{aspect-ratio:1200/300}
@@ -37,7 +40,7 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
 .statusbar{background:#10141a;border-top:1px solid #2b323e;padding:7px 12px;display:flex;gap:16px;flex-wrap:wrap;color:#8b95a5;font-size:11px;position:sticky;bottom:0;min-width:900px}
 .statusbar b{color:#7ee0ad}
 input[type=range]{width:100%;accent-color:#3fd4ec}
-.capBtns{display:flex;gap:5px}
+.capBtns{display:flex;gap:5px;margin-top:8px;padding-top:8px;border-top:1px solid #2b323e}
 .capBtns button{padding:6px 4px;font-size:11px;font-weight:700;white-space:nowrap}
 .capBtns .cap{flex:2}
 .capBtns .mini{flex:0 0 auto}
@@ -99,7 +102,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <li>Geser cursor di grafik, liat kotak <b>CURSOR</b> di tengah atas: freq + dB + derajat phase nya.</li>
       <li>Liat kiri grafik phase, tulisan kecil: <b>NORMAL ✓ / TERBALIK ⚠</b>, itu polarity nya.</li>
       <li>Pencet <b>🔍 FIND DELAY</b>, hasil delay nya nongol di atas grafik phase.</li>
-      <li>Pencet <b>📸 CAPTURE</b> kiri bawah, pencet nama capture nya / tombol ✏️, ubah jadi misal <b>box pahratel</b>.</li>
+      <li>Pencet <b>📸 CAPTURE</b> di bawah kotak List, pencet nama capture nya / tombol ✏️, ubah jadi misal <b>box pahratel</b>.</li>
       <li>Pencet <b>■ OFF</b> di kanan bawah, pink mati, phase capture + cursor tetep aktif.</li>
     </ol>
     <p style="color:#8b95a5;font-size:11px;line-height:1.6">Garis ijo tengah = 0 dB / 0°. dBFS rel, bukan SPL terkalibrasi.</p>
@@ -119,15 +122,15 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 
 <div class="layout">
   <aside class="leftCol">
-    <div class="panel capPanel">
-      <h3>📸 CAPTURE — TAK TERBATAS</h3>
+    <div class="panel listBox">
+      <h3>📋 List<span>CAPTURE — TAK TERBATAS • PENCET NAMA BUAT GANTI NAMA</span></h3>
+      <div id="caplist"></div>
       <div class="capBtns">
         <button id="capturebtn" class="cap">📸 CAPTURE</button>
         <button id="clearcap" class="danger mini" title="Hapus semua capture">🗑</button>
         <button id="infobtn" class="mini" title="Cara pakai">ⓘ INFO</button>
       </div>
       <div style="color:#8b95a5;font-size:10px;margin-top:6px">Pencet nama capture / ✏️ buat ganti nama, misal jadi box pahratel.</div>
-      <div id="caplist" style="margin-top:6px"></div>
     </div>
   </aside>
 
