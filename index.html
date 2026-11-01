@@ -3,46 +3,67 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart RTA - Magnitude & Phase</title>
+<title>Smart RTA Pro - Mirip Foto</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
-body{background:#0a0a0a;color:#fff;padding:8px}
-h2{text-align:center;color:#00e5ff;font-size:18px;padding:6px}
-.box{background:#111;border:1px solid #333;border-radius:10px;padding:10px;margin-bottom:8px}
-button{width:100%;padding:14px;font-size:15px;font-weight:bold;border:none;border-radius:8px;margin:4px 0;cursor:pointer}
-.btnMic{background:#00e5ff;color:#000}
-.btnNoise{background:#ff9100;color:#000}
-.btnStop{background:#ff1744;color:#fff}
-canvas{width:100%;height:200px;background:#000;border-radius:8px;display:block}
-label{font-size:12px;color:#aaa}
-input[type=range]{width:100%}
-.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;text-align:center}
-.grid b{font-size:18px;color:#00e5ff}
-select{width:100%;padding:10px;border-radius:8px;background:#222;color:#fff;border:1px solid #444}
+body{background:#000;color:#fff;overflow-x:hidden}
+#topbar{display:flex;justify-content:space-between;padding:6px 10px;font-size:13px;color:#ccc;background:#000}
+#topbar b{color:#fff}
+#controls{position:absolute;top:34px;right:8px;z-index:20;display:flex;gap:14px;font-size:20px}
+#controls span{cursor:pointer;background:rgba(0,0,0,.6);padding:4px 8px;border-radius:6px}
+#wrap{position:relative}
+canvas{display:block;width:100%}
+#mag{height:52vh;background:#000}
+#spec{height:38vh;background:#000;border-top:2px solid #222}
+#panel{background:#111;padding:10px;display:flex;gap:6px;flex-wrap:wrap}
+button{flex:1;min-width:110px;padding:13px;font-weight:bold;border:none;border-radius:8px;cursor:pointer;font-size:14px}
+#btnMic{background:#00e5ff}
+#btnNoise{background:#ff9100}
+#btnFreeze{background:#fff}
+#btnShot{background:#00c853;color:#fff}
+#info{padding:8px 10px;font-size:13px;color:#aaa;background:#000}
+#info b{color:#ffea00}
+#marker{position:absolute;left:12%;top:62px;color:#4db2ff;font-size:11px;z-index:10;text-shadow:0 0 4px #000}
+select{width:100%;padding:10px;background:#222;color:#fff;border:1px solid #444;border-radius:8px;margin-top:6px}
 </style>
 </head>
 <body>
 
-<h2>🎛️ SMART RTA v1 - MAGNITUDE & PHASE</h2>
-<p style="text-align:center;font-size:11px;color:#888">Buat ukur speaker / DLMS - Mic HP + Pink Noise</p>
-
-<div class="box">
-<button class="btnMic" onclick="startMic()">🎤 START MIC - UKUR SUARA</button>
-<button class="btnNoise" onclick="playNoise()">🔊 PLAY PINK NOISE DARI HP INI</button>
-<button class="btnStop" onclick="stopAll()">⏹ STOP SEMUA</button>
-<div id="status" style="text-align:center;color:#00ff88">STATUS: BELUM JALAN - PENCET START MIC</div>
+<div id="topbar">
+<div><b id="jam">8.11</b> &nbsp; 📶 ✈️ &nbsp; <span style="color:#4db2ff">◀</span></div>
+<div>📡 🔋 <b id="bat">47</b> &nbsp; <span id="statDot">● MIC OFF</span></div>
 </div>
 
-<div class="box">
-<div class="grid">
-<div>Level<br><b id="level">- - dB</b></div>
-<div>Peak Freq<br><b id="peak">- - Hz</b></div>
-<div>Phase @1k<br><b id="phase1k">- -°</b></div>
+<div id="wrap">
+<div id="controls">
+<span onclick="freeze=!freeze;alert(freeze?'DIBEKUKAN - pencet X lagi buat jalan':'JALAN LAGI')">✕</span>
+<span onclick="startMic()">▶</span>
+<span onclick="alert('Menu: 1.Start Mic 2.Pink Noise 3.Freeze 4.Screenshot')">⋮</span>
 </div>
-<label>Smoothing: <span id="smVal">1/6 Oct</span></label>
-<input type="range" min="1" max="10" value="4" oninput="smoothN=this.value;document.getElementById('smVal').textContent=this.value+'/12 Oct'">
-<label>Hold / Freeze</label>
-<select id="mode" onchange="freezeMode=this.value">
-<option value="live">LIVE - Jalan Terus</option>
-<option value="freeze">FREEZE - Bekukan Layar</option>
-<option value="avg
+<div id="marker">-38 dB<br>62 Hz</div>
+<canvas id="mag"></canvas>
+<canvas id="spec"></canvas>
+</div>
+
+<div id="info">
+<span style="color:#ff5b7f">— PEAK HOLD (Merah)</span> &nbsp; <span style="color:#ffea00">— LIVE (Kuning)</span> &nbsp; | Peak: <b id="peakInfo">-38 dB @ 62 Hz</b> | Level: <b id="lvl">-- dB</b>
+</div>
+
+<div id="panel">
+<button id="btnMic" onclick="startMic()">🎤 START MIC</button>
+<button id="btnNoise" onclick="playNoise()">🔊 PINK NOISE</button>
+<button id="btnFreeze" onclick="freeze=!freeze;this.textContent=freeze?'▶ JALAN LAGI':'❄ FREEZE'">❄ FREEZE</button>
+<button id="btnShot" onclick="screenshot()">📸 SIMPAN GAMBAR</button>
+</div>
+<select onchange="speedMode=this.value">
+<option value="normal">Kecepatan Spectrogram: Normal</option>
+<option value="slow">Lambat - Buat Lihat Detail</option>
+<option value="fast">Cepat - Buat Lihat Gerakan</option>
+</select>
+<p style="padding:8px 10px;font-size:11px;color:#888">Cara pake: Start Mic > izinkan > bunyikan speaker / Pink Noise. Garis kuning jalan, garis merah itu jejak tertinggi nya. Bawah nya warna oranye = keras, ungu gelap = sepi. Kalo ada bolong di 100-400Hz, berarti mid nya jeblok di DLMS.</p>
+
+<script>
+let ctxA=null, analyser=null, stream=null, noiseSrc=null, noiseGain=null;
+let freeze=false, speedMode="normal";
+let fftSize=4096;
+let peakHold=[], specHistory=[];
