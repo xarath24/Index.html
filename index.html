@@ -8,7 +8,7 @@
 *{box-sizing:border-box}
 body{margin:0;background:#0a0c10;color:#e8eaf0;font:12px system-ui,Arial;overflow-x:auto}
 button,select{font:inherit;cursor:pointer}
-.topbar{height:46px;background:#10141a;border-bottom:2px solid #3fd4ec;display:flex;align-items:center;gap:8px;padding:0 12px;position:sticky;top:0;z-index:20;white-space:nowrap;min-width:900px}
+.topbar{height:46px;background:#10141a;border-bottom:2px solid #3fd4ec;display:flex;align-items:center;gap:14px;padding:0 12px;position:sticky;top:0;z-index:20;white-space:nowrap;min-width:900px}
 .logo{font-weight:900;font-size:17px}.logo b{color:#3fd4ec}.logo span{color:#8b95a5;font-weight:400;font-size:10px;display:block;letter-spacing:2px}
 .topbtns{margin-left:auto;display:flex;gap:6px;align-items:center}
 button{background:#222b37;color:#e8eaf0;border:1px solid #4a5566;border-radius:6px;padding:7px 12px}
@@ -17,7 +17,6 @@ button.on{background:#c2410c!important;border-color:#fb923c!important;color:#fff
 button.cap{background:#7c3aed;border-color:#a78bfa;font-weight:800}
 button.danger{background:#7f1d1d;border-color:#ef4444}
 button.phon{background:#065f46!important;border-color:#34d399!important;color:#fff}
-button.backbtn{background:#1e3a5f;border-color:#60a5fa;font-weight:800}
 select{background:#222b37;color:#e8eaf0;border:1px solid #4a5566;border-radius:6px;padding:6px}
 .layout{display:grid;grid-template-columns:250px minmax(640px,1fr) 170px;gap:8px;padding:8px;max-width:1600px;margin:auto;min-width:900px}
 .panel{background:#14181f;border:1px solid #2b323e;border-radius:8px;padding:9px}
@@ -34,8 +33,6 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
 .kv b{color:#fff}.kv span{color:#8b95a5}
 .cursor{display:flex;gap:6px;align-items:center;margin-top:7px;background:#090d12;border:1px solid #2b323e;border-radius:6px;padding:6px}
 .cursor input{flex:1;accent-color:#fff}
-.centerctl{display:flex;gap:6px;align-items:center;background:#090d12;border:1px solid #2b323e;border-radius:6px;padding:6px;margin-bottom:8px}
-.centerctl b{flex:1;text-align:center;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .statusbar{background:#10141a;border-top:1px solid #2b323e;padding:7px 12px;display:flex;gap:16px;flex-wrap:wrap;color:#8b95a5;font-size:11px;position:sticky;bottom:0;min-width:900px}
 .statusbar b{color:#7ee0ad}
 input[type=range]{width:100%;accent-color:#3fd4ec}
@@ -43,22 +40,21 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 .capitem .dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
 .capitem .nm{flex:1;min-width:0}
 .capitem .nm b{display:block;color:#fff;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.capitem .nm span{color:#8b95a5;font-size:10px;display:block;line-height:1.5}
+.capitem .nm span{color:#8b95a5;font-size:10px}
 .capitem button{padding:4px 7px;font-size:11px}
 .capempty{color:#8b95a5;font-size:11px;line-height:1.6;padding:4px 0}
-.frozen{color:#fbbf24!important}
+:fullscreen body{background:#0a0c10}
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <button id="backtop" class="backbtn">← BACK</button>
   <div class="logo"><b>SMART</b> LIVE <span>MEASUREMENT • LIKE SMAART</span></div>
   <div class="topbtns">
+    <span style="color:#34d399;font-size:11px;font-weight:800">↻ AUTO LANDSCAPE</span>
     <button id="start" class="go">▶ START</button>
     <button id="stop" disabled>■ STOP</button>
     <b id="liveind" style="color:#7ee0ad">● STANDBY</b>
-    <span style="color:#fbbf24;font-size:11px">↻ PUTAR HP KE LANDSCAPE</span>
   </div>
 </div>
 
@@ -72,8 +68,9 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         <input type="range" id="noisevol" min="0" max="100" value="30">
       </label>
       <p style="color:#8b95a5;font-size:11px;line-height:1.6;margin:8px 0 0">
-        Pink OFF = kurva terakhir tetep beku, ga mati.<br>
-        Pink ON = Magnitude + Phase jalan.
+        Pink OFF = kurva mati.<br>
+        Pink ON = Magnitude + Phase jalan.<br>
+        Sentuh layar 1x = otomatis landscape.
       </p>
     </div>
 
@@ -82,7 +79,6 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <button id="capturebtn" class="cap" style="width:100%;padding:12px">📸 CAPTURE KURVA INI</button>
       <button id="clearcap" class="danger" style="width:100%;padding:8px;margin-top:6px">🗑 HAPUS SEMUA CAPTURE</button>
       <div id="caplist" style="margin-top:6px"></div>
-      <p style="color:#8b95a5;font-size:11px;line-height:1.6;margin:8px 0 0">Garis capture sekarang lurus padat, ga putus-putus.<br>Kotak besar di tengah, BACK nya di dalam kotak.</p>
     </div>
 
     <div class="panel" style="margin-top:8px">
@@ -136,14 +132,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         </label>
       </div>
 
-      <div class="centerctl">
-        <button id="backcap" class="backbtn">◀ BACK</button>
-        <b id="centerlabel">KOTAK TENGAH: BELUM ADA CAPTURE</b>
-        <button id="infotoggle">INFO: OFF</button>
-        <button id="nextcap">NEXT ▶</button>
-      </div>
-
-      <div class="title"><b>MAGNITUDE</b><span id="magstate">20 Hz — 20 kHz • GARIS TENGAH = 0 dB</span></div>
+      <div class="title"><b>MAGNITUDE</b><span>20 Hz — 20 kHz • GARIS TENGAH = 0 dB</span></div>
       <canvas id="mag" width="1200" height="300"></canvas>
       <canvas id="freqscale" width="1200" height="56"></canvas>
 
@@ -164,7 +153,6 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
             <option value="500-4000">500 Hz — 4 kHz</option>
           </select>
         </label>
-        <span style="color:#8b95a5;font-size:11px">STOP / OFF = beku. START lagi = jalan lagi.</span>
       </div>
       <canvas id="phase" width="1200" height="190"></canvas>
 
@@ -181,12 +169,12 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
     <div class="panel">
       <h3>CARA PAKAI</h3>
       <div style="font-size:11px;color:#8b95a5;line-height:1.8">
-        1. Putar HP landscape<br>
-        2. START + PINK ON<br>
-        3. Pencet CAPTURE, garis capture nya lurus, ga putus-putus<br>
-        4. Pencet OFF, kurva tetep ada, beku, ga mati<br>
-        5. Pencet BACK di dalam kotak besar di tengah, buat balik capture sebelum nya<br>
-        6. START + PINK ON lagi, kurva jalan lagi<br><br>
+        1. Buka file, sentuh layar 1x, otomatis landscape<br>
+        2. START + PINK ON, layar tetep landscape<br>
+        3. Tunggu 5 detik, phase jalan<br>
+        4. Pencet UNWRAP, phase jadi lurus<br>
+        5. Pencet OFF / STOP, kurva mati<br>
+        6. Geser dari atas HP buat keluar fullscreen, sentuh lagi buat landscape lagi<br><br>
         Garis ijo tengah = 0 dB / 0°.
       </div>
     </div>
@@ -215,18 +203,64 @@ const FREQS=[20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20
 const CAPCOLORS=['#fb923c','#facc15','#f472b6','#a78bfa','#34d399','#f87171','#93c5fd','#fdba74','#e879f9','#4ade80','#fbbf24','#fb7185'];
 
 const S={ctx:null,stream:null,src:null,an:null,refAn:null,noise:null,noiseGain:null,pink:false,running:false,fft:8192,raf:0,
-  cursor:4190,live:[],phase:[],phaseRaw:[],coh:[],sm:null,acc:null,accN:0,magOffset:null,captures:[],capN:0,unwrap:false,delayMs:null,
-  frozen:false,frozenMag:[],frozenPhase:[],frozenCoh:[],frozenPink:false,lastPeakDb:null,lastPeakFreq:null,lastCohAvg:null,
-  centerIdx:-1,centerInfo:false,backRect:null};
+  cursor:4190,live:[],phase:[],phaseRaw:[],coh:[],sm:null,acc:null,accN:0,magOffset:null,captures:[],capN:0,unwrap:false,delayMs:null};
+
+/* ROTASI OTOMATIS: SENTUH 1X LANGSUNG FULLSCREEN + LANDSCAPE */
+let lastAutoTry=0;
+async function autoLandscape(){
+  const now=Date.now();
+  if(document.fullscreenElement)return;
+  if(now-lastAutoTry<2000)return;
+  lastAutoTry=now;
+  try{
+    const el=document.documentElement;
+    if(el.requestFullscreen)await el.requestFullscreen();
+    else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen();
+  }catch(e){}
+  try{if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock('landscape')}catch(e){}
+  setTimeout(drawAll,300);
+}
+document.addEventListener('pointerdown',autoLandscape);
+document.addEventListener('touchstart',autoLandscape,{passive:true});
+document.addEventListener('fullscreenchange',()=>setTimeout(drawAll,300));
+window.addEventListener('orientationchange',()=>setTimeout(drawAll,300));
 
 function xfreq(f,w){f=Math.max(MINF,Math.min(MAXF,f));let s=0;for(const[a,b,p]of SEGS){if(f<=b||a===15000)return(s+Math.log(f/a)/Math.log(b/a)*p)*w;s+=p}return w}
 function freqAtX(x,w){const r=Math.max(0,Math.min(1,x/w));let s=0;for(const[a,b,p]of SEGS){if(r<=s+p||a===15000)return a*Math.exp(((r-s)/p)*Math.log(b/a));s+=p}return MAXF}
 function fmtF(f){return f>=1000?(f/1000).toFixed(2).replace(/0+$/,'').replace(/\.$/,'')+' kHz':Math.round(f)+' Hz'}
-function fmtF2(f){return f>=1000?(f/1000).toFixed(2)+' kHz':Math.round(f)+' Hz'}
 function fmtLab(f){return f>=1000?(f/1000).toString().replace(/\.0$/,'')+'k':(''+f)}
 function yMag(v,range,h){return Math.max(0,Math.min(h,(range/2-v)/range*h))}
 function db2p(v){return Math.pow(10,Math.max(-120,v)/10)}
 function p2db(p){return 10*Math.log10(Math.max(1e-12,p))}
+
+function renderCaptures(){
+  const el=$('caplist');$('capcount').textContent=S.captures.length;
+  if(!S.captures.length){el.innerHTML='<div class="capempty">Belum ada capture.<br>Pencet CAPTURE pas kurva nya lagi bagus.</div>';return}
+  el.innerHTML='';
+  S.captures.forEach((cp,idx)=>{
+    const row=document.createElement('div');row.className='capitem';
+    row.innerHTML='<span class="dot" style="background:'+cp.color+'"></span><label style="display:flex;align-items:center;gap:4px"><input type="checkbox" '+(cp.show?'checked':'')+' style="accent-color:'+cp.color+'"></label><div class="nm"><b>'+cp.name+'</b><span>'+cp.time+' • '+(cp.mode||'RTA')+'</span></div><button>Hapus</button>';
+    row.querySelector('input').onchange=e=>{cp.show=e.target.checked;drawAll()};
+    row.querySelector('button').onclick=()=>{S.captures.splice(idx,1);renderCaptures();drawAll()};
+    el.appendChild(row);
+  });
+}
+$('capturebtn').onclick=()=>{
+  autoLandscape();
+  if(!S.live.length){alert('Belum ada kurva. START dulu, tunggu grafik jalan, baru CAPTURE.');return}
+  S.capN++;
+  const now=new Date(),hh=String(now.getHours()).padStart(2,'0'),mm=String(now.getMinutes()).padStart(2,'0'),ss=String(now.getSeconds()).padStart(2,'0');
+  S.captures.push({id:Date.now()+Math.random(),name:'Capture '+S.capN,color:CAPCOLORS[(S.capN-1)%CAPCOLORS.length],show:true,
+    time:hh+':'+mm+':'+ss,mode:S.pink?'TF':'RTA',
+    mag:S.live.map(o=>({f:o.f,v:o.v,x:o.x})),phase:S.phase.map(o=>({f:o.f,v:o.v,x:o.x})),phaseRaw:S.phaseRaw.map(o=>({f:o.f,v:o.v,x:o.x}))});
+  renderCaptures();drawAll();
+};
+$('clearcap').onclick=()=>{if(!S.captures.length)return;if(confirm('Hapus semua '+S.captures.length+' capture?')){S.captures=[];renderCaptures();drawAll()}};
+renderCaptures();
+
+$('unwrapbtn').onclick=()=>{S.unwrap=!S.unwrap;$('unwrapbtn').textContent=S.unwrap?'↗ UNWRAP: ON':'↗ UNWRAP: OFF';$('unwrapbtn').classList.toggle('phon',S.unwrap);drawAll()};
+$('phsmooth').onchange=drawAll;
+$('delayrange').onchange=()=>{computeDelay();drawAll()};
 
 function unwrapPhase(arr){
   if(!arr.length)return arr;
@@ -242,7 +276,7 @@ function smoothPhase(arr,perOct){
 }
 function calcDelay(raw,coh){
   if(!raw.length||!coh.length)return null;
-  const [lo,hi]=($('delayrange')?$('delayrange').value:'200-2000').split('-').map(Number);
+  const [lo,hi]=$('delayrange').value.split('-').map(Number);
   const pts=[];
   for(let i=0;i<raw.length;i++){if(raw[i].f>=lo&&raw[i].f<=hi&&coh[i]&&coh[i].v>=0.6)pts.push(raw[i])}
   if(pts.length<5)return null;
@@ -251,98 +285,16 @@ function calcDelay(raw,coh){
   const den=n*sxx-sx*sx;if(!den)return null;
   return -(n*sxy-sx*sy)/den/360*1000;
 }
-function peakOf(magArr){
-  if(!magArr.length)return{db:null,f:null};
-  let best=magArr[0];magArr.forEach(o=>{if(o.v>best.v)best=o});
-  return{db:best.v,f:best.f};
-}
-function cohAvgOf(coh){
-  if(!coh.length)return null;
-  return coh.reduce((s,o)=>s+o.v,0)/coh.length;
-}
-/* BEKUKAN KURVA TERAKHIR, DIPAKE PAS STOP DAN PAS PINK OFF, BIAR GA MATI */
-function freezeLast(){
-  if(!S.live.length)return;
-  S.frozenMag=S.live.map(o=>({...o}));
-  S.frozenPhase=S.phaseRaw.map(o=>({...o}));
-  S.frozenCoh=S.coh.map(o=>({...o}));
-  S.frozenPink=S.pink||S.frozenPink;
-  S.frozen=true;
-}
-
-function updateCenterLabel(){
-  const el=$('centerlabel');
-  if(!S.captures.length){el.textContent='KOTAK TENGAH: BELUM ADA CAPTURE';$('infotoggle').textContent='INFO: OFF';return}
-  if(S.centerIdx<0)S.centerIdx=0;
-  if(S.centerIdx>=S.captures.length)S.centerIdx=S.captures.length-1;
-  const cp=S.captures[S.centerIdx];
-  el.textContent=(S.centerInfo?'● ':'○ ')+cp.name.toUpperCase()+'  •  '+(S.centerIdx+1)+' / '+S.captures.length+'  •  '+(cp.delayMs==null?'Delay —':'Delay '+cp.delayMs.toFixed(3)+' ms');
-  $('infotoggle').textContent=S.centerInfo?'INFO: ON':'INFO: OFF';
-  $('infotoggle').classList.toggle('phon',S.centerInfo);
-}
-function goBack(){
-  if(!S.captures.length)return;
-  if(S.centerIdx<=0){S.centerInfo=false;updateCenterLabel();drawAll();return}
-  S.centerIdx--;S.centerInfo=true;updateCenterLabel();drawAll();
-}
-function goNext(){
-  if(!S.captures.length)return;
-  S.centerInfo=true;
-  S.centerIdx=(S.centerIdx+1)%S.captures.length;
-  updateCenterLabel();drawAll();
-}
-$('backcap').onclick=goBack;
-$('nextcap').onclick=goNext;
-$('infotoggle').onclick=()=>{if(!S.captures.length)return;S.centerInfo=!S.centerInfo;updateCenterLabel();drawAll()};
-$('backtop').onclick=()=>{S.centerInfo=false;updateCenterLabel();drawAll()};
-
-function renderCaptures(){
-  const el=$('caplist');$('capcount').textContent=S.captures.length;
-  if(!S.captures.length){el.innerHTML='<div class="capempty">Belum ada capture.<br>Pencet CAPTURE pas kurva nya lagi bagus.</div>';S.centerIdx=-1;updateCenterLabel();return}
-  el.innerHTML='';
-  S.captures.forEach((cp,idx)=>{
-    const row=document.createElement('div');row.className='capitem';
-    const d=cp.delayMs==null?'Delay —':'Delay '+cp.delayMs.toFixed(3)+' ms';
-    const p=cp.peakDb==null?'':'Peak '+cp.peakDb.toFixed(1)+' dB';
-    const at=cp.peakFreq==null?'':'@ '+fmtF2(cp.peakFreq);
-    const mark=idx===S.centerIdx&&S.centerInfo?' ● TENGAH':'';
-    row.innerHTML='<span class="dot" style="background:'+cp.color+'"></span><label style="display:flex;align-items:center;gap:4px"><input type="checkbox" '+(cp.show?'checked':'')+' style="accent-color:'+cp.color+'"></label><div class="nm"><b>'+cp.name+mark+'</b><span>'+d+'</span><span>'+p+'</span><span>'+at+'</span></div><button>Hapus</button>';
-    row.querySelector('.nm').style.cursor='pointer';
-    row.querySelector('.nm').onclick=()=>{S.centerIdx=idx;S.centerInfo=true;updateCenterLabel();drawAll()};
-    row.querySelector('input').onchange=e=>{cp.show=e.target.checked;drawAll()};
-    row.querySelector('button').onclick=()=>{S.captures.splice(idx,1);if(S.centerIdx>=S.captures.length)S.centerIdx=S.captures.length-1;if(!S.captures.length)S.centerInfo=false;renderCaptures();drawAll()};
-    el.appendChild(row);
-  });
-  updateCenterLabel();
-}
-function visibleMag(){return S.frozen?S.frozenMag:S.live}
-function visiblePhaseRaw(){return S.frozen?S.frozenPhase:S.phaseRaw}
-function visibleCoh(){return S.frozen?S.frozenCoh:S.coh}
-$('capturebtn').onclick=()=>{
-  const vm=visibleMag();
-  if(!vm.length){alert('Belum ada kurva. START dulu, tunggu grafik jalan, baru CAPTURE.');return}
-  S.capN++;
-  const now=new Date(),hh=String(now.getHours()).padStart(2,'0'),mm=String(now.getMinutes()).padStart(2,'0'),ss=String(now.getSeconds()).padStart(2,'0');
-  const vp=visiblePhaseRaw(),vc=visibleCoh(),pk=peakOf(vm);
-  const dly=(S.pink||S.frozenPink)?calcDelay(vp,vc):null;
-  S.captures.push({id:Date.now()+Math.random(),name:'Capture '+S.capN,color:CAPCOLORS[(S.capN-1)%CAPCOLORS.length],show:true,
-    time:hh+':'+mm+':'+ss,mode:(S.pink||S.frozenPink)?'TF':'RTA',
-    delayMs:dly,peakDb:pk.db,peakFreq:pk.f,cohAvg:cohAvgOf(vc),
-    mag:vm.map(o=>({f:o.f,v:o.v,x:o.x})),phase:vp.map(o=>({f:o.f,v:o.v,x:o.x})),phaseRaw:vp.map(o=>({f:o.f,v:o.v,x:o.x}))});
-  S.centerIdx=S.captures.length-1;S.centerInfo=true;
-  renderCaptures();drawAll();
-};
-$('clearcap').onclick=()=>{if(!S.captures.length)return;if(confirm('Hapus semua '+S.captures.length+' capture?')){S.captures=[];S.centerIdx=-1;S.centerInfo=false;renderCaptures();drawAll()}};
-renderCaptures();updateCenterLabel();
-
-$('unwrapbtn').onclick=()=>{S.unwrap=!S.unwrap;$('unwrapbtn').textContent=S.unwrap?'↗ UNWRAP: ON':'↗ UNWRAP: OFF';$('unwrapbtn').classList.toggle('phon',S.unwrap);drawAll()};
-$('phsmooth').onchange=drawAll;
-$('delayrange').onchange=()=>{computeDelay();drawAll()};
-
 function computeDelay(){
-  const d=calcDelay(visiblePhaseRaw(),visibleCoh());
+  const d=calcDelay(S.phaseRaw,S.coh);
   S.delayMs=d;
   $('delaytxt').textContent=d==null?'—':d.toFixed(3)+' ms';
+}
+function killLive(){
+  S.live=[];S.phase=[];S.phaseRaw=[];S.coh=[];
+  S.sm=null;S.acc=null;S.accN=0;S.magOffset=null;S.delayMs=null;
+  $('cohtxt').textContent='—';$('peakdb').textContent='—';$('peakfreq').textContent='—';
+  $('phasecursor').textContent='—';$('delaytxt').textContent='—';
 }
 
 async function ensureCtx(){
@@ -376,32 +328,29 @@ function pinkBuffer(c){
 }
 function resetAcc(){S.acc=null;S.accN=0;S.sm=null;S.magOffset=null}
 async function startPink(){
-  /* PINK ON LAGI: HAPUS BEKU NYA, BIAR JALAN LAGI DARI AWAL */
-  const wasFrozen=S.frozen;
-  stopPink(true);
+  stopPinkNoiseOnly();
   await ensureCtx();const c=S.ctx;
   S.noise=c.createBufferSource();S.noise.buffer=pinkBuffer(c);S.noise.loop=true;
   S.noiseGain=c.createGain();S.noiseGain.gain.value=($('noisevol').value/100)*0.5;
   S.refAn=c.createAnalyser();S.refAn.fftSize=S.fft;S.refAn.smoothingTimeConstant=0;
   S.noise.connect(S.noiseGain);S.noiseGain.connect(c.destination);S.noiseGain.connect(S.refAn);S.noise.start();
   S.pink=true;$('refstat').textContent='PINK NOISE';$('modetxt').textContent='TF';$('phasesub').textContent='Pink ON — Phase jalan';
-  $('pinkbtn').classList.add('on');
-  if(wasFrozen){S.frozen=false;S.frozenMag=[];S.frozenPhase=[];S.frozenCoh=[];S.frozenPink=false}
-  resetAcc();drawAll();
+  $('pinkbtn').classList.add('on');resetAcc();
 }
-/* keepPink=true ARTINYA LAGI MAU NYALAIN LAGI, JANGAN LANGSUNG BEKUIN DULU DI SINI */
-function stopPink(keep){
-  freezeLast();
+function stopPinkNoiseOnly(){
   if(S.noise){try{S.noise.stop()}catch(e){}try{S.noise.disconnect()}catch(e){}S.noise=null}
   if(S.noiseGain){try{S.noiseGain.disconnect()}catch(e){}S.noiseGain=null}
-  S.refAn=null;S.pink=false;
-  $('refstat').textContent='OFF';$('modetxt').textContent='RTA';$('phasesub').textContent='Pink OFF — KURVA TERAKHIR BEKU, GA MATI';
-  $('pinkbtn').classList.remove('on');
-  /* JANGAN HAPUS LIVE / PHASE, BIAR GRAFIK GA MATI PAS OFF */
-  computeDelay();drawAll();
+  S.refAn=null;
 }
-$('pinkbtn').onclick=()=>S.pink?stopPink():startPink();
-$('noiseoff').onclick=()=>stopPink();
+function stopPink(){
+  stopPinkNoiseOnly();
+  S.pink=false;
+  $('refstat').textContent='OFF';$('modetxt').textContent='RTA';$('phasesub').textContent='Pink OFF — HIDUPKAN PINK';
+  $('pinkbtn').classList.remove('on');
+  killLive();drawAll();
+}
+$('pinkbtn').onclick=()=>{autoLandscape();S.pink?stopPink():startPink()};
+$('noiseoff').onclick=stopPink;
 $('noisevol').oninput=e=>{$('voltxt').textContent=e.target.value+'%';if(S.noiseGain&&S.ctx)S.noiseGain.gain.setTargetAtTime((e.target.value/100)*0.5,S.ctx.currentTime,.02)};
 
 function drawLabelOnCurve(c,cx,cy,W,H,txt,strokeCol){
@@ -416,37 +365,6 @@ function drawLabelOnCurve(c,cx,cy,W,H,txt,strokeCol){
   c.beginPath();c.roundRect(lx,ly,tw,38,8);c.stroke();
   c.fillStyle='#fff';c.textAlign='center';c.textBaseline='middle';
   c.fillText(txt,centerX,centerY);
-  c.textAlign='left';c.textBaseline='alphabetic';
-}
-/* KOTAK BESAR DI TENGAH, TOMBOL BACK DI TENGAH-TENGAH DALAM KOTAK */
-function drawCaptureInfos(c,w,h){
-  S.backRect=null;
-  if(!S.centerInfo||!S.captures.length||S.centerIdx<0||S.centerIdx>=S.captures.length)return;
-  const cp=S.captures[S.centerIdx];
-  if(!cp.show)return;
-  const boxW=560, boxH=260;
-  const cx=w/2, lx=cx-boxW/2, ly=(h-boxH)/2;
-  c.fillStyle='rgba(0,0,0,0.92)';
-  c.beginPath();c.roundRect(lx,ly,boxW,boxH,14);c.fill();
-  c.strokeStyle=cp.color;c.lineWidth=4;
-  c.beginPath();c.roundRect(lx,ly,boxW,boxH,14);c.stroke();
-  c.textAlign='center';c.textBaseline='middle';
-  c.fillStyle=cp.color;c.font='bold 24px Arial';
-  c.fillText(cp.name.toUpperCase(),cx,ly+28);
-  c.fillStyle='#8b95a5';c.font='16px Arial';
-  c.fillText('INFORMATION',cx,ly+54);
-  c.fillStyle='#fff';c.font='bold 30px Arial';
-  c.fillText(cp.delayMs==null?'Delay —':'Delay '+cp.delayMs.toFixed(3)+' ms',cx,ly+94);
-  c.fillText(cp.peakDb==null?'Peak —':'Peak '+cp.peakDb.toFixed(1)+' dB',cx,ly+130);
-  c.fillText(cp.peakFreq==null?'@ —':'@ '+fmtF2(cp.peakFreq),cx,ly+166);
-  const bw=240, bh=48, bx=cx-bw/2, by=ly+boxH-58;
-  S.backRect={x:bx,y:by,w:bw,h:bh};
-  c.fillStyle='#1e3a5f';
-  c.beginPath();c.roundRect(bx,by,bw,bh,10);c.fill();
-  c.strokeStyle='#60a5fa';c.lineWidth=3;
-  c.beginPath();c.roundRect(bx,by,bw,bh,10);c.stroke();
-  c.fillStyle='#fff';c.font='bold 22px Arial';
-  c.fillText('◀  BACK',cx,by+bh/2+1);
   c.textAlign='left';c.textBaseline='alphabetic';
 }
 function drawZeroLine(c,w,h,range){
@@ -518,29 +436,23 @@ function phaseDisplayRaw(raw){
 }
 function drawAll(){
   const w=mag.width,h=mag.height,range=+$('range').value;
-  const magData=visibleMag(), rawPhase=visiblePhaseRaw(), cohData=visibleCoh();
-  const hasPhase=rawPhase.length&&((S.pink||S.frozenPink));
   gridMag(mg,w,h,range);
   $('cursorfreqbig').textContent=fmtF(S.cursor);
-  $('magstate').textContent=S.frozen?'❄ BEKU — OFF / STOP, KURVA DIEM, GA MATI • 20 Hz — 20 kHz':'20 Hz — 20 kHz • GARIS TENGAH = 0 dB';
-  $('magstate').className=S.frozen?'frozen':'';
-  /* CAPTURE: GARIS LURUS PADAT, GA PAKE PUTUS-PUTUS LAGI */
   S.captures.forEach(cp=>{
     if(!cp.show||!cp.mag.length)return;
     mg.beginPath();mg.strokeStyle=cp.color;mg.lineWidth=2.5;mg.setLineDash([]);
     cp.mag.forEach((o,i)=>{const Y=yMag(o.v,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke();
   });
-  if(magData.length){
+  if(S.live.length){
     mg.beginPath();mg.strokeStyle='#3fd4ec';mg.lineWidth=2.5;
-    magData.forEach((o,i)=>{const Y=yMag(o.v,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke();
+    S.live.forEach((o,i)=>{const Y=yMag(o.v,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke();
   }
-  if(cohData.length&&S.running&&S.pink){
+  if(S.coh.length&&S.pink){
     mg.beginPath();mg.strokeStyle='#5fd68a';mg.lineWidth=1.5;
-    cohData.forEach((o,i)=>{const Y=h-Math.max(0,Math.min(1,o.v))*22-4;if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke();
+    S.coh.forEach((o,i)=>{const Y=h-Math.max(0,Math.min(1,o.v))*22-4;if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke();
   }
   drawZeroLine(mg,w,h,range);
-  drawCaptureInfos(mg,w,h);
-  const pt=pointOn(magData,S.cursor),cx=Math.max(6,Math.min(w-6,xfreq(S.cursor,w)));
+  const pt=pointOn(S.live,S.cursor),cx=Math.max(6,Math.min(w-6,xfreq(S.cursor,w)));
   mg.strokeStyle='#fff';mg.lineWidth=3;mg.beginPath();mg.moveTo(cx,0);mg.lineTo(cx,h);mg.stroke();
   if(pt){
     const Y=yMag(pt.v,range,h);
@@ -549,11 +461,10 @@ function drawAll(){
     drawLabelOnCurve(mg,cx,Y,w,h,fmtF(S.cursor)+'  •  '+pt.v.toFixed(1)+' dB','#3fd4ec');
   }else{
     $('cursorread').textContent=fmtF(S.cursor)+' • — dB';
-    drawLabelOnCurve(mg,cx,h/2,w,h,fmtF(S.cursor),'#3fd4ec');
   }
   drawScale();
   const pw=phc.width,phH=phc.height;
-  const disp=phaseDisplayRaw(rawPhase);
+  const disp=phaseDisplayRaw(S.phaseRaw);
   const minPh=S.unwrap&&disp.length?(Math.min(...disp.map(o=>o.v),-180)): -180;
   const maxPh=S.unwrap&&disp.length?(Math.max(...disp.map(o=>o.v),180)):180;
   const yPh=v=>{if(S.unwrap){const span=Math.max(360,maxPh-minPh);return ((maxPh-v)/span)*phH}return ((180-v)/360)*phH};
@@ -566,8 +477,7 @@ function drawAll(){
   pg.strokeStyle='#22ff88';pg.lineWidth=3;pg.beginPath();pg.moveTo(0,yPh(0));pg.lineTo(pw,yPh(0));pg.stroke();
   pg.fillStyle='#22ff88';pg.font='bold 11px Arial';pg.fillText(S.unwrap?'0° (unwrap)':'0°',10,Math.max(11,Math.min(phH-2,yPh(0)+12)));
   const pp=pointOn(disp,S.cursor);
-  if(hasPhase&&disp.length){
-    /* PHASE CAPTURE JUGA LURUS PADAT */
+  if(S.pink&&disp.length){
     S.captures.forEach(cp=>{
       if(!cp.show||!cp.phaseRaw.length)return;
       let carr=phaseDisplayRaw(cp.phaseRaw);
@@ -576,10 +486,10 @@ function drawAll(){
     });
     pg.beginPath();pg.strokeStyle='#3fd4ec';pg.lineWidth=2.5;let pen=false;
     disp.forEach((o,i)=>{
-      const ok=!cohData[i]||cohData[i].v>=0.5,X=o.x,Y=yPh(Math.max(minPh,Math.min(maxPh,o.v)));
+      const ok=!S.coh[i]||S.coh[i].v>=0.5,X=o.x,Y=yPh(Math.max(minPh,Math.min(maxPh,o.v)));
       if(!ok&&!S.unwrap){pen=false;return}
       if(!pen){pg.beginPath();pg.moveTo(X,Y);pen=true}else pg.lineTo(X,Y);
-      if(i===disp.length-1||(cohData[i+1]&&cohData[i+1].v<0.5&&!S.unwrap))pg.stroke();
+      if(i===disp.length-1||(S.coh[i+1]&&S.coh[i+1].v<0.5&&!S.unwrap))pg.stroke();
     });
     pg.strokeStyle='#fff';pg.lineWidth=3;pg.beginPath();pg.moveTo(cx,0);pg.lineTo(cx,phH);pg.stroke();
     if(pp){
@@ -590,9 +500,9 @@ function drawAll(){
       if(pt)$('cursorread').textContent=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB • Phase '+pp.v.toFixed(0)+'°';
     }
   }else{
+    $('phasecursor').textContent='—';
     pg.fillStyle='#8b95a5';pg.font='bold 14px Arial';pg.textAlign='center';
-    pg.fillText(S.frozen?'BEKU — PHASE TERAKHIR TETEP DI ATAS':'NO REFERENCE — HIDUPKAN PINK NOISE',pw/2,phH/2);pg.textAlign='left';
-    if(!S.frozen)$('phasecursor').textContent='—';
+    pg.fillText('NO REFERENCE — HIDUPKAN PINK NOISE',pw/2,phH/2);pg.textAlign='left';
   }
 }
 function computeTF(){
@@ -636,14 +546,12 @@ function draw(){
   let peak=-Infinity,peakBin=1;
   for(let i=1;i<n;i++){const f=i*S.ctx.sampleRate/S.fft;if(f<MINF||f>MAXF)continue;if(raw[i]>peak){peak=raw[i];peakBin=i}}
   const peakFreq=peakBin*S.ctx.sampleRate/S.fft;
-  S.lastPeakDb=peak;S.lastPeakFreq=peakFreq;
   $('peakdb').textContent=peak.toFixed(1)+' dBFS';$('peakfreq').textContent=Math.round(peakFreq)+' Hz';
   let freqs,pArr,phArr,cohArr;
   if(S.pink&&S.refAn){
     const tf=computeTF();freqs=tf.freqs;phArr=tf.ph;cohArr=tf.coh;
     pArr=normalizeToCenter(freqs,tf.magP);
-    S.lastCohAvg=cohArr.reduce((s,v)=>s+v,0)/Math.max(1,cohArr.length);
-    $('cohtxt').textContent=S.lastCohAvg.toFixed(2);
+    $('cohtxt').textContent=(cohArr.reduce((s,v)=>s+v,0)/Math.max(1,cohArr.length)).toFixed(2);
   }else{
     freqs=[];const rawP=[];phArr=null;cohArr=null;$('cohtxt').textContent='—';
     for(let i=1;i<n;i++){const f=i*S.ctx.sampleRate/S.fft;if(f<MINF||f>MAXF)continue;freqs.push({f});rawP.push(db2p(raw[i]))}
@@ -658,6 +566,7 @@ function draw(){
   S.raf=requestAnimationFrame(draw);
 }
 $('start').onclick=async()=>{
+  autoLandscape();
   try{
     S.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
     await ensureCtx();
@@ -665,33 +574,22 @@ $('start').onclick=async()=>{
     S.an=S.ctx.createAnalyser();S.fft=+$('fft').value;S.an.fftSize=S.fft;S.an.smoothingTimeConstant=0;S.an.minDecibels=-120;S.an.maxDecibels=0;
     S.src.connect(S.an);
     if(S.refAn)S.refAn.fftSize=S.fft;
-    S.frozen=false;S.frozenMag=[];S.frozenPhase=[];S.frozenCoh=[];S.frozenPink=false;
     resetAcc();S.running=true;
-    $('start').disabled=true;$('stop').disabled=false;$('status').textContent='LIVE';$('liveind').textContent='● LIVE';$('liveind').style.color='#7ee0ad';
+    $('start').disabled=true;$('stop').disabled=false;$('status').textContent='LIVE';$('liveind').textContent='● LIVE';
     $('samplerate').textContent=S.ctx.sampleRate+' Hz';$('fftstat').textContent=S.fft;
     draw();
   }catch(e){alert('Mic ga bisa dibuka: '+e.message)}
 };
 $('stop').onclick=()=>{
-  freezeLast();
   S.running=false;cancelAnimationFrame(S.raf);
   if(S.stream)S.stream.getTracks().forEach(t=>t.stop());
   S.stream=null;S.an=null;$('start').disabled=false;$('stop').disabled=true;
-  $('status').textContent='BEKU — FROZEN';$('liveind').textContent='❄ BEKU';$('liveind').style.color='#fbbf24';
-  computeDelay();drawAll();
+  $('status').textContent='STANDBY';$('liveind').textContent='● STANDBY';
+  killLive();drawAll();
 };
 $('fft').onchange=()=>{if(S.an&&S.ctx){S.fft=+$('fft').value;S.an.fftSize=S.fft;if(S.refAn)S.refAn.fftSize=S.fft;resetAcc();$('fftstat').textContent=S.fft}};
 $('average').onchange=resetAcc;
 $('detail').onchange=drawAll;
-function canvasXY(e,el){
-  const r=el.getBoundingClientRect();
-  return{x:(e.clientX-r.left)/r.width*mag.width,y:(e.clientY-r.top)/r.height*mag.height};
-}
-function hitBackButton(e){
-  if(!S.backRect)return false;
-  const p=canvasXY(e,mag);
-  return p.x>=S.backRect.x&&p.x<=S.backRect.x+S.backRect.w&&p.y>=S.backRect.y&&p.y<=S.backRect.y+S.backRect.h;
-}
 function moveFromX(x,el){
   const r=el.getBoundingClientRect();
   const px=Math.max(0,Math.min(mag.width,(x-r.left)/r.width*mag.width));
@@ -699,10 +597,7 @@ function moveFromX(x,el){
 }
 let drag=false;
 [mag,fsc,phc].forEach(el=>{
-  el.addEventListener('pointerdown',e=>{
-    if(el===mag&&hitBackButton(e)){goBack();return}
-    drag=true;try{el.setPointerCapture(e.pointerId)}catch(err){}moveFromX(e.clientX,el);
-  });
+  el.addEventListener('pointerdown',e=>{drag=true;try{el.setPointerCapture(e.pointerId)}catch(err){}moveFromX(e.clientX,el)});
   el.addEventListener('pointermove',e=>{if(drag)moveFromX(e.clientX,el)});
   el.addEventListener('pointerup',()=>drag=false);
   el.addEventListener('pointercancel',()=>drag=false);
