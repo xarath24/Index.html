@@ -3,18 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>SMART LIVE v15 — FIX SMAART STYLE</title>
+<title>SMART LIVE v16 — SMAART ASLI</title>
 <style>
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;background:#0a1a2e;color:#e8eaf0;font:700 11px system-ui,Arial;overflow:hidden}
+body{margin:0;background:#16283f;color:#e8eaf0;font:700 11px system-ui,Arial;overflow:hidden}
 button,select{font:700 11px system-ui,Arial;cursor:pointer;font-weight:900}
-.menubar{height:22px;background:#1c2f4a;display:flex;gap:14px;align-items:center;padding:0 8px;font-size:11px;color:#cbd5e1;white-space:nowrap;overflow:hidden}
+.menubar{height:22px;background:#1c2f4a;display:flex;gap:14px;align-items:center;padding:0 8px;font-size:11px;color:#dbe7f3;white-space:nowrap;overflow:hidden;border-bottom:1px solid #0a1524}
 .menubar b{color:#fff}
 .tabbar{height:26px;background:#2b3f5c;display:flex;align-items:center;gap:8px;padding:0 8px;white-space:nowrap}
 .tabbar .tab{background:#0a1a2e;border:1px solid #4a5566;border-bottom:none;border-radius:5px 5px 0 0;padding:4px 14px;color:#fff}
 .tabbar span{color:#cbd5e1;font-size:10px}
-.topbar{height:30px;background:#10141a;border-bottom:2px solid #3fd4ec;display:flex;align-items:center;gap:10px;padding:0 10px;white-space:nowrap;min-width:860px}
+.topbar{height:30px;background:#0f141b;border-bottom:2px solid #3fd4ec;display:flex;align-items:center;gap:10px;padding:0 10px;white-space:nowrap;min-width:860px}
 .logo{font-weight:900;font-size:14px}.logo b{color:#3fd4ec}.logo span{color:#cbd5e1;font-weight:900;font-size:8px;display:block;letter-spacing:2px}
 .topbtns{margin-left:auto;display:flex;gap:5px;align-items:center}
 button{background:#222b37;color:#fff;border:1px solid #4a5566;border-radius:5px;padding:4px 8px;white-space:nowrap}
@@ -23,18 +23,18 @@ button.on{background:#c2410c!important;border-color:#fb923c!important;color:#fff
 button.cap{background:#7c3aed;border-color:#a78bfa}
 button.danger{background:#7f1d1d;border-color:#ef4444}
 button.find{background:#7c3aed;border-color:#a78bfa}
-select{background:#222b37;color:#fff;border:1px solid #4a5566;border-radius:4px;padding:2px 3px;width:100%;font-weight:900;height:22px;font-size:10px;white-space:nowrap}
-.layout{display:grid;grid-template-columns:190px minmax(520px,1fr) 210px;gap:4px;padding:4px 5px;max-width:1600px;margin:auto;min-width:860px;height:calc(100dvh - 22px - 26px - 30px - 28px)}
-.panel{background:#14181f;border:1px solid #2b323e;border-radius:6px;padding:6px 7px;min-width:0;overflow:hidden}
+select{background:#1e2a3a;color:#fff;border:1px solid #4a5566;border-radius:4px;padding:2px 3px;width:100%;font-weight:900;height:22px;font-size:10px;white-space:nowrap}
+.layout{display:grid;grid-template-columns:195px minmax(520px,1fr) 215px;gap:4px;padding:4px 5px;max-width:1600px;margin:auto;min-width:860px;height:calc(100dvh - 22px - 26px - 30px - 28px)}
+.panel{background:#12161d;border:1px solid #2b323e;border-radius:4px;padding:6px 7px;min-width:0;overflow:hidden}
 .leftCol{display:flex;flex-direction:column;min-height:0;height:100%}
 .listBox{flex:1;display:flex;flex-direction:column;min-height:0;height:100%}
 .listBox h3{font-size:12px;color:#fff;margin:0 0 3px;font-weight:900;white-space:nowrap}
 #caplist{flex:1;overflow-y:auto;overflow-x:hidden;min-height:30px;scrollbar-color:#3fd4ec #1f2937}
 #caplist::-webkit-scrollbar{width:9px}#caplist::-webkit-scrollbar-thumb{background:#3fd4ec;border-radius:5px}
 main{display:flex;min-height:0;min-width:0}
-main .panel{flex:1;height:100%;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+main .panel{flex:1;height:100%;overflow:hidden;display:flex;flex-direction:column;min-height:0;padding:4px}
 h3{margin:0 0 3px;font-size:10px;color:#fff;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-resize;touch-action:none;min-height:0}
+canvas{display:block;width:100%;background:#05070a;border:1px solid #222a35;border-radius:2px;cursor:ew-resize;touch-action:none;min-height:0}
 #mag{flex:1 1 0}
 #freqscale{flex:0 0 auto;height:22px;background:#0b0f14;border-top:1px solid #2b323e}
 #phase{flex:1 1 0}
@@ -48,35 +48,38 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
 .cursorTop .lab{font-size:10px;color:#e2e8f0}.cursorTop .freq{font-size:14px;color:#fff}.cursorTop .db{font-size:14px;color:#3fd4ec}.cursorTop .ph{font-size:14px;color:#34d399}
 .capBtns{display:flex;gap:4px;margin-top:5px;padding-top:6px;border-top:1px solid #2b323e;flex:0 0 auto}
 .capBtns button{flex:1;padding:5px 3px;font-size:10px}
-.capitem{display:flex;align-items:center;gap:5px;padding:3px;border-bottom:1px solid #2b323e;min-height:30px}
+.capitem{display:flex;align-items:center;gap:5px;padding:3px 2px;border-bottom:1px solid #232a35;min-height:28px}
+.capitem .x{color:#f87171;font-weight:900;font-size:13px;flex-shrink:0;cursor:pointer}
 .capitem .dot{width:11px;height:11px;border-radius:2px;flex-shrink:0}
-.capitem input{width:14px;height:14px;margin:0;accent-color:#3fd4ec}
+.capitem input{width:13px;height:13px;margin:0;accent-color:#3fd4ec}
 .capitem .nm{flex:1;min-width:0;line-height:1.25}
 .capitem .nm b{display:block;color:#fff;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text}
-.capitem .nm span{color:#e2e8f0;font-size:9px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.capitem button{padding:3px 5px;font-size:10px;flex-shrink:0}
+.capitem .nm span{color:#cbd5e1;font-size:9px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.capitem button{padding:2px 4px;font-size:10px;flex-shrink:0;background:transparent;border:none;color:#f87171}
 .renameInput{width:100%;background:#090d12;color:#fff;border:1px solid #3fd4ec;border-radius:5px;padding:3px 5px;font-size:11px;outline:none}
 .capempty{color:#e2e8f0;font-size:11px;line-height:1.6;padding:4px 0}
 .rightCol{display:flex;flex-direction:column;min-height:0;height:100%;overflow-y:auto;overflow-x:hidden;min-width:0}
 .rightCol .panel{flex:0 0 auto;margin-top:5px}.rightCol .panel:first-child{margin-top:0}
-.peakBox{background:#0f3d1a;border:1px solid #22c55e;border-radius:6px;padding:6px;text-align:center}
+.peakBox{background:#1a4d1a;border:1px solid #4ade80;border-radius:4px;padding:6px;text-align:center}
 .peakBox .big{font-weight:900;font-size:26px;color:#fff;line-height:1}
 .peakBox small{display:block;color:#bbf7d0;font-size:9px;margin-top:2px}
-.peakMeter{height:8px;background:#1f2937;border-radius:6px;overflow:hidden;margin-top:5px}
+.peakMeter{height:7px;background:#1f2937;border-radius:4px;overflow:hidden;margin-top:5px}
 .peakMeterFill{height:100%;width:0%;background:#22ff88;transition:width .06s linear}
 .setRow{display:flex;flex-direction:column;gap:2px}
-.setRow label{font-size:9px;color:#fff;display:flex;flex-direction:column;gap:1px;font-weight:900;white-space:nowrap}
+.setRow label{font-size:9px;color:#dbe7f3;display:flex;flex-direction:column;gap:1px;font-weight:900;white-space:nowrap}
 .setRow .row2{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.studioBar{background:#facc15;color:#000;font-weight:900;font-size:11px;padding:5px 6px;border-radius:4px;display:flex;justify-content:space-between;margin:4px 0}
+.focusBar{background:#1a4d1a;border:1px solid #22c55e;color:#fff;font-weight:900;font-size:11px;padding:5px 6px;border-radius:4px;display:flex;justify-content:space-between}
 .miniRef{display:flex;gap:4px;flex-wrap:wrap}
 .miniRef button{flex:1 1 45%;padding:6px 3px;font-size:11px}
 .miniVol{display:block;margin-top:6px;color:#fff;font-size:10px;white-space:nowrap}
 .miniVol input{margin-top:2px;height:14px}
-.viewTabs{display:flex;gap:3px}
-.viewTabs button{flex:1;padding:5px 2px;font-size:10px}
+.viewTabs{display:flex;gap:3px;margin-top:6px}
+.viewTabs button{flex:1;padding:5px 2px;font-size:9px}
 .viewTabs button.on{background:#c2410c!important;border-color:#fb923c!important}
 #toast{position:fixed;left:50%;bottom:48px;transform:translateX(-50%);background:#1f2937;border:1px solid #4a5566;color:#fff;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:900;z-index:99;opacity:0;pointer-events:none;transition:opacity .25s;max-width:92vw;text-align:center}
 #toast.show{opacity:1}
-.statusbar{height:28px;background:#10141a;border-top:1px solid #2b323e;padding:4px 6px;display:flex;gap:4px;color:#fff;font-size:11px;align-items:center;overflow:hidden;white-space:nowrap}
+.statusbar{height:28px;background:#0f141b;border-top:1px solid #2b323e;padding:4px 6px;display:flex;gap:4px;color:#fff;font-size:11px;align-items:center;overflow:hidden;white-space:nowrap}
 .statusbar button{padding:4px 10px;font-size:11px}
 .statusbar b{color:#7ee0ad}
 #infoModal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:center;justify-content:center;padding:16px}
@@ -87,11 +90,11 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
 </head>
 <body>
 <div id="toast"></div>
-<div id="infoModal"><div class="infoBox"><h3>ⓘ CARA PAKAI — SMAART STYLE</h3><ol><li>Mute driver lain, ukur 1 driver doang.</li><li>Cursor ke 500 Hz (mid) / 5 kHz (tweeter).</li><li>Lihat Phase di atas + Polarity di bawah.</li><li>Balik + / - di DLMS, Phase harus ganti.</li><li>Delay AUTO. Averaging / Smooth bisa diganti di kanan.</li></ol><button id="infoClose" style="width:100%;padding:7px;margin-top:6px">✕ TUTUP</button></div></div>
-<div class="menubar"><b>File</b><span>Config</span><span>Options</span><span>View</span><span>Command</span><span>Window</span><span>Help</span><span style="margin-left:auto">SMART LIVE v15 • LIKE SMAART</span></div>
+<div id="infoModal"><div class="infoBox"><h3>ⓘ CARA PAKAI — SMAART</h3><ol><li>Mute driver lain, ukur 1 driver doang.</li><li>Cursor ke 500 Hz (mid) / 5 kHz (tweeter).</li><li>Lihat Phase di atas + Polarity di bawah.</li><li>Balik + / - di DLMS, Phase harus ganti.</li><li>Range Magnitude 30 dB kayak Smaart asli.</li></ol><button id="infoClose" style="width:100%;padding:7px;margin-top:6px">✕ TUTUP</button></div></div>
+<div class="menubar"><b>File</b><span>Config</span><span>Options</span><span>View</span><span>Command</span><span>Window</span><span>Help</span><span style="margin-left:auto">SMART LIVE v16 • LIKE SMAART</span></div>
 <div class="tabbar"><div class="tab">Default Tab</div><span>All Track &nbsp; No Track</span><button id="newtabbtn" style="margin-left:auto;padding:3px 8px">+ New Tab</button></div>
 <div class="topbar">
-  <div class="logo"><b>SMART</b> LIVE v15 <span>TRANSFER FUNCTION • SMAART STYLE • FIX</span></div>
+  <div class="logo"><b>SMART</b> LIVE v16 <span>TRANSFER FUNCTION • SMAART STYLE</span></div>
   <div class="topbtns">
     <span style="color:#34d399;font-size:10px">↻ AUTO LANDSCAPE</span>
     <button id="start" class="go">▶ START</button>
@@ -106,7 +109,7 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
       <div id="caplist"></div>
       <div class="capBtns"><button id="capturebtn" class="cap">📸 Capture</button><button id="captureallbtn" class="cap">Capture All</button></div>
       <div class="capBtns"><button id="clearcap" class="danger">🗑 Clear</button><button id="infobtn">ⓘ INFO</button></div>
-      <div style="color:#e2e8f0;font-size:10px;margin-top:5px">Pencet nama buat ganti nama trace.</div>
+      <div style="color:#cbd5e1;font-size:10px;margin-top:5px">X = hapus trace • Pencet nama buat ganti nama.</div>
     </div>
   </aside>
   <main>
@@ -115,7 +118,7 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
       <div id="viewTransfer">
         <div class="title"><b>Phase ▼</b><span id="phasesub">Reference OFF — HIDUPKAN REFERENCE</span></div>
         <canvas id="phase" width="1200" height="190"></canvas>
-        <div class="title"><b>Magnitude ▼</b><span id="magRangeLbl">20 Hz — 20 kHz • Range 60 dB</span></div>
+        <div class="title"><b>Magnitude ▼</b><span id="magRangeLbl">20 Hz — 20 kHz • Range 30 dB (+15 / -15)</span></div>
         <canvas id="mag" width="1200" height="300"></canvas>
         <canvas id="freqscale" width="1200" height="56"></canvas>
       </div>
@@ -146,7 +149,7 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
       <h3>Transfer Function</h3>
       <div class="setRow">
         <label>Averaging
-          <select id="average"><option value="0">None</option><option value="16">16 — Fast</option><option value="32">32</option><option value="64" selected>64 — Slow</option><option value="128">128 — Slower</option></select>
+          <select id="average"><option value="0">None</option><option value="16">16 — Fast</option><option value="32">32</option><option value="64" selected>Slow</option><option value="128">128 — Slower</option></select>
         </label>
         <label>Phase Smooth
           <select id="phasesmooth"><option value="0">None</option><option value="24" selected>1/24 Oct</option><option value="12">1/12 Oct</option><option value="6">1/6 Oct</option><option value="3">1/3 Oct</option></select>
@@ -157,30 +160,34 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
         <label>FFT — Time Window
           <select id="fft"><option value="1024">1k — 21 ms</option><option value="2048">2k — 43 ms</option><option value="8192">8192 — 171 ms</option><option value="16384" selected>16k — 342 ms</option><option value="32768">32k — 683 ms</option></select>
         </label>
+        <div style="color:#cbd5e1;font-size:10px;margin-top:3px">Tab: &nbsp;<b style="color:#fff">Default Tab</b> &nbsp; <span style="float:right">✕</span></div>
+        <div class="studioBar"><span>■ STUDIO24C</span><span>2.29</span></div>
         <div class="row2">
           <button id="finddelaybtn" class="find">🔍 Find</button>
           <button id="unwrapbtn">↩ WRAP</button>
         </div>
         <span id="finddelayres" style="text-align:center;color:#fff;font-size:11px">Delay: AUTO</span>
         <div class="row2"><button id="trackbtn">◎ Track</button><button id="focusbtn">◉ Focus</button></div>
+        <div class="focusBar"><span>FOCUS</span><span id="focusVal">● LIVE</span></div>
       </div>
     </div>
     <div class="panel">
       <h3>Signal Generator</h3>
+      <div style="display:flex;gap:4px;align-items:center;margin-bottom:5px">
+        <button id="pinkbtn" style="flex:1">Pink Noise</button>
+        <button id="genOnBtn" style="flex:0 0 auto;background:#c2410c;border-color:#fb923c">On</button>
+        <b id="genDb" style="color:#fff">0 dB</b>
+      </div>
       <div class="miniRef">
-        <button id="pinkbtn">Pink Noise</button>
         <button id="whitebtn">White</button>
         <button id="brownbtn">Brown</button>
         <button id="sweepbtn">🌊 Sweep</button>
-        <button id="noiseoff" style="flex:1 1 100%">■ Off</button>
+        <button id="noiseoff">■ Off</button>
       </div>
       <label class="miniVol">Level <b id="voltxt">100%</b>
         <input type="range" id="noisevol" min="0" max="100" value="100">
       </label>
       <div style="color:#fff;font-size:10px;margin-top:4px">Gen: <b id="refstat2">OFF</b> • <b id="refstat">OFF</b></div>
-    </div>
-    <div class="panel">
-      <h3>View</h3>
       <div class="viewTabs">
         <button id="tabSpectrum">Spectrum</button>
         <button id="tabTransfer" class="on">Transfer</button>
@@ -194,7 +201,7 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
   <button id="databarbtn">Data Bar</button><button id="capturebtn2">Capture</button><button id="resetavgbtn">Reset Avg</button><button id="newtabbtn2">New Tab</button><button id="newspecbtn">New Spec</button><button id="newtfbtn">New TF</button>
   <button id="dbplusbtn">dB +</button><button id="dbminusbtn">dB −</button>
   <span style="margin-left:6px">● <b id="status">STANDBY</b> &nbsp; Input: <b>Mic 1</b> &nbsp; Reference: <b id="refstat3">OFF</b> &nbsp; FFT: <b id="fftstat">16384</b> &nbsp; Polarity: <b id="polstat">—</b></span>
-  <span style="margin-left:auto">SPL Meter &nbsp; Ctrl Bar &nbsp; v15</span>
+  <span style="margin-left:auto">SPL Meter &nbsp; Ctrl Bar &nbsp; v16</span>
 </div>
 <script>
 const _dummy=document.createElement('div');
@@ -212,9 +219,26 @@ const MAJORSET=new Set(MAJORS);
 const FREQS=[20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000];
 const CAPCOLORS=['#fb923c','#facc15','#f472b6','#a78bfa','#34d399','#f87171','#93c5fd','#fdba74','#e879f9','#4ade80','#fbbf24','#fb7185'];
 const REFLBL={pink:'PINK NOISE',white:'WHITE NOISE',brown:'BROWN NOISE',sweep:'SWEEP 20 Hz-20 kHz'};
-const RANGES=[30,45,60,90,120];
-const S={ctx:null,stream:null,src:null,an:null,noise:null,noiseGain:null,pink:false,refType:'pink',running:false,fft:16384,raf:0,cursor:1000,live:[],phase:[],phaseRaw:[],acc:null,accN:0,captures:[],capN:0,unwrap:false,delayMs:null,polarity:null,phaseAvg:null,phSmooth:24,delayLo:200,delayHi:2000,foundDelay:null,polBand:null,appliedDelay:0,frameN:0,delayLocked:false,refRe:null,refIm:null,refBuf:null,delayHist:[],signHist:[],corrSign:1,corrStrength:0,ir:[],irLag:0,lastAutoDelay:0,range:60,track:false};
+const RANGES=[15,30,45,60,90,120];
+const S={ctx:null,stream:null,src:null,an:null,noise:null,noiseGain:null,pink:false,refType:'pink',running:false,fft:16384,raf:0,cursor:1000,live:[],phase:[],phaseRaw:[],acc:null,accN:0,captures:[],capN:0,unwrap:false,delayMs:null,polarity:null,phaseAvg:null,phSmooth:24,delayLo:200,delayHi:2000,foundDelay:null,polBand:null,appliedDelay:0,frameN:0,delayLocked:false,refRe:null,refIm:null,refBuf:null,delayHist:[],signHist:[],corrSign:1,corrStrength:0,ir:[],irLag:0,lastAutoDelay:0,range:30,track:false};
 function median(a){if(!a.length)return 0;const s=a.slice().sort((x,y)=>x-y);return s[Math.floor(s.length/2)]}
+function demoTrace(name,color,phOff,magDrop){
+  const pts=[],ph=[];
+  for(let k=0;k<=300;k++){
+    const x=k/300*1200,f=freqAtX(x,1200);
+    const v=-Math.pow(Math.max(0,Math.log10(f/800)),2)*magDrop-Math.max(0,(f-8000)/20000)*6;
+    pts.push({f,v,x});
+    let pv=phOff-Math.log10(Math.max(20,f)/100)*55;
+    pv=((pv+180)%360+360)%360-180;
+    ph.push({f,v:pv,x});
+  }
+  return{name,color,show:true,time:'',mode:'TF',ref:'PINK NOISE',polarity:'NORMAL',phaseAvg:phOff,weak:false,polBand:'500 Hz',delayMs:0.29,mag:pts,phase:ph,phaseRaw:ph};
+}
+S.captures.push(demoTrace('STUDIO24C-3.1tf','#fb923c',-20,4));
+S.captures.push(demoTrace('STUDIO24C-2.1tf','#facc15',35,6));
+S.captures.push(demoTrace('high v24.1tf','#f472b6',80,9));
+S.captures.push(demoTrace('low v24.1tf','#a78bfa',-70,3));
+S.capN=4;
 $('infobtn').onclick=()=>{$('infoModal').classList.add('show')};
 $('infoClose').onclick=()=>{$('infoModal').classList.remove('show')};
 $('infoModal').addEventListener('click',e=>{if(e.target.id==='infoModal')$('infoModal').classList.remove('show')});
@@ -240,7 +264,7 @@ function yMag(v,range,h){return Math.max(0,Math.min(h,(range/2-v)/range*h))}
 function db2p(v){return Math.pow(10,Math.max(-120,v)/10)}
 function p2db(p){return 10*Math.log10(Math.max(1e-12,p))}
 function recenter(arr){if(!arr.length)return arr;const mid=arr.filter(o=>o.f>=500&&o.f<=2000);if(!mid.length)return arr;const avg=mid.reduce((s,o)=>s+o.v,0)/mid.length;return arr.map(o=>({f:o.f,v:o.v-avg,x:o.x}))}
-function updateRangeLabels(){const r=S.range,top=Math.round(r*0.2),bot=top-r;$('magRangeLbl').textContent='20 Hz — 20 kHz • Range '+r+' dB ('+(top>0?'+'+top:top)+' / '+bot+')';const win=Math.round(S.fft/48000*1000);$('irinfo').textContent='Time Window: '+win+' ms • FFT '+S.fft+' • Delay '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':'AUTO')}
+function updateRangeLabels(){const r=S.range,top=Math.round(r/2),bot=-top;$('magRangeLbl').textContent='20 Hz — 20 kHz • Range '+r+' dB ('+(top>0?'+'+top:top)+' / '+bot+')';const win=Math.round(S.fft/48000*1000);$('irinfo').textContent='Time Window: '+win+' ms • FFT '+S.fft+' • Delay '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':'AUTO')}
 function detectPolarityBand(raw,center){if(!raw.length)return{state:null,avg:null,weak:true,band:null};const lo=center/1.5,hi=center*1.5;let sx=0,sy=0,cn=0;for(let i=0;i<raw.length;i++){if(raw[i].f<lo||raw[i].f>hi)continue;cn++;const r=raw[i].v*Math.PI/180;sx+=Math.cos(r);sy+=Math.sin(r)}if(cn<3)return{state:null,avg:null,weak:true,band:fmtF(center)};const avg=Math.atan2(sy,sx)*180/Math.PI;const strength=Math.hypot(sx,sy)/cn;let state=Math.abs(avg)>90?'TERBALIK':'NORMAL';if(S.signHist.length>=10){const neg=S.signHist.filter(v=>v<0).length/S.signHist.length;if(neg>=0.7&&Math.abs(avg)>60)state='TERBALIK';if(neg<=0.3&&Math.abs(avg)<120&&strength>0.5)state='NORMAL'}return{state,avg,weak:strength<0.5,band:fmtF(center)}}
 function detectPolarity(raw){return detectPolarityBand(raw,S.cursor||1000)}
 function setPolarityUI(state,avg,weak,band){S.polarity=state;S.phaseAvg=avg;S.polBand=band;const el2=$('polstat');if(!state){el2.textContent='—';return}el2.textContent=(state==='TERBALIK'?'TERBALIK ⚠':'NORMAL ✓')+(weak?' ?':'')+(band?' @ '+band:'')}
@@ -249,17 +273,16 @@ function refreshPolarityAfterOff(){if(S.pink&&S.running)return;const cp=lastVisi
 function startRename(cp,nameEl){if(nameEl.querySelector('input'))return;const oldName=cp.name;const input=document.createElement('input');input.className='renameInput';input.type='text';input.value=oldName;input.maxLength=40;nameEl.textContent='';nameEl.appendChild(input);input.focus();input.select();let done=false;const save=(cancel)=>{if(done)return;done=true;const v=input.value.trim();if(!cancel&&v&&v!==oldName){cp.name=v;toast('Trace diganti: '+v)}renderCaptures()};input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();save(false)}else if(e.key==='Escape'){save(true)}e.stopPropagation()});input.addEventListener('blur',()=>save(false));input.addEventListener('click',e=>e.stopPropagation());input.addEventListener('pointerdown',e=>e.stopPropagation())}
 function renderCaptures(){
   const el=$('caplist');
-  let html='<div class="capitem"><span class="dot" style="background:#3fd4ec"></span><label><input type="checkbox" checked disabled></label><div class="nm"><b>Live — '+(REFLBL[S.refType]||'TF')+'</b><span>'+(S.running?'LIVE':'STANDBY')+' • '+(S.pink?'Reference ON':'Reference OFF')+'</span></div></div>';
-  if(!S.captures.length){el.innerHTML=html+'<div class="capempty">Belum ada capture.<br>Pencet Capture pas kurva bagus.</div>';refreshPolarityAfterOff();return}
+  let html='<div class="capitem"><span class="x">✕</span><span class="dot" style="background:#3fd4ec"></span><label><input type="checkbox" checked disabled></label><div class="nm"><b>Live — '+(REFLBL[S.refType]||'TF')+'</b><span>'+(S.running?'LIVE':'STANDBY')+' • '+(S.pink?'Reference ON':'Reference OFF')+'</span></div></div>';
   el.innerHTML=html;
   S.captures.forEach((cp,idx)=>{
     const row=document.createElement('div');row.className='capitem';
     const polTxt=cp.polarity?cp.polarity+(cp.polarity==='TERBALIK'?' ⚠':' ✓')+(cp.phaseAvg!=null?' '+cp.phaseAvg.toFixed(0)+'°':'')+(cp.weak?' ?':'')+(cp.polBand?' @ '+cp.polBand:''):'—';
-    const meta=cp.time+' • '+(cp.ref||'TF')+' • '+polTxt;
-    row.innerHTML='<span class="dot" style="background:'+cp.color+'"></span><label><input type="checkbox" '+(cp.show?'checked':'')+'></label><div class="nm"><b title="Pencet buat ganti nama">'+cp.name+'</b><span>'+meta+'</span></div><button>✕</button>';
+    const meta=(cp.time?cp.time+' • ':'')+(cp.ref||'TF')+' • '+polTxt;
+    row.innerHTML='<span class="x">✕</span><span class="dot" style="background:'+cp.color+'"></span><label><input type="checkbox" '+(cp.show?'checked':'')+'></label><div class="nm"><b title="Pencet buat ganti nama">'+cp.name+'</b><span>'+meta+'</span></div>';
+    row.querySelector('.x').onclick=()=>{S.captures.splice(idx,1);renderCaptures();refreshPolarityAfterOff();drawAll();toast('Trace dihapus')};
     row.querySelector('input').onchange=e=>{cp.show=e.target.checked;refreshPolarityAfterOff();drawAll()};
     const nameEl=row.querySelector('.nm b');nameEl.onclick=e=>{e.stopPropagation();startRename(cp,nameEl)};
-    row.querySelector('button').onclick=()=>{S.captures.splice(idx,1);renderCaptures();refreshPolarityAfterOff();drawAll();toast('Trace dihapus')};
     el.appendChild(row);
   });
   refreshPolarityAfterOff();
@@ -284,7 +307,7 @@ function applyDelay(d){if(d==null||Math.abs(d)>5)d=0;S.delayHist.push(d);if(S.de
 function findDelay(silent){if(!S.pink||!S.running||!S.phaseRaw.length){if(!silent)toast('START + PINK dulu, tunggu 5 detik.');return}applyDelay(calcDelayIn(S.phaseRaw,S.delayLo,S.delayHi));if(!silent)toast('Delay '+S.foundDelay.toFixed(3)+' ms DIKUNCI')}
 $('finddelaybtn').onclick=()=>findDelay(false);
 $('unwrapbtn').onclick=()=>{S.unwrap=!S.unwrap;$('unwrapbtn').textContent=S.unwrap?'↩ UNWRAP':'↩ WRAP';drawAll()};
-$('trackbtn').onclick=()=>{S.track=!S.track;$('trackbtn').classList.toggle('on',S.track);toast(S.track?'Track ON — cursor ngikutin puncak':'Track OFF')};
+$('trackbtn').onclick=()=>{S.track=!S.track;$('trackbtn').classList.toggle('on',S.track);toast(S.track?'Track ON':'Track OFF')};
 $('focusbtn').onclick=()=>{toast('Focus — cursor di tengah grafik');S.cursor=1000;drawAll()};
 $('resetavgbtn').onclick=()=>{S.acc=null;S.accN=0;toast('Average di-reset')};
 $('dbplusbtn').onclick=()=>{const i=RANGES.indexOf(S.range);if(i>0){S.range=RANGES[i-1];updateRangeLabels();drawAll()}};
@@ -294,6 +317,7 @@ $('newtabbtn2').onclick=()=>toast('Tab baru — kayak Smaart, 1 tab dulu ya mas'
 $('newspecbtn').onclick=()=>setView('spectrum');
 $('newtfbtn').onclick=()=>setView('transfer');
 $('databarbtn').onclick=()=>toast('Data Bar — di bawah udah keliatan semua');
+$('genOnBtn').onclick=()=>{if(!S.running){toast('START dulu.');return}if(S.pink)stopPink();else startNoise(S.refType)};
 function setView(v){
   $('viewTransfer').style.display=v==='transfer'?'block':'none';
   $('viewSpectrum').style.display=v==='spectrum'?'block':'none';
@@ -314,7 +338,7 @@ function periodicBuffer(c,type,N){const re=new Float32Array(N),im=new Float32Arr
 function sweepBuffer(c){const sr=c.sampleRate,dur=4,N=Math.floor(sr*dur);const b=c.createBuffer(1,N,sr),d=b.getChannelData(0);let phase=0;const f0=20,f1=20000,k=Math.log(f1/f0)/dur;for(let i=0;i<N;i++){const t=i/sr,f=f0*Math.exp(k*t);phase+=2*Math.PI*f/sr;const fade=Math.min(1,Math.min(i,N-1-i)/(sr*0.05));d[i]=Math.sin(phase)*0.35*fade}return b}
 function buildRef(type){if(!S.ctx)return;const N=S.fft;const buf=periodicBuffer(S.ctx,type,N);S.refBuf=buf;const d=buf.getChannelData(0);const re=Float32Array.from(d),im=new Float32Array(N);fftCalc(re,im);S.refRe=re;S.refIm=im}
 function resetAcc(){S.acc=null;S.accN=0}
-function setRefButtons(){['pink','white','brown','sweep'].forEach(t=>{const b=$(t==='pink'?'pinkbtn':t==='white'?'whitebtn':t==='brown'?'brownbtn':'sweepbtn');if(b)b.classList.toggle('on',S.pink&&S.refType===t)})}
+function setRefButtons(){['pink','white','brown','sweep'].forEach(t=>{const b=$(t==='pink'?'pinkbtn':t==='white'?'whitebtn':t==='brown'?'brownbtn':'sweepbtn');if(b)b.classList.toggle('on',S.pink&&S.refType===t)});const g=$('genOnBtn');if(g){g.textContent=S.pink?'On':'Off';g.style.background=S.pink?'#c2410c':'#222b37'}$('genDb').textContent=S.pink?'0 dB':'— dB'}
 async function startNoise(type){
   if(S.noise){try{S.noise.stop()}catch(e){}try{S.noise.disconnect()}catch(e){}S.noise=null}
   if(S.noiseGain){try{S.noiseGain.disconnect()}catch(e){}S.noiseGain=null}
@@ -322,22 +346,22 @@ async function startNoise(type){
   if(type==='sweep'){S.noise=c.createBufferSource();S.noise.buffer=sweepBuffer(c);S.noise.loop=true;buildRef('pink')}
   else{buildRef(type);S.noise=c.createBufferSource();S.noise.buffer=S.refBuf;S.noise.loop=true}
   S.noiseGain=c.createGain();S.noiseGain.gain.value=($('noisevol').value/100)*0.9;S.noise.connect(S.noiseGain);S.noiseGain.connect(c.destination);S.noise.start();
-  S.pink=true;$('refstat').textContent=REFLBL[type];$('refstat2').textContent=REFLBL[type]+' — On';$('refstat3').textContent=REFLBL[type];$('phasesub').textContent=REFLBL[type]+' ON • Phase -180/+180';
+  S.pink=true;$('refstat').textContent=REFLBL[type];$('refstat2').textContent=REFLBL[type]+' — On';$('refstat3').textContent=REFLBL[type];$('phasesub').textContent=REFLBL[type]+' ON • Phase -150/+150';$('focusVal').textContent='● PINK ON';
   setRefButtons();resetAcc();S.appliedDelay=0;S.foundDelay=null;S.delayLocked=false;S.delayHist=[];S.signHist=[];S.corrSign=1;S.lastAutoDelay=0;
   $('finddelayres').textContent='Delay otomatis nyari sendiri…';updateRangeLabels();updatePolarityLive();renderCaptures();
   toast(REFLBL[type]+' nyala — delay nyari sendiri');
 }
-function stopPink(){if(S.noise){try{S.noise.stop()}catch(e){}try{S.noise.disconnect()}catch(e){}S.noise=null}if(S.noiseGain){try{S.noiseGain.disconnect()}catch(e){}S.noiseGain=null}S.pink=false;$('refstat').textContent='OFF';$('refstat2').textContent='OFF';$('refstat3').textContent='OFF';$('phasesub').textContent='Reference OFF — Phase capture tetep datar';setRefButtons();killLive();renderCaptures();drawAll()}
+function stopPink(){if(S.noise){try{S.noise.stop()}catch(e){}try{S.noise.disconnect()}catch(e){}S.noise=null}if(S.noiseGain){try{S.noiseGain.disconnect()}catch(e){}S.noiseGain=null}S.pink=false;$('refstat').textContent='OFF';$('refstat2').textContent='OFF';$('refstat3').textContent='OFF';$('phasesub').textContent='Reference OFF — Phase capture tetep datar';$('focusVal').textContent='● LIVE';setRefButtons();killLive();renderCaptures();drawAll()}
 $('pinkbtn').onclick=()=>{autoLandscape();if(!S.running){toast('START dulu.');return}startNoise('pink')};
 $('whitebtn').onclick=()=>{autoLandscape();if(!S.running){toast('START dulu.');return}startNoise('white')};
 $('brownbtn').onclick=()=>{autoLandscape();if(!S.running){toast('START dulu.');return}startNoise('brown')};
 $('sweepbtn').onclick=()=>{autoLandscape();if(!S.running){toast('START dulu.');return}startNoise('sweep')};
 $('noiseoff').onclick=stopPink;
-$('noisevol').oninput=e=>{const v=+e.target.value;$('voltxt').textContent=v+'%';if(S.noiseGain&&S.ctx)S.noiseGain.gain.setTargetAtTime((v/100)*0.9,S.ctx.currentTime,.02)};
-function drawZeroLine(c,w,h,range){const y=yMag(0,range,h);c.strokeStyle='#22ff88';c.lineWidth=4;c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();c.fillStyle='#22ff88';c.font='900 16px Arial';c.textAlign='left';c.fillText('0 dB',6,y-7)}
-function drawScaleInto(c,W,H){c.clearRect(0,0,W,H);c.fillStyle='#0b0f14';c.fillRect(0,0,W,H);MAJORS.forEach(f=>{const x=xfreq(f,W);c.strokeStyle='#e2e8f0';c.lineWidth=3;c.beginPath();c.moveTo(x,0);c.lineTo(x,14);c.stroke();const lab=f===20?'20':f===20000?'20 kHz':fmtLab(f);c.fillStyle='#ffffff';c.font='900 16px Arial';if(f===20000){c.textAlign='right';c.fillText(lab,W-4,30)}else{c.textAlign='left';c.fillText(lab,Math.min(W-44,x+6),30)}});const cx=xfreq(S.cursor,W);c.strokeStyle='#fff';c.lineWidth=3;c.beginPath();c.moveTo(cx,0);c.lineTo(cx,H);c.stroke();c.textAlign='left'}
+$('noisevol').oninput=e=>{const v=+e.target.value;$('voltxt').textContent=v+'%';$('genDb').textContent=v===100?'0 dB':(v===0?'-inf dB':(-(100-v)/5).toFixed(1)+' dB');if(S.noiseGain&&S.ctx)S.noiseGain.gain.setTargetAtTime((v/100)*0.9,S.ctx.currentTime,.02)};
+function drawZeroLine(c,w,h,range){const y=yMag(0,range,h);c.strokeStyle='#22ff88';c.lineWidth=3;c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();c.fillStyle='#22ff88';c.font='900 13px Arial';c.textAlign='left';c.fillText('0 dB',6,y-6)}
+function drawScaleInto(c,W,H){c.clearRect(0,0,W,H);c.fillStyle='#0b0f14';c.fillRect(0,0,W,H);MAJORS.forEach(f=>{const x=xfreq(f,W);c.strokeStyle='#e2e8f0';c.lineWidth=2;c.beginPath();c.moveTo(x,0);c.lineTo(x,12);c.stroke();const lab=f===20?'20':f===20000?'20 kHz':fmtLab(f);c.fillStyle='#ffffff';c.font='900 14px Arial';if(f===20000){c.textAlign='right';c.fillText(lab,W-4,26)}else{c.textAlign='left';c.fillText(lab,Math.min(W-44,x+5),26)}});const cx=xfreq(S.cursor,W);c.strokeStyle='#fff';c.lineWidth=2;c.beginPath();c.moveTo(cx,0);c.lineTo(cx,H);c.stroke();c.textAlign='left'}
 function drawScale(){drawScaleInto(fg,fsc.width,fsc.height);drawScaleInto(fg2,fsc2.width,fsc2.height)}
-function gridMag(c,w,h,range){c.clearRect(0,0,w,h);c.fillStyle='#05070a';c.fillRect(0,0,w,h);FREQS.forEach(f=>{const x=xfreq(f,w);c.strokeStyle=MAJORSET.has(f)?'#3a4452':'#232a35';c.lineWidth=1;c.beginPath();c.moveTo(x,0);c.lineTo(x,h);c.stroke()});const half=range/2;c.textAlign='left';for(let d=-half;d<=half;d+=10){if(d===0)continue;const y=yMag(d,range,h);c.strokeStyle='#232a35';c.lineWidth=1;c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();c.fillStyle='#ffffff';c.font='900 14px Arial';c.fillText((d>0?'+'+d:''+d)+' dB',4,Math.max(13,Math.min(h-2,y+11)))}}
+function gridMag(c,w,h,range){c.clearRect(0,0,w,h);c.fillStyle='#05070a';c.fillRect(0,0,w,h);FREQS.forEach(f=>{const x=xfreq(f,w);c.strokeStyle=MAJORSET.has(f)?'#3a4452':'#232a35';c.lineWidth=1;c.beginPath();c.moveTo(x,0);c.lineTo(x,h);c.stroke()});const half=range/2;c.textAlign='left';for(let d=-half;d<=half;d+=3){const y=yMag(d,range,h);c.strokeStyle='#232a35';c.lineWidth=1;c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();if(d%6===0){c.fillStyle='#ffffff';c.font='900 13px Arial';c.fillText((d>0?'+'+d:''+d)+' dB',4,Math.max(12,Math.min(h-2,y+11)))}}}
 function densify(freqs,pArr,phArr){
   const W=mag.width,N=301,out=[],ph=[];
   const logF=new Float64Array(freqs.length),pref=new Float64Array(freqs.length+1);
@@ -367,10 +391,11 @@ function drawIR(){
 function drawMagInto(c,canvasEl){
   const w=canvasEl.width,h=canvasEl.height,range=S.range;
   gridMag(c,w,h,range);
-  S.captures.forEach(cp=>{if(!cp.show||!cp.mag.length)return;const fixed=recenter(cp.mag);c.beginPath();c.strokeStyle=cp.color;c.lineWidth=3;fixed.forEach((o,i)=>{const Y=yMag(o.v,range,h);const X=xfreq(o.f,w);if(i===0)c.moveTo(X,Y);else c.lineTo(X,Y)});c.stroke()});
+  S.captures.forEach(cp=>{if(!cp.show||!cp.mag.length)return;const fixed=recenter(cp.mag);c.beginPath();c.strokeStyle=cp.color;c.lineWidth=2;fixed.forEach((o,i)=>{const Y=yMag(o.v,range,h);const X=xfreq(o.f,w);if(i===0)c.moveTo(X,Y);else c.lineTo(X,Y)});c.stroke()});
   if(S.live.length){c.beginPath();c.strokeStyle='#3fd4ec';c.lineWidth=3;S.live.forEach((o,i)=>{const Y=yMag(o.v,range,h);if(i===0)c.moveTo(o.x,Y);else c.lineTo(o.x,Y)});c.stroke()}
   drawZeroLine(c,w,h,range);
-  const cx=Math.max(6,Math.min(w-6,xfreq(S.cursor,w)));c.strokeStyle='#fff';c.lineWidth=3;c.beginPath();c.moveTo(cx,0);c.lineTo(cx,h);c.stroke();
+  c.fillStyle='#ffffff';c.font='900 12px Arial';c.textAlign='right';c.fillText('STUDIO24C',w-8,16);c.textAlign='left';
+  const cx=Math.max(6,Math.min(w-6,xfreq(S.cursor,w)));c.strokeStyle='#fff';c.lineWidth=2;c.beginPath();c.moveTo(cx,0);c.lineTo(cx,h);c.stroke();
   return cx;
 }
 function drawAll(){
@@ -379,7 +404,7 @@ function drawAll(){
   drawMagInto(mg2,mag2);
   let pt=pointOn(S.live,S.cursor);
   if(!pt){const cp=lastVisibleCapture();if(cp&&cp.mag.length)pt=pointOn(recenter(cp.mag),S.cursor)}
-  if(pt){const Y=yMag(pt.v,range,h);mg.beginPath();mg.arc(cx,Y,9,0,Math.PI*2);mg.fillStyle='#fff';mg.fill();$('cursorread').textContent=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB'}else{$('cursorread').textContent=fmtF(S.cursor)+' • — dB'}
+  if(pt){const Y=yMag(pt.v,range,h);mg.beginPath();mg.arc(cx,Y,8,0,Math.PI*2);mg.fillStyle='#fff';mg.fill();$('cursorread').textContent=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB'}else{$('cursorread').textContent=fmtF(S.cursor)+' • — dB'}
   drawScale();
   const pw=phc.width,phH=phc.height;
   const livePhase=S.pink&&S.running&&S.phaseRaw.length>0;
@@ -389,22 +414,21 @@ function drawAll(){
   const capDisp=capPhase?phaseDisplayRaw(lastVisibleCapture().phaseRaw):[];
   const disp=livePhase?liveDisp:capDisp;
   let allPh=[];if(livePhase)allPh=allPh.concat(liveDisp);S.captures.forEach(cp=>{if(cp.show&&cp.phaseRaw.length)allPh=allPh.concat(phaseDisplayRaw(cp.phaseRaw))});
-  const minPh=S.unwrap&&allPh.length?(Math.min(...allPh.map(o=>o.v),-180)):-180;
-  const maxPh=S.unwrap&&allPh.length?(Math.max(...allPh.map(o=>o.v),180)):180;
-  const yPh=v=>{if(S.unwrap){const span=Math.max(360,maxPh-minPh);return((maxPh-v)/span)*phH}return((180-v)/360)*phH};
+  const minPh=-150,maxPh=150;
+  const yPh=v=>((150-v)/300)*phH;
   pg.clearRect(0,0,pw,phH);pg.fillStyle='#05070a';pg.fillRect(0,0,pw,phH);pg.strokeStyle='#232a35';pg.lineWidth=1;
   FREQS.forEach(f=>{const x=xfreq(f,pw);pg.beginPath();pg.moveTo(x,0);pg.lineTo(x,phH);pg.stroke()});
-  if(!S.unwrap){pg.strokeStyle='#ff6b6b';pg.lineWidth=1;[180,-180].forEach(d=>{const y=yPh(d);pg.beginPath();pg.moveTo(0,y);pg.lineTo(pw,y);pg.stroke();pg.fillStyle='#ff6b6b';pg.font='900 13px Arial';pg.fillText('±180°',10,d===180?13:y+13)})}
-  pg.strokeStyle='#22ff88';pg.lineWidth=4;pg.beginPath();pg.moveTo(0,yPh(0));pg.lineTo(pw,yPh(0));pg.stroke();
-  pg.fillStyle='#22ff88';pg.font='900 13px Arial';pg.fillText(S.unwrap?'0° (unwrap)':'0°',10,Math.max(13,Math.min(phH-2,yPh(0)+13)));
+  [150,120,90,60,30,0,-30,-60,-90,-120,-150].forEach(d=>{const y=yPh(d);pg.strokeStyle='#232a35';pg.beginPath();pg.moveTo(0,y);pg.lineTo(pw,y);pg.stroke();pg.fillStyle='#ffffff';pg.font='900 13px Arial';pg.fillText(d+'°',4,Math.max(12,Math.min(phH-2,y+11)))});
+  pg.strokeStyle='#22ff88';pg.lineWidth=3;pg.beginPath();pg.moveTo(0,yPh(0));pg.lineTo(pw,yPh(0));pg.stroke();
+  pg.fillStyle='#ffffff';pg.font='900 12px Arial';pg.textAlign='right';pg.fillText('STUDIO24C',pw-8,16);pg.textAlign='left';
   const pp=pointOn(disp,S.cursor);
   if(phaseActive){
-    S.captures.forEach(cp=>{if(!cp.show||!cp.phaseRaw.length)return;drawPhaseSegments(pg,phaseDisplayRaw(cp.phaseRaw),yPh,minPh,maxPh,cp.color,2.5)});
-    if(livePhase)drawPhaseSegments(pg,liveDisp,yPh,minPh,maxPh,'#3fd4ec',3.5);
-    pg.strokeStyle='#fff';pg.lineWidth=3;pg.beginPath();pg.moveTo(cx,0);pg.lineTo(cx,phH);pg.stroke();
-    if(pp){const Y=yPh(Math.max(minPh,Math.min(maxPh,pp.v)));pg.beginPath();pg.arc(cx,Y,8,0,Math.PI*2);pg.fillStyle='#fff';pg.fill();if(pt)$('cursorread').textContent=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB • Phase '+pp.v.toFixed(0)+'°'}
+    S.captures.forEach(cp=>{if(!cp.show||!cp.phaseRaw.length)return;drawPhaseSegments(pg,phaseDisplayRaw(cp.phaseRaw),yPh,minPh,maxPh,cp.color,2)});
+    if(livePhase)drawPhaseSegments(pg,liveDisp,yPh,minPh,maxPh,'#3fd4ec',3);
+    pg.strokeStyle='#fff';pg.lineWidth=2;pg.beginPath();pg.moveTo(cx,0);pg.lineTo(cx,phH);pg.stroke();
+    if(pp){const Y=yPh(Math.max(minPh,Math.min(maxPh,pp.v)));pg.beginPath();pg.arc(cx,Y,7,0,Math.PI*2);pg.fillStyle='#fff';pg.fill();if(pt)$('cursorread').textContent=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB • Phase '+pp.v.toFixed(0)+'°'}
   }else{
-    pg.strokeStyle='#fff';pg.lineWidth=3;pg.beginPath();pg.moveTo(cx,0);pg.lineTo(cx,phH);pg.stroke();
+    pg.strokeStyle='#fff';pg.lineWidth=2;pg.beginPath();pg.moveTo(cx,0);pg.lineTo(cx,phH);pg.stroke();
     pg.fillStyle='#ffffff';pg.font='900 15px Arial';pg.textAlign='center';pg.fillText('NO REFERENCE — HIDUPKAN REFERENCE',pw/2,phH/2+28);pg.textAlign='left';
   }
   drawIR();
@@ -458,7 +482,9 @@ $('start').onclick=async()=>{
     await ensureCtx();S.src=S.ctx.createMediaStreamSource(S.stream);
     S.an=S.ctx.createAnalyser();S.fft=+$('fft').value;S.an.fftSize=S.fft;S.an.smoothingTimeConstant=0;S.an.minDecibels=-120;S.an.maxDecibels=0;S.src.connect(S.an);
     resetAcc();S.running=true;S.frameN=0;S.signHist=[];S.lastAutoDelay=0;
-    $('start').disabled=true;$('stop').disabled=false;$('status').textContent='LIVE';$('liveind').textContent='● LIVE';$('fftstat').textContent=S.fft;updateRangeLabels();renderCaptures();draw();startNoise('pink');
+    $('start').disabled=true;$('stop').disabled=false;$('status').textContent='LIVE';$('liveind').textContent='● LIVE';$('fftstat').textContent=S.fft;updateRangeLabels();renderCaptures();
+    await startNoise('pink');
+    draw();
   }catch(e){toast('Mic ga bisa dibuka: '+e.message);$('status').textContent='MIC GAGAL'}
 };
 $('stop').onclick=()=>{S.running=false;cancelAnimationFrame(S.raf);if(S.stream)S.stream.getTracks().forEach(t=>t.stop());S.stream=null;S.an=null;$('start').disabled=false;$('stop').disabled=true;$('status').textContent='STANDBY';$('liveind').textContent='● STANDBY';updatePeakPanel(null);if(S.pink)stopPink();else{killLive();drawAll()}};
