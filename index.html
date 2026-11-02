@@ -113,14 +113,14 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
     <ol>
       <li>Sentuh layar 1x, otomatis landscape.</li>
       <li>Pencet <b>START</b> di atas, izinin mic. FFT biarin 8192.</li>
-      <li>Pencet <b>🩷 PINK</b> buat kurva anteng, volume 100%, mic 1 m dari speaker. Tunggu 2-3 detik, kurva nya naik semua, ga goyang.</li>
-      <li><b>〰️ SWEEP</b> beda: tunggu 8 detik penuh, kurva nya keisi dari kiri ke kanan, pake MAX-HOLD. Jangan pencet FIND DELAY pas sweep.</li>
+      <li><b>CEK SINYAL DULU:</b> liat <b>dBFS PEAK</b> di kanan, harus -12 sampai -6 dBFS. Kalo masih -45 dBFS, gedein tombol volume HP sampe mentok, deketin mic 1 m dari speaker, jangan ketutup tangan.</li>
+      <li>Pencet <b>🩷 PINK</b> buat kurva anteng, tunggu 2-3 detik, kurva nya naik semua.</li>
+      <li><b>〰️ SWEEP</b> sekarang 20 detik, pelan. Tunggu 20 detik penuh, kurva keisi dari kiri ke kanan, pake MAX-HOLD mentah, ga pake rata-rata. Jangan pencet FIND DELAY pas sweep, polarity nya abaikan pas sweep.</li>
       <li><b>⬜ WHITE</b> buat tes tweeter, mulai volume 30% dulu.</li>
-      <li>Liat <b>dBFS PEAK</b> di kanan, bagus nya -12 sampai -6 dBFS.</li>
       <li>Geser cursor, liat kotak <b>CURSOR</b> di tengah atas.</li>
-      <li>Liat kiri grafik phase: <b>NORMAL ✓ / TERBALIK ⚠</b>, itu polarity nya, cuma bener pas PINK / WHITE.</li>
+      <li>Liat kiri grafik phase: <b>NORMAL ✓ / TERBALIK ⚠</b>, cuma bener pas PINK / WHITE.</li>
       <li>Pencet <b>🔍 FIND DELAY</b> pas PINK jalan.</li>
-      <li>Pencet <b>📸 CAPTURE</b> pas kurva nya udah anteng naik semua, pencet nama nya / ✏️, ubah jadi <b>box pahratel</b>.</li>
+      <li>Pencet <b>📸 CAPTURE</b> pas kurva nya udah anteng / sweep nya udah 20 detik kelar, pencet nama nya / ✏️, ubah jadi <b>box pahratel</b>.</li>
       <li>Pencet <b>■ OFF</b>, suara mati, phase capture + cursor tetep aktif.</li>
     </ol>
     <p style="font-size:12px;line-height:1.6">Garis ijo tengah = 0 dB / 0°. dBFS rel, bukan SPL terkalibrasi.</p>
@@ -193,6 +193,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         <small>PEAK SEKARANG • INPUT MIC</small>
       </div>
       <div class="peakMeter"><div class="peakMeterFill" id="peakFill"></div></div>
+      <div id="weakwarn" style="display:none;color:#f87171;font-size:10px;font-weight:900;margin-top:5px;text-align:center;line-height:1.4">⚠ SINYAL LEMAH — GEDEIN VOLUME HP + DEKETIN MIC</div>
     </div>
 
     <div class="panel" style="margin-top:8px">
@@ -219,7 +220,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
           <select id="detail">
             <option value="0">RAW</option>
             <option value="12">1/12 OKT</option>
-            <option value="6" selected>1/6 OKT</option>
+            <option value="6">1/6 OKT</option>
             <option value="3" selected>1/3 OKT</option>
           </select>
         </label>
@@ -246,6 +247,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <label class="miniVol">VOLUME <b id="voltxt" style="color:#fff">30%</b>
         <input type="range" id="noisevol" min="0" max="100" value="30">
       </label>
+      <div id="sweepprog" style="display:none;color:#3fd4ec;font-size:10px;font-weight:900;margin-top:5px;text-align:center">SWEEP: 0 / 20 detik</div>
     </div>
   </aside>
 </div>
@@ -276,7 +278,7 @@ const CAPCOLORS=['#fb923c','#facc15','#f472b6','#a78bfa','#34d399','#f87171','#9
 const S={ctx:null,stream:null,src:null,an:null,refAn:null,noise:null,noiseGain:null,pink:false,running:false,fft:8192,raf:0,
   cursor:4190,live:[],phase:[],phaseRaw:[],coh:[],sm:null,acc:null,accN:0,magOffset:null,captures:[],capN:0,unwrap:false,delayMs:null,
   polarity:null,phaseAvg:null,phSmooth:6,delayLo:200,delayHi:2000,cohAvg:null,foundDelay:null,foundDelayBand:null,foundDelayCoh:null,
-  clipUntil:0,peakHoldDb:-120,peakHoldUntil:0,refType:null,powAvg:null,sweepMax:null,sweepMaxFreqs:null};
+  clipUntil:0,peakHoldDb:-120,peakHoldUntil:0,refType:null,powAvg:null,sweepMax:null,sweepMaxFreqs:null,sweepStart:0,sweepDur:20,lastPeak:-120};
 
 $('infobtn').onclick=()=>{$('infoModal').classList.add('show')};
 $('infoClose').onclick=()=>{$('infoModal').classList.remove('show')};
@@ -285,6 +287,9 @@ $('infoModal').addEventListener('click',e=>{if(e.target.id==='infoModal')$('info
 function updatePeakPanel(peakDb,peakFreq){
   const big=$('peakBig'),fill=$('peakFill');
   if(!big||!fill)return;
+  S.lastPeak=peakDb==null?-120:peakDb;
+  const w=$('weakwarn');
+  if(w)w.style.display=(peakDb!=null&&peakDb<-30&&S.running)?'block':'none';
   if(peakDb==null){
     big.textContent='— dBFS';big.className='big';
     fill.style.width='0%';fill.style.background='#22ff88';
@@ -438,6 +443,10 @@ function renderCaptures(){
 $('capturebtn').onclick=()=>{
   autoLandscape();
   if(!S.live.length){toast('Belum ada kurva. START dulu, tunggu grafik jalan, baru CAPTURE.');return}
+  if(S.refType==='sweep'&&S.sweepStart){
+    const el=(performance.now()-S.sweepStart)/1000;
+    if(el<S.sweepDur){toast('Sweep belum kelar, tunggu '+Math.ceil(S.sweepDur-el)+' detik lagi, baru CAPTURE.');return}
+  }
   S.capN++;
   const now=new Date(),hh=String(now.getHours()).padStart(2,'0'),mm=String(now.getMinutes()).padStart(2,'0'),ss=String(now.getSeconds()).padStart(2,'0');
   const pol=detectPolarity(S.phaseRaw,S.coh);
@@ -534,8 +543,9 @@ function updatePolarityLive(){
 }
 function killLive(){
   S.live=[];S.phase=[];S.phaseRaw=[];S.coh=[];
-  S.sm=null;S.acc=null;S.accN=0;S.magOffset=null;S.delayMs=null;S.powAvg=null;S.sweepMax=null;S.sweepMaxFreqs=null;
+  S.sm=null;S.acc=null;S.accN=0;S.magOffset=null;S.delayMs=null;S.powAvg=null;S.sweepMax=null;S.sweepMaxFreqs=null;S.sweepStart=0;
   $('cohtxt').textContent='—';$('peakdb').textContent='—';$('peakfreq').textContent='—';
+  $('sweepprog').style.display='none';
   if(S.foundDelay!=null)$('delaytxt').textContent=S.foundDelay.toFixed(3)+' ms';
   else $('delaytxt').textContent='—';
   refreshPolarityAfterOff();
@@ -576,7 +586,7 @@ function whiteBuffer(c){
   return b;
 }
 function sweepBuffer(c){
-  const sr=c.sampleRate,T=8,N=Math.floor(sr*T),b=c.createBuffer(1,N,sr),d=b.getChannelData(0);
+  const sr=c.sampleRate,T=20,N=Math.floor(sr*T),b=c.createBuffer(1,N,sr),d=b.getChannelData(0);
   let ph=0;const f0=20,f1=20000,k=Math.pow(f1/f0,1/T);
   for(let i=0;i<N;i++){
     const t=i/sr,f=f0*Math.pow(k,t);
@@ -585,11 +595,11 @@ function sweepBuffer(c){
     const fade=Math.floor(sr*0.08);
     if(i<fade)env=0.5-0.5*Math.cos(Math.PI*i/fade);
     else if(i>=N-fade)env=0.5-0.5*Math.cos(Math.PI*(N-1-i)/fade);
-    d[i]=Math.sin(ph)*0.32*env;
+    d[i]=Math.sin(ph)*0.38*env;
   }
   return b;
 }
-function resetAcc(){S.acc=null;S.accN=0;S.sm=null;S.magOffset=null;S.live=[];S.phase=[];S.phaseRaw=[];S.coh=[];S.powAvg=null;S.sweepMax=null;S.sweepMaxFreqs=null}
+function resetAcc(){S.acc=null;S.accN=0;S.sm=null;S.magOffset=null;S.live=[];S.phase=[];S.phaseRaw=[];S.coh=[];S.powAvg=null;S.sweepMax=null;S.sweepMaxFreqs=null;S.sweepStart=0}
 function setRefButtons(type){
   $('pinkbtn').classList.toggle('on',type==='pink');
   $('sweepbtn').classList.toggle('on',type==='sweep');
@@ -606,9 +616,10 @@ async function startRef(type){
   S.pink=true;S.refType=type;
   $('refstat').textContent=type==='sweep'?'SWEEP':type==='white'?'WHITE NOISE':'PINK NOISE';
   $('modetxt').textContent='TF';
-  $('phasesub').textContent=type==='sweep'?'Sweep ON — tunggu 8 detik, kurva keisi MAX-HOLD':type==='white'?'White ON — Phase jalan':'Pink ON — Phase jalan';
-  setRefButtons(type);resetAcc();drawAll();
-  if(type==='sweep')toast('SWEEP jalan, tunggu 8 detik sampe kurva keisi semua, jangan di-capture dulu.');
+  $('phasesub').textContent=type==='sweep'?'Sweep ON — 20 detik, pelan, kurva keisi MAX-HOLD mentah':type==='white'?'White ON — Phase jalan':'Pink ON — Phase jalan';
+  setRefButtons(type);resetAcc();
+  if(type==='sweep'){S.sweepStart=performance.now();$('sweepprog').style.display='block';toast('SWEEP 20 detik jalan, tunggu sampe kelar, jangan capture dulu.')}
+  drawAll();
 }
 async function startPink(){return startRef('pink')}
 function stopPinkNoiseOnly(){
@@ -620,7 +631,7 @@ function stopPink(){
   stopPinkNoiseOnly();
   S.pink=false;S.refType=null;
   $('refstat').textContent='OFF';$('modetxt').textContent='RTA';$('phasesub').textContent='Pink OFF — Live mati, phase capture tetep aktif';
-  setRefButtons(null);
+  setRefButtons(null);$('sweepprog').style.display='none';
   killLive();drawAll();
 }
 $('pinkbtn').onclick=()=>{autoLandscape();S.refType==='pink'?stopPink():startRef('pink')};
@@ -813,7 +824,7 @@ function drawAll(){
     pg.strokeStyle='#fff';pg.lineWidth=3;pg.beginPath();pg.moveTo(cx,0);pg.lineTo(cx,phH);pg.stroke();
     drawPolarityBadge(pg,pw);
     pg.fillStyle='#ffffff';pg.font='900 15px Arial';pg.textAlign='center';
-    pg.fillText(S.refType==='sweep'?'SWEEP MAX-HOLD — TUNGGU 8 DETIK, PHASE TIDAK DIPAKAI':'NO REFERENCE — HIDUPKAN PINK NOISE',pw/2,phH/2+28);pg.textAlign='left';
+    pg.fillText(S.refType==='sweep'?'SWEEP MAX-HOLD 20 DETIK — TUNGGU SAMPE KELAR, PHASE TIDAK DIPAKAI':'NO REFERENCE — HIDUPKAN PINK NOISE',pw/2,phH/2+28);pg.textAlign='left';
   }
   $('ctFreq').textContent=fmtF(S.cursor);
   $('ctDb').textContent=pt?pt.v.toFixed(1)+' dB':'— dB';
@@ -852,6 +863,11 @@ function normalizeToCenter(freqs,powerArr){
   const avgMid=mid.reduce((s,v)=>s+v,0)/Math.max(1,mid.length);
   return powerArr.map(v=>v/Math.max(1e-12,avgMid));
 }
+function normalizeSweep(freqs,powerArr){
+  const vals=powerArr.slice().sort((a,b)=>a-b);
+  const p90=vals[Math.floor(vals.length*0.9)]||vals[vals.length-1]||1e-12;
+  return powerArr.map(v=>v/Math.max(1e-12,p90));
+}
 let delayTick=0,polTick=0;
 function draw(){
   if(!S.running||!S.an||!S.ctx)return;
@@ -862,6 +878,10 @@ function draw(){
   const peakFreq=peakBin*S.ctx.sampleRate/S.fft;
   $('peakdb').textContent=peak.toFixed(1)+' dBFS';$('peakfreq').textContent=Math.round(peakFreq)+' Hz';
   updatePeakPanel(peak,peakFreq);
+  if(S.refType==='sweep'&&S.sweepStart){
+    const el=Math.min(S.sweepDur,(performance.now()-S.sweepStart)/1000);
+    $('sweepprog').textContent='SWEEP: '+Math.floor(el)+' / '+S.sweepDur+' detik • '+(el>=S.sweepDur?'KELAR, BOLEH CAPTURE':'JANGAN CAPTURE DULU');
+  }
   let freqs,pArr,phArr,cohArr;
   const isSweep=S.refType==='sweep';
   if(S.pink&&S.refAn&&!isSweep){
@@ -872,16 +892,16 @@ function draw(){
   }else{
     freqs=[];const rawP=[];phArr=null;cohArr=null;$('cohtxt').textContent='—';
     for(let i=1;i<n;i++){const f=i*S.ctx.sampleRate/S.fft;if(f<MINF||f>MAXF)continue;freqs.push({f});rawP.push(db2p(raw[i]))}
-    const alpha=1/Math.max(1,+$('average').value);
-    if(!S.powAvg||S.powAvg.length!==rawP.length)S.powAvg=Float64Array.from(rawP);
-    else for(let i=0;i<rawP.length;i++)S.powAvg[i]+=alpha*(rawP[i]-S.powAvg[i]);
-    let base=Array.from(S.powAvg);
     if(isSweep){
-      if(!S.sweepMax||S.sweepMax.length!==base.length){S.sweepMax=Float64Array.from(base);S.sweepMaxFreqs=freqs.slice()}
-      else for(let i=0;i<base.length;i++)if(base[i]>S.sweepMax[i])S.sweepMax[i]=base[i];
-      base=Array.from(S.sweepMax);
+      if(!S.sweepMax||S.sweepMax.length!==rawP.length){S.sweepMax=Float64Array.from(rawP);S.sweepMaxFreqs=freqs.slice()}
+      else for(let i=0;i<rawP.length;i++)if(rawP[i]>S.sweepMax[i])S.sweepMax[i]=rawP[i];
+      pArr=normalizeSweep(freqs,Array.from(S.sweepMax));
+    }else{
+      const alpha=1/Math.max(1,+$('average').value);
+      if(!S.powAvg||S.powAvg.length!==rawP.length)S.powAvg=Float64Array.from(rawP);
+      else for(let i=0;i<rawP.length;i++)S.powAvg[i]+=alpha*(rawP[i]-S.powAvg[i]);
+      pArr=normalizeToCenter(freqs,Array.from(S.powAvg));
     }
-    pArr=normalizeToCenter(freqs,base);
   }
   const den=densify(freqs,pArr,phArr,cohArr);
   S.live=den.mag;S.phaseRaw=phArr?den.phase:[];S.phase=S.phaseRaw.slice();S.coh=cohArr?den.coh:[];
