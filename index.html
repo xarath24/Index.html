@@ -106,10 +106,10 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
   <div class="infoBox">
     <h3>ⓘ CARA PAKAI</h3>
     <ol>
-      <li>Pencet <b>START</b>, izinin mic. Volume tombol HP mentok.</li>
-      <li>Pilih <b>PINK</b>. Mic 30 cm, jangan gerak.</li>
-      <li>Tunggu 5 detik, phase datar, polarity kebaca dari korelasi.</li>
-      <li>Balik kabel + / - 1x, polarity harus ganti. Kalo ga ganti, screenshot.</li>
+      <li>Mute driver lain, ukur 1 driver doang.</li>
+      <li>Geser cursor ke tengah daerah driver itu: mid 500 Hz, tweeter 5 kHz.</li>
+      <li>Badge polarity itu polarity di cursor, bukan 1 box.</li>
+      <li>Balik + / - di DLMS, badge harus ganti di cursor itu.</li>
     </ol>
     <button id="infoClose" style="width:100%;padding:9px;margin-top:6px">✕ TUTUP</button>
   </div>
@@ -258,7 +258,7 @@ const CAPCOLORS=['#fb923c','#facc15','#f472b6','#a78bfa','#34d399','#f87171','#9
 const REFLBL={pink:'PINK NOISE',white:'WHITE NOISE',brown:'BROWN NOISE',sweep:'SWEEP 20 Hz-20 kHz'};
 const S={ctx:null,stream:null,src:null,an:null,noise:null,noiseGain:null,pink:false,refType:'pink',running:false,fft:16384,raf:0,
   cursor:1000,live:[],phase:[],phaseRaw:[],acc:null,accN:0,captures:[],capN:0,unwrap:false,delayMs:null,
-  polarity:null,phaseAvg:null,phSmooth:24,delayLo:200,delayHi:2000,foundDelay:null,
+  polarity:null,phaseAvg:null,phSmooth:24,delayLo:200,delayHi:2000,foundDelay:null,polBand:null,
   appliedDelay:0,frameN:0,delayLocked:false,refRe:null,refIm:null,refBuf:null,delayHist:[],signHist:[],corrSign:1,corrStrength:0};
 function median(a){if(!a.length)return 0;const s=a.slice().sort((x,y)=>x-y);return s[Math.floor(s.length/2)]}
 $('infobtn').onclick=()=>{$('infoModal').classList.add('show')};
@@ -308,36 +308,40 @@ function recenter(arr){
   const avg=mid.reduce((s,o)=>s+o.v,0)/mid.length;
   return arr.map(o=>({f:o.f,v:o.v-avg,x:o.x}));
 }
-function detectPolarity(raw){
-  if(S.signHist.length>=5){
-    const neg=S.signHist.filter(v=>v<0).length, tot=S.signHist.length;
-    if(neg/tot>=0.7)return{state:'TERBALIK',avg:180,weak:false,fromSign:true};
-    if((tot-neg)/tot>=0.7)return{state:'NORMAL',avg:0,weak:false,fromSign:true};
-  }
-  if(!raw.length)return{state:null,avg:null,weak:true};
-  let sx=0,sy=0,wsum=0,cn=0;
+function detectPolarityBand(raw,center){
+  if(!raw.length)return{state:null,avg:null,weak:true,band:null};
+  const lo=center/1.5,hi=center*1.5;
+  let sx=0,sy=0,cn=0;
   for(let i=0;i<raw.length;i++){
-    if(raw[i].f<200||raw[i].f>2000)continue;
+    if(raw[i].f<lo||raw[i].f>hi)continue;
     cn++;const r=raw[i].v*Math.PI/180;
-    sx+=Math.cos(r);sy+=Math.sin(r);wsum+=1;
+    sx+=Math.cos(r);sy+=Math.sin(r);
   }
-  if(wsum<=0||cn<5)return{state:null,avg:null,weak:true};
+  if(cn<3)return{state:null,avg:null,weak:true,band:fmtF(center)};
   const avg=Math.atan2(sy,sx)*180/Math.PI;
-  const strength=Math.hypot(sx,sy)/Math.max(1e-9,wsum);
-  return{state:Math.abs(avg)>90?'TERBALIK':'NORMAL',avg,weak:strength<0.5};
+  const strength=Math.hypot(sx,sy)/cn;
+  let state=Math.abs(avg)>90?'TERBALIK':'NORMAL';
+  if(S.signHist.length>=10){
+    const neg=S.signHist.filter(v=>v<0).length/tot0();
+    function tot0(){return S.signHist.length}
+    if(neg>=0.7&&Math.abs(avg)>60)state='TERBALIK';
+    if(neg<=0.3&&Math.abs(avg)<120&&strength>0.5)state='NORMAL';
+  }
+  return{state,avg,weak:strength<0.5,band:fmtF(center)};
 }
-function setPolarityUI(state,avg,weak){
-  S.polarity=state;S.phaseAvg=avg;
+function detectPolarity(raw){return detectPolarityBand(raw,S.cursor||1000)}
+function setPolarityUI(state,avg,weak,band){
+  S.polarity=state;S.phaseAvg=avg;S.polBand=band;
   const el2=$('polstat');
   if(!state){el2.textContent='—';return}
-  el2.textContent=(state==='TERBALIK'?'TERBALIK ⚠':'NORMAL ✓')+(weak?' ?':'');
+  el2.textContent=(state==='TERBALIK'?'TERBALIK ⚠':'NORMAL ✓')+(weak?' ?':'')+(band?' @ '+band:'');
 }
 function lastVisibleCapture(){for(let i=S.captures.length-1;i>=0;i--){if(S.captures[i].show)return S.captures[i]}return null}
 function refreshPolarityAfterOff(){
   if(S.pink&&S.running)return;
   const cp=lastVisibleCapture();
-  if(cp&&cp.polarity)setPolarityUI(cp.polarity,cp.phaseAvg,cp.weak);
-  else setPolarityUI(null,null,false);
+  if(cp&&cp.polarity)setPolarityUI(cp.polarity,cp.phaseAvg,cp.weak,cp.polBand);
+  else setPolarityUI(null,null,false,null);
 }
 function startRename(cp,nameEl){
   if(nameEl.querySelector('input'))return;
@@ -364,7 +368,7 @@ function renderCaptures(){
   el.innerHTML='';
   S.captures.forEach((cp,idx)=>{
     const row=document.createElement('div');row.className='capitem';
-    const polTxt=cp.polarity?cp.polarity+(cp.polarity==='TERBALIK'?' ⚠':' ✓')+(cp.phaseAvg!=null?' '+cp.phaseAvg.toFixed(0)+'°':'')+(cp.weak?' ?':''):'—';
+    const polTxt=cp.polarity?cp.polarity+(cp.polarity==='TERBALIK'?' ⚠':' ✓')+(cp.phaseAvg!=null?' '+cp.phaseAvg.toFixed(0)+'°':'')+(cp.weak?' ?':'')+(cp.polBand?' @ '+cp.polBand:''):'—';
     const dlTxt=cp.delayMs!=null?cp.delayMs.toFixed(3)+' ms':'—';
     const meta=cp.time+' • '+(cp.ref||'TF')+' • '+polTxt+' • '+dlTxt;
     row.innerHTML='<span class="dot" style="background:'+cp.color+'"></span><label><input type="checkbox" '+(cp.show?'checked':'')+' style="accent-color:'+cp.color+'"></label><div class="nm"><b title="Pencet buat ganti nama">'+cp.name+'</b><span title="'+meta+'">'+meta+'</span></div><button class="renameBtn">✏️</button><button>✕</button>';
@@ -385,11 +389,11 @@ $('capturebtn').onclick=()=>{
   const dms=S.foundDelay;
   const pol=detectPolarity(S.phaseRaw);
   S.captures.push({id:Date.now()+Math.random(),name:'Capture '+S.capN,color:CAPCOLORS[(S.capN-1)%CAPCOLORS.length],show:true,
-    time:hh+':'+mm+':'+ss,mode:S.pink?'TF':'RTA',ref:(REFLBL[S.refType]||'TF'),polarity:pol.state,phaseAvg:pol.avg,weak:pol.weak,delayMs:dms,
+    time:hh+':'+mm+':'+ss,mode:S.pink?'TF':'RTA',ref:(REFLBL[S.refType]||'TF'),polarity:pol.state,phaseAvg:pol.avg,weak:pol.weak,polBand:pol.band,delayMs:dms,
     mag:recenter(S.live).map(o=>({f:o.f,v:o.v,x:o.x})),
     phase:S.phaseRaw.map(o=>({f:o.f,v:o.v,x:o.x})),
     phaseRaw:S.phaseRaw.map(o=>({f:o.f,v:o.v,x:o.x}))});
-  renderCaptures();drawAll();toast('Capture '+S.capN+' tersimpan — '+pol.state);
+  renderCaptures();drawAll();toast('Capture '+S.capN+' tersimpan — '+pol.state+' @ '+pol.band);
 };
 $('clearcap').onclick=()=>{
   if(!S.captures.length){toast('Belum ada capture.');return}
@@ -444,9 +448,9 @@ function findDelay(){
 $('finddelaybtn').onclick=findDelay;
 function updatePolarityLive(){
   if(!S.pink||!S.running){refreshPolarityAfterOff();return}
-  if(!S.phaseRaw.length&&!S.signHist.length){setPolarityUI(null,null,false);return}
+  if(!S.phaseRaw.length&&!S.signHist.length){setPolarityUI(null,null,false,null);return}
   const pol=detectPolarity(S.phaseRaw);
-  setPolarityUI(pol.state,pol.avg,pol.weak);
+  setPolarityUI(pol.state,pol.avg,pol.weak,pol.band);
 }
 function killLive(){
   S.live=[];S.phase=[];S.phaseRaw=[];S.acc=null;S.accN=0;S.appliedDelay=0;
@@ -608,7 +612,7 @@ function drawPhaseSegments(c,arr,yPh,minPh,maxPh,color,lw){
 }
 function drawPolarityBadge(c,pw){
   let txt,bg,stroke;
-  if(S.polarity){txt='POLARITY: '+S.polarity+(S.polarity==='TERBALIK'?' ⚠':' ✓');bg=S.polarity==='TERBALIK'?'rgba(127,29,29,0.95)':'rgba(6,95,70,0.95)';stroke=S.polarity==='TERBALIK'?'#f87171':'#4ade80'}
+  if(S.polarity){txt='POLARITY: '+S.polarity+(S.polarity==='TERBALIK'?' ⚠':' ✓')+(S.polBand?' @ '+S.polBand:'');bg=S.polarity==='TERBALIK'?'rgba(127,29,29,0.95)':'rgba(6,95,70,0.95)';stroke=S.polarity==='TERBALIK'?'#f87171':'#4ade80'}
   else{txt='POLARITY: —';bg='rgba(30,35,45,0.95)';stroke='#ffffff'}
   c.font='900 17px Arial';const tw=c.measureText(txt).width+22;const bx=14,by=38;
   c.fillStyle=bg;c.beginPath();c.roundRect(bx,by,tw,28,7);c.fill();c.strokeStyle=stroke;c.lineWidth=2;c.beginPath();c.roundRect(bx,by,tw,28,7);c.stroke();
@@ -733,7 +737,7 @@ function draw(){
   const den=densify(freqs,pArr,phArr);
   S.live=den.mag;
   S.phaseRaw=phArr?den.phase:[];S.phase=S.phaseRaw.slice();
-  if(S.pink&&(++polTick%5===0))updatePolarityLive();
+  if(S.pink&&(++polTick%3===0))updatePolarityLive();
   drawAll();
   S.raf=requestAnimationFrame(draw);
 }
@@ -767,7 +771,7 @@ $('phasesmooth').onchange=e=>{S.phSmooth=+$('phasesmooth').value||0;drawAll()};
 function moveFromX(x,el){
   const r=el.getBoundingClientRect();
   const px=Math.max(0,Math.min(mag.width,(x-r.left)/r.width*mag.width));
-  S.cursor=freqAtX(px,mag.width);drawAll();
+  S.cursor=freqAtX(px,mag.width);updatePolarityLive();drawAll();
 }
 let drag=false;
 [mag,fsc,phc].forEach(el=>{
@@ -776,9 +780,9 @@ let drag=false;
   el.addEventListener('pointerup',()=>drag=false);
   el.addEventListener('pointercancel',()=>drag=false);
 });
-$('cursorslider').addEventListener('input',e=>{S.cursor=freqAtX(+e.target.value/1000*mag.width,mag.width);drawAll()});
-$('curleft').onclick=()=>{S.cursor=Math.max(20,S.cursor-50);drawAll()};
-$('curright').onclick=()=>{S.cursor=Math.min(20000,S.cursor+50);drawAll()};
+$('cursorslider').addEventListener('input',e=>{S.cursor=freqAtX(+e.target.value/1000*mag.width,mag.width);updatePolarityLive();drawAll()});
+$('curleft').onclick=()=>{S.cursor=Math.max(20,S.cursor-50);updatePolarityLive();drawAll()};
+$('curright').onclick=()=>{S.cursor=Math.min(20000,S.cursor+50);updatePolarityLive();drawAll()};
 drawAll();
 </script>
 </body>
