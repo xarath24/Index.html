@@ -97,6 +97,9 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 .infoBox ol{margin:8px 0 0;padding-left:18px;color:#fff;font-size:13px;line-height:1.9;font-weight:800}
 .infoBox b{color:#fff}
 .infoBox p{color:#e2e8f0;font-weight:800}
+.cohBox{background:#090d12;border:1px solid #2b323e;border-radius:8px;padding:7px;text-align:center;margin-top:8px}
+.cohBox .big{font-weight:900;font-size:22px;color:#fff}
+.cohBox small{display:block;color:#e2e8f0;font-size:10px;letter-spacing:1px;font-weight:900}
 :fullscreen body{background:#0a0c10}
 </style>
 </head>
@@ -104,15 +107,16 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 <div id="toast"></div>
 <div id="infoModal">
   <div class="infoBox">
-    <h3>ⓘ CARA PAKAI — SMART LIVE</h3>
+    <h3>ⓘ CARA PAKAI — SMART LIVE (AKURAT)</h3>
     <ol>
-      <li>Sentuh layar 1x, otomatis landscape.</li>
       <li>Pencet <b>START</b>, izinin mic. Volume tombol HP mentok.</li>
-      <li>Pilih reference: <b>PINK / WHITE / BROWN / SWEEP</b>.</li>
-      <li>Pencet <b>🔍 FIND DELAY</b>, phase langsung datar, polarity langsung kebaca.</li>
-      <li>Pencet <b>📸 CAPTURE</b>, pencet <b>■ OFF</b>, phase capture tetep datar.</li>
+      <li>Pilih <b>PINK</b>. Mic 30 cm dari speaker luar, ruangan sepi.</li>
+      <li>Tunggu 5 detik, jangan gerak, jangan ngomong. Liat <b>COH</b> di kanan.</li>
+      <li><b>COH 0.70 ke atas = akurat</b>, boleh capture. COH di bawah 0.50 = ngawur, deketin mic / gedein volume, jangan capture dulu.</li>
+      <li>Pencet <b>🔍 FIND DELAY</b>, phase datar, polarity kebaca.</li>
+      <li>Yang dipercaya: <b>200 Hz - 10 kHz</b>. Bass 20-100 Hz + treble 15-20 kHz di HP jangan dipercaya 100%.</li>
     </ol>
-    <p style="font-size:12px;line-height:1.6">Garis ijo tengah = 0 dB / 0°. Polarity selalu tampil pas reference jalan, ada ? kalo sinyal lemah.</p>
+    <p style="font-size:12px;line-height:1.6">Garis ijo tengah = 0 dB / 0°. Mic HP bukan mic ukur, jadi jangan samain 100% sama Smaart laptop.</p>
     <button id="infoClose" style="width:100%;padding:9px;margin-top:6px">✕ TUTUP</button>
   </div>
 </div>
@@ -157,6 +161,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <div class="ctl">
         <button id="finddelaybtn" class="find">🔍 FIND DELAY</button>
         <span class="findres" id="finddelayres">Delay otomatis <small>• nyari sendiri tiap 2 detik</small></span>
+        <span class="findres" id="cohres" style="margin-left:auto">COH: —</span>
       </div>
       <canvas id="phase" width="1200" height="190"></canvas>
       <div class="cursor">
@@ -175,28 +180,28 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         <small>PEAK SEKARANG • INPUT MIC</small>
       </div>
       <div class="peakMeter"><div class="peakMeterFill" id="peakFill"></div></div>
-      <div id="weakwarn" style="display:none;color:#f87171;font-size:10px;font-weight:900;margin-top:5px;text-align:center;line-height:1.4">⚠ SINYAL LEMAH — VOLUME TOMBOL HP MENTOK + MIC 30 CM</div>
+      <div class="cohBox">
+        <div class="big" id="cohBig">COH —</div>
+        <small>COHERENCE 200 Hz - 2 kHz • &ge;0.70 AKURAT</small>
+      </div>
+      <div id="weakwarn" style="display:none;color:#f87171;font-size:10px;font-weight:900;margin-top:5px;text-align:center;line-height:1.4">⚠ KURANG AKURAT — DEKETIN MIC 30 CM, VOLUME MENTOK, RUANGAN SEPI</div>
     </div>
     <div class="panel" style="margin-top:8px">
       <h3>⚙️ PENGATURAN</h3>
       <div class="setRow">
-        <label>FFT
+        <label>FFT — LEBIH GEDE, BASS LEBIH AKURAT
           <select id="fft">
-            <option value="2048">2048</option>
-            <option value="4096">4096</option>
-            <option value="8192" selected>8192</option>
-            <option value="16384">16384</option>
+            <option value="8192">8192</option>
+            <option value="16384" selected>16384</option>
+            <option value="32768">32768</option>
           </select>
         </label>
         <label>AVERAGE — SLOW
           <select id="average">
-            <option value="1">1</option>
-            <option value="4">4</option>
-            <option value="8">8</option>
-            <option value="12">12</option>
             <option value="16">16</option>
-            <option value="32" selected>32</option>
-            <option value="64">64</option>
+            <option value="32">32</option>
+            <option value="64" selected>64</option>
+            <option value="128">128</option>
           </select>
         </label>
         <label>MAG SMOOTHING — 1/24 OKT
@@ -246,7 +251,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
   <span>● <b id="status">STANDBY</b></span>
   <span>Input: <b>Mic 1</b></span>
   <span>Reference: <b id="refstat">OFF</b></span>
-  <span>FFT: <b id="fftstat">8192</b></span>
+  <span>FFT: <b id="fftstat">16384</b></span>
   <span>Polarity: <b id="polstat">—</b></span>
   <span style="margin-left:auto">SMART LIVE • dBFS rel, bukan SPL terkalibrasi</span>
 </div>
@@ -263,18 +268,16 @@ const MAJORSET=new Set(MAJORS);
 const FREQS=[20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000];
 const CAPCOLORS=['#fb923c','#facc15','#f472b6','#a78bfa','#34d399','#f87171','#93c5fd','#fdba74','#e879f9','#4ade80','#fbbf24','#fb7185'];
 const REFLBL={pink:'PINK NOISE',white:'WHITE NOISE',brown:'BROWN NOISE',sweep:'SWEEP 20 Hz-20 kHz'};
-const S={ctx:null,stream:null,src:null,an:null,refAn:null,noise:null,noiseGain:null,pink:false,refType:'pink',running:false,fft:8192,raf:0,
-  cursor:4190,live:[],phase:[],phaseRaw:[],coh:[],acc:null,accN:0,captures:[],capN:0,unwrap:false,delayMs:null,
+const S={ctx:null,stream:null,src:null,an:null,refAn:null,noise:null,noiseGain:null,pink:false,refType:'pink',running:false,fft:16384,raf:0,
+  cursor:1000,live:[],phase:[],phaseRaw:[],coh:[],acc:null,accN:0,captures:[],capN:0,unwrap:false,delayMs:null,
   polarity:null,phaseAvg:null,phSmooth:24,delayLo:200,delayHi:2000,cohAvg:null,foundDelay:null,foundDelayBand:null,foundDelayCoh:null,
-  appliedDelay:0,frameN:0};
+  appliedDelay:0,frameN:0,lastLag:0,cohMid:0};
 $('infobtn').onclick=()=>{$('infoModal').classList.add('show')};
 $('infoClose').onclick=()=>{$('infoModal').classList.remove('show')};
 $('infoModal').addEventListener('click',e=>{if(e.target.id==='infoModal')$('infoModal').classList.remove('show')});
 function updatePeakPanel(peakDb){
   const big=$('peakBig'),fill=$('peakFill');
   if(!big||!fill)return;
-  const w=$('weakwarn');
-  if(w)w.style.display=(peakDb!=null&&peakDb<-30&&S.running)?'block':'none';
   if(peakDb==null){big.textContent='— dBFS';big.className='big';fill.style.width='0%';fill.style.background='#22ff88';return}
   big.textContent=peakDb.toFixed(1)+' dBFS';
   big.className='big'+(peakDb>=-1?' hot':peakDb>=-6?' warn':'');
@@ -282,7 +285,16 @@ function updatePeakPanel(peakDb){
   fill.style.width=pct+'%';
   fill.style.background=peakDb>=-1?'#ef4444':peakDb>=-6?'#facc15':'#22ff88';
 }
-updatePeakPanel(null);
+function updateCohUI(c){
+  S.cohMid=c;
+  const el=$('cohBig'),el2=$('cohres'),w=$('weakwarn');
+  if(c==null){el.textContent='COH —';el.style.color='#fff';el2.textContent='COH: —';if(w)w.style.display='none';return}
+  el.textContent='COH '+c.toFixed(2);
+  el.style.color=c>=0.7?'#4ade80':c>=0.5?'#facc15':'#f87171';
+  el2.textContent='COH: '+c.toFixed(2)+(c>=0.7?' • AKURAT':c>=0.5?' • LUMAYAN':' • KURANG AKURAT');
+  if(w)w.style.display=(S.running&&S.pink&&c<0.5)?'block':'none';
+}
+updatePeakPanel(null);updateCohUI(null);
 let toastTimer=0;
 function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2800)}
 let lastAutoTry=0;
@@ -319,7 +331,7 @@ function recenter(arr){
   return arr.map(o=>({f:o.f,v:o.v-avg,x:o.x}));
 }
 function detectPolarity(raw,coh,delayMs){
-  if(!raw.length)return{state:null,avg:null,cohAvg:null};
+  if(!raw.length)return{state:null,avg:null,cohAvg:null,weak:true};
   const comp=compensatePhase(raw,delayMs||0);
   let sx=0,sy=0,wsum=0,csum=0,cn=0;
   for(let i=0;i<comp.length;i++){
@@ -330,7 +342,7 @@ function detectPolarity(raw,coh,delayMs){
     const r=comp[i].v*Math.PI/180;
     sx+=w*Math.cos(r);sy+=w*Math.sin(r);wsum+=w;
   }
-  if(wsum<=0||cn<5)return{state:null,avg:null,cohAvg:null};
+  if(wsum<=0||cn<5)return{state:null,avg:null,cohAvg:null,weak:true};
   const avg=Math.atan2(sy,sx)*180/Math.PI;
   const strength=Math.hypot(sx,sy)/Math.max(1e-9,wsum);
   return{state:Math.abs(avg)>90?'TERBALIK':'NORMAL',avg,cohAvg:csum/cn,weak:strength<0.5};
@@ -369,13 +381,14 @@ function startRename(cp,nameEl){
 }
 function renderCaptures(){
   const el=$('caplist');
-  if(!S.captures.length){el.innerHTML='<div class="capempty">Belum ada capture.<br>Pencet CAPTURE pas kurva nya lagi bagus.</div>';refreshPolarityAfterOff();return}
+  if(!S.captures.length){el.innerHTML='<div class="capempty">Belum ada capture.<br>Tunggu COH &ge;0.70 dulu, baru CAPTURE.</div>';refreshPolarityAfterOff();return}
   el.innerHTML='';
   S.captures.forEach((cp,idx)=>{
     const row=document.createElement('div');row.className='capitem';
     const polTxt=cp.polarity?cp.polarity+(cp.polarity==='TERBALIK'?' ⚠':' ✓')+(cp.phaseAvg!=null?' '+cp.phaseAvg.toFixed(0)+'°':'')+(cp.weak?' ?':''):'—';
     const dlTxt=cp.delayMs!=null?cp.delayMs.toFixed(3)+' ms':'—';
-    const meta=cp.time+' • '+(cp.ref||'TF')+' • '+polTxt+' • '+dlTxt;
+    const cohTxt=cp.cohMid!=null?' COH '+cp.cohMid.toFixed(2):'';
+    const meta=cp.time+' • '+(cp.ref||'TF')+' • '+polTxt+' • '+dlTxt+cohTxt;
     row.innerHTML='<span class="dot" style="background:'+cp.color+'"></span><label><input type="checkbox" '+(cp.show?'checked':'')+' style="accent-color:'+cp.color+'"></label><div class="nm"><b title="Pencet buat ganti nama">'+cp.name+'</b><span title="'+meta+'">'+meta+'</span></div><button class="renameBtn" title="Ganti nama">✏️</button><button title="Hapus capture ini">✕</button>';
     row.querySelector('input').onchange=e=>{cp.show=e.target.checked;refreshPolarityAfterOff();drawAll()};
     const nameEl=row.querySelector('.nm b');
@@ -389,17 +402,18 @@ function renderCaptures(){
 $('capturebtn').onclick=()=>{
   autoLandscape();
   if(!S.live.length){toast('Belum ada kurva. START dulu, tunggu grafik jalan, baru CAPTURE.');return}
+  if(S.pink&&S.cohMid<0.5){toast('COH masih '+S.cohMid.toFixed(2)+' — kurang akurat. Deketin mic dulu, tunggu COH naik.');return}
   S.capN++;
   const now=new Date(),hh=String(now.getHours()).padStart(2,'0'),mm=String(now.getMinutes()).padStart(2,'0'),ss=String(now.getSeconds()).padStart(2,'0');
   const dms=S.foundDelay!=null?S.foundDelay:calcDelayIn(S.phaseRaw,S.coh,S.delayLo,S.delayHi);
   const pol=detectPolarity(S.phaseRaw,S.coh,dms);
   S.captures.push({id:Date.now()+Math.random(),name:'Capture '+S.capN,color:CAPCOLORS[(S.capN-1)%CAPCOLORS.length],show:true,
-    time:hh+':'+mm+':'+ss,mode:S.pink?'TF':'RTA',ref:(REFLBL[S.refType]||'TF'),polarity:pol.state,phaseAvg:pol.avg,cohAvg:pol.cohAvg,weak:pol.weak,delayMs:dms,
+    time:hh+':'+mm+':'+ss,mode:S.pink?'TF':'RTA',ref:(REFLBL[S.refType]||'TF'),polarity:pol.state,phaseAvg:pol.avg,cohAvg:pol.cohAvg,weak:pol.weak,delayMs:dms,cohMid:S.cohMid,
     mag:recenter(S.live).map(o=>({f:o.f,v:o.v,x:o.x})),
     phase:compensatePhase(S.phaseRaw,dms).map(o=>({f:o.f,v:o.v,x:o.x})),
     phaseRaw:compensatePhase(S.phaseRaw,dms).map(o=>({f:o.f,v:o.v,x:o.x})),
     coh:S.coh.map(o=>({f:o.f,v:o.v,x:o.x}))});
-  renderCaptures();drawAll();toast('Capture '+S.capN+' tersimpan — '+pol.state+' '+(pol.avg!=null?pol.avg.toFixed(0)+'°':''));
+  renderCaptures();drawAll();toast('Capture '+S.capN+' tersimpan — COH '+S.cohMid.toFixed(2)+' — '+pol.state);
 };
 $('clearcap').onclick=()=>{
   if(!S.captures.length){toast('Belum ada capture.');return}
@@ -483,7 +497,7 @@ function updatePolarityLive(){
 }
 function killLive(){
   S.live=[];S.phase=[];S.phaseRaw=[];S.coh=[];S.acc=null;S.accN=0;S.appliedDelay=0;
-  refreshPolarityAfterOff();
+  updateCohUI(null);refreshPolarityAfterOff();
 }
 async function ensureCtx(){
   if(!S.ctx)S.ctx=new(window.AudioContext||window.webkitAudioContext)({latencyHint:'interactive',sampleRate:48000});
@@ -542,7 +556,7 @@ async function startNoise(type){
   S.pink=true;$('refstat').textContent=REFLBL[type];$('phasesub').textContent=REFLBL[type]+' ON — Phase jalan';
   setRefButtons();resetAcc();S.appliedDelay=0;S.foundDelay=null;
   updatePolarityLive();
-  toast(REFLBL[type]+' nyala');
+  toast(REFLBL[type]+' nyala — tunggu 5 detik, jangan gerak');
 }
 function stopPinkNoiseOnly(){
   if(S.noise){try{S.noise.stop()}catch(e){}try{S.noise.disconnect()}catch(e){}S.noise=null}
@@ -700,9 +714,35 @@ function drawAll(){
   }
   $('ctFreq').textContent=fmtF(S.cursor);$('ctDb').textContent=pt?pt.v.toFixed(1)+' dB':'— dB';$('ctPhase').textContent='Phase '+(pp?pp.v.toFixed(0)+'°':'—°');
 }
+function findLag(tdM,tdR){
+  const N=tdM.length,maxLag=1024,step=4;
+  let bestLag=S.lastLag,bestVal=-1e18;
+  for(let lag=-maxLag;lag<=maxLag;lag+=step){
+    let s=0;
+    for(let i=0;i<N;i+=step){
+      const j=i+lag;
+      if(j>=0&&j<N)s+=tdM[i]*tdR[j];
+    }
+    if(s>bestVal){bestVal=s;bestLag=lag}
+  }
+  let best2=bestLag,bestV2=-1e18;
+  for(let lag=bestLag-4;lag<=bestLag+4;lag++){
+    let s=0;
+    for(let i=0;i<N;i+=2){
+      const j=i+lag;
+      if(j>=0&&j<N)s+=tdM[i]*tdR[j];
+    }
+    if(s>bestV2){bestV2=s;best2=lag}
+  }
+  S.lastLag=best2;
+  return best2;
+}
 function computeTF(){
-  const N=S.fft,tdM=new Float32Array(N),tdR=new Float32Array(N);
-  S.an.getFloatTimeDomainData(tdM);S.refAn.getFloatTimeDomainData(tdR);
+  const N=S.fft,tdM=new Float32Array(N),tdRraw=new Float32Array(N);
+  S.an.getFloatTimeDomainData(tdM);S.refAn.getFloatTimeDomainData(tdRraw);
+  const lag=findLag(tdM,tdRraw);
+  const tdR=new Float32Array(N);
+  for(let i=0;i<N;i++){const j=i+lag;tdR[i]=(j>=0&&j<N)?tdRraw[j]:0}
   const reM=Float32Array.from(tdM),imM=new Float32Array(N),reR=Float32Array.from(tdR),imR=new Float32Array(N);
   for(let i=0;i<N;i++){const w=.5*(1-Math.cos(2*Math.PI*i/(N-1)));reM[i]*=w;reR[i]*=w}
   fftCalc(reM,imM);fftCalc(reR,imR);
@@ -746,6 +786,11 @@ function draw(){
   if(S.pink&&S.refAn){
     const tf=computeTF();freqs=tf.freqs;phArr=tf.ph;cohArr=tf.coh;
     pArr=normalizeInstant(freqs,tf.magP);
+    if(S.frameN%15===0){
+      let s=0,cnt=0;
+      for(let i=0;i<freqs.length;i++){if(freqs[i].f>=200&&freqs[i].f<=2000){s+=cohArr[i];cnt++}}
+      updateCohUI(cnt?s/cnt:0);
+    }
   }else{
     freqs=[];const rawP=[];phArr=null;cohArr=null;
     for(let i=1;i<n;i++){const f=i*S.ctx.sampleRate/S.fft;if(f<MINF||f>MAXF)continue;freqs.push({f});rawP.push(db2p(raw[i]))}
@@ -769,7 +814,7 @@ $('start').onclick=async()=>{
     S.an=S.ctx.createAnalyser();S.fft=+$('fft').value;S.an.fftSize=S.fft;S.an.smoothingTimeConstant=0;S.an.minDecibels=-120;S.an.maxDecibels=0;
     S.src.connect(S.an);
     if(S.refAn)S.refAn.fftSize=S.fft;
-    resetAcc();S.running=true;S.frameN=0;
+    resetAcc();S.running=true;S.frameN=0;S.lastLag=0;
     $('start').disabled=true;$('stop').disabled=false;$('status').textContent='LIVE';$('liveind').textContent='● LIVE';
     $('fftstat').textContent=S.fft;
     draw();
