@@ -113,9 +113,9 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
     <ol>
       <li>Sentuh layar 1x, otomatis landscape.</li>
       <li>Pencet <b>START</b> di atas, izinin mic.</li>
-      <li>Pencet <b>🩷 PINK</b>, cara ukur nya sama kayak Smaart 8 di laptop.</li>
+      <li>Pencet <b>🩷 PINK</b>, cara ukur nya sama kayak Smaart 7 di laptop.</li>
       <li>Liat <b>dBFS PEAK</b> di kanan, bagus nya -12 sampai -6 dBFS.</li>
-      <li>Tunggu 2 detik, kurva nya anteng, liat garis coherence ijo di bawah grafik.</li>
+      <li>Tunggu 3 detik, kurva nya anteng, liat garis coherence ijo di bawah grafik.</li>
       <li>Pencet <b>🔍 FIND DELAY</b>, phase nya jadi datar.</li>
       <li>Geser cursor, liat kotak <b>CURSOR</b> di tengah atas.</li>
       <li>Pencet <b>📸 CAPTURE</b>, pencet nama nya / ✏️, ubah jadi <b>box pahratel</b>.</li>
@@ -200,8 +200,8 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         <label>FFT
           <select id="fft">
             <option value="2048">2048</option>
-            <option value="4096" selected>4096</option>
-            <option value="8192">8192</option>
+            <option value="4096">4096</option>
+            <option value="8192" selected>8192</option>
             <option value="16384">16384</option>
           </select>
         </label>
@@ -209,16 +209,19 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
           <select id="average">
             <option value="1">1</option>
             <option value="4">4</option>
-            <option value="8" selected>8</option>
+            <option value="8">8</option>
             <option value="12">12</option>
             <option value="16">16</option>
+            <option value="32" selected>32</option>
+            <option value="64">64</option>
           </select>
         </label>
         <label>SMOOTHING
           <select id="detail">
             <option value="0">RAW</option>
+            <option value="24" selected>1/24 OKT</option>
             <option value="12">1/12 OKT</option>
-            <option value="6" selected>1/6 OKT</option>
+            <option value="6">1/6 OKT</option>
             <option value="3">1/3 OKT</option>
             <option value="1">1 OKT</option>
           </select>
@@ -255,7 +258,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
   <span>● <b id="status">STANDBY</b></span>
   <span>Input: <b>Mic 1</b></span>
   <span>Reference: <b id="refstat">OFF</b></span>
-  <span>FFT: <b id="fftstat">4096</b></span>
+  <span>FFT: <b id="fftstat">8192</b></span>
   <span>Polarity: <b id="polstat">—</b></span>
   <span style="margin-left:auto">SMART LIVE • dBFS rel, bukan SPL terkalibrasi</span>
 </div>
@@ -274,9 +277,9 @@ const MAJORSET=new Set(MAJORS);
 const FREQS=[20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000];
 const CAPCOLORS=['#fb923c','#facc15','#f472b6','#a78bfa','#34d399','#f87171','#93c5fd','#fdba74','#e879f9','#4ade80','#fbbf24','#fb7185'];
 
-const S={ctx:null,stream:null,src:null,an:null,refAn:null,noise:null,noiseGain:null,pink:false,running:false,fft:4096,raf:0,
+const S={ctx:null,stream:null,src:null,an:null,refAn:null,noise:null,noiseGain:null,pink:false,running:false,fft:8192,raf:0,
   cursor:4190,live:[],phase:[],phaseRaw:[],coh:[],sm:null,acc:null,accN:0,magOffset:null,captures:[],capN:0,unwrap:false,delayMs:null,
-  polarity:null,phaseAvg:null,phSmooth:6,delayLo:200,delayHi:2000,cohAvg:null,foundDelay:null,foundDelayBand:null,foundDelayCoh:null,
+  polarity:null,phaseAvg:null,phSmooth:24,delayLo:200,delayHi:2000,cohAvg:null,foundDelay:null,foundDelayBand:null,foundDelayCoh:null,
   clipUntil:0,peakHoldDb:-120,peakHoldUntil:0,refType:null,powAvg:null,sweepMax:null,sweepMaxFreqs:null,sweepStart:0,sweepStartCtx:0,sweepDur:8,lastPeak:-120,tfTick:0,prevSweepElapsed:0,sweepDone:false,sweepHold:null,sweepHoldFreqs:null,appliedDelay:0};
 
 $('infobtn').onclick=()=>{$('infoModal').classList.add('show')};
@@ -349,11 +352,13 @@ function db2p(v){return Math.pow(10,Math.max(-120,v)/10)}
 function p2db(p){return 10*Math.log10(Math.max(1e-12,p))}
 
 function detectPolarity(raw,coh){
+  if(!S.running||!S.pink||S.refType==='sweep')return{state:null,avg:null,cohAvg:null};
   if(!raw.length)return{state:null,avg:null,cohAvg:null};
   let sx=0,sy=0,wsum=0,csum=0,cn=0;
   for(let i=0;i<raw.length;i++){
     if(raw[i].f<200||raw[i].f>2000)continue;
     const c=coh&&coh[i]?coh[i].v:0;
+    if(c<0.3)continue;
     csum+=c;cn++;
     const w=0.05+c;
     const r=raw[i].v*Math.PI/180;
@@ -365,7 +370,7 @@ function detectPolarity(raw,coh){
   return{state,avg,cohAvg:csum/cn};
 }
 function setPolarityUI(state,avg,cohAvg){
-  if(S.refType==='sweep'){state=null;avg=null;cohAvg=null}
+  if(S.refType==='sweep'||!S.running||!S.pink){state=null;avg=null;cohAvg=null}
   S.polarity=state;S.phaseAvg=avg;S.cohAvg=cohAvg;
   const el=$('polaritytxt'),el2=$('polstat');
   if(!state){el.textContent='—';el.className='';el2.textContent='—';$('phaseavgtxt').textContent='—';return}
@@ -381,11 +386,8 @@ function lastVisibleCapture(){
   return null;
 }
 function refreshPolarityAfterOff(){
-  if(S.refType==='sweep'){setPolarityUI(null,null,null);return}
-  if(S.pink&&S.running&&S.refType!=='sweep')return;
-  const cp=lastVisibleCapture();
-  if(cp&&cp.polarity)setPolarityUI(cp.polarity,cp.phaseAvg,cp.cohAvg);
-  else setPolarityUI(null,null,null);
+  if(S.running&&S.pink&&S.refType!=='sweep')return;
+  setPolarityUI(null,null,null);
 }
 
 function startRename(cp,nameEl){
@@ -466,6 +468,7 @@ $('capturebtn').onclick=()=>{
     renderCaptures();drawAll();toast('Capture '+S.capN+' tersimpan');
     return;
   }
+  if(!S.running||!S.pink){toast('START + PINK dulu, baru CAPTURE. Jangan capture pas STANDBY.');return}
   if(!S.live.length){toast('Belum ada kurva. START dulu, tunggu grafik jalan, baru CAPTURE.');return}
   S.capN++;
   const now=new Date(),hh=String(now.getHours()).padStart(2,'0'),mm=String(now.getMinutes()).padStart(2,'0'),ss=String(now.getSeconds()).padStart(2,'0');
@@ -569,7 +572,7 @@ function killLive(){
   $('sweepprog').style.display='none';
   if(S.foundDelay!=null)$('delaytxt').textContent=S.foundDelay.toFixed(3)+' ms';
   else $('delaytxt').textContent='—';
-  refreshPolarityAfterOff();
+  setPolarityUI(null,null,null);
 }
 
 async function ensureCtx(){
@@ -628,7 +631,7 @@ function setRefButtons(type){
 }
 function applyAnalyserFft(){
   if(!S.an)return;
-  const want=S.refType==='sweep'?2048:4096;
+  const want=S.refType==='sweep'?2048:8192;
   S.fft=want;S.an.fftSize=want;
   if(S.refAn)S.refAn.fftSize=want;
   $('fft').value=String(want);$('fftstat').textContent=want;
@@ -711,7 +714,7 @@ function densify(freqs,pArr,phArr,cohArr){
   const logF=new Float64Array(freqs.length),pref=new Float64Array(freqs.length+1);
   for(let i=0;i<freqs.length;i++){logF[i]=Math.log(freqs[i].f);pref[i+1]=pref[i]+pArr[i]}
   let perOct=+$('detail').value||0;
-  if(perOct===0)perOct=6;
+  if(perOct===0)perOct=24;
   const half=1/(2*perOct);
   const loIdx=t=>{let lo=0,hi=logF.length;while(lo<hi){const m=(lo+hi)>>1;if(logF[m]<t)lo=m+1;else hi=m}return lo};
   for(let k=0;k<N;k++){
@@ -739,6 +742,32 @@ function sweepLiveCurve(freqs,rawP){
   }
   return out;
 }
+function gateLowFreq(magArr,phaseArr,cohArr){
+  if(!magArr.length)return{mag:magArr,phase:phaseArr};
+  const vals=magArr.map(o=>o.v);
+  const med=[];
+  for(let i=0;i<vals.length;i++){
+    const w=vals.slice(Math.max(0,i-4),Math.min(vals.length,i+5)).sort((a,b)=>a-b);
+    med.push(w[Math.floor(w.length/2)]);
+  }
+  const outMag=magArr.map((o,i)=>{
+    if(o.f>120)return o;
+    const c=cohArr&&cohArr[i]?cohArr[i].v:0;
+    if(c>=0.25)return o;
+    const wgt=0.5;
+    return{f:o.f,v:o.v*(1-wgt)+med[i]*wgt,x:o.x};
+  });
+  const outPh=phaseArr.map((o,i)=>{
+    if(o.f>120||!phaseArr.length)return o;
+    const c=cohArr&&cohArr[i]?cohArr[i].v:0;
+    if(c>=0.25)return o;
+    let s=0,n=0;
+    for(let j=Math.max(0,i-6);j<=Math.min(phaseArr.length-1,i+6);j++){s+=phaseArr[j].v;n++}
+    const avg=s/Math.max(1,n);
+    return{f:o.f,v:o.v*0.5+avg*0.5,x:o.x};
+  });
+  return{mag:outMag,phase:outPh};
+}
 function pointOn(data,f){
   if(!data.length)return null;
   const cx=xfreq(f,mag.width);
@@ -757,7 +786,7 @@ function phaseDisplayRaw(raw){
   return arr;
 }
 function drawPolarityBadge(c,pw){
-  if(S.refType==='sweep')return;
+  if(S.refType==='sweep'||!S.running||!S.pink)return;
   const low=S.cohAvg!=null&&S.cohAvg<0.3;
   let txt,bg,stroke;
   if(S.polarity){
@@ -826,7 +855,7 @@ function drawAll(){
   drawScale();
   const pw=phc.width,phH=phc.height;
   const livePhase=S.pink&&S.running&&S.phaseRaw.length>0&&S.refType!=='sweep';
-  const capPhase=S.captures.some(cp=>cp.show&&cp.phaseRaw.length);
+  const capPhase=!S.running&&S.captures.some(cp=>cp.show&&cp.phaseRaw.length);
   const phaseActive=livePhase||capPhase;
   const disp=livePhase?phaseDisplayRaw(S.phaseRaw):(capPhase?phaseDisplayRaw(lastVisibleCapture().phaseRaw):[]);
   let allPh=[];
@@ -847,6 +876,7 @@ function drawAll(){
   if(phaseActive){
     S.captures.forEach(cp=>{
       if(!cp.show||!cp.phaseRaw.length)return;
+      if(S.running&&S.refType!=='sweep')return;
       let carr=phaseDisplayRaw(cp.phaseRaw);
       pg.beginPath();pg.strokeStyle=cp.color;pg.lineWidth=2.5;pg.setLineDash([]);
       carr.forEach((o,i)=>{const Y=yPh(Math.max(minPh,Math.min(maxPh,o.v)));if(i===0)pg.moveTo(o.x,Y);else pg.lineTo(o.x,Y)});pg.stroke();
@@ -869,7 +899,6 @@ function drawAll(){
   }else{
     $('phasecursor').textContent='—';
     pg.strokeStyle='#fff';pg.lineWidth=3;pg.beginPath();pg.moveTo(cx,0);pg.lineTo(cx,phH);pg.stroke();
-    drawPolarityBadge(pg,pw);
     pg.fillStyle='#ffffff';pg.font='900 15px Arial';pg.textAlign='center';
     pg.fillText(S.refType==='sweep'?'SWEEP — PUNCAK JALAN GANTIAN, PHASE TIDAK DIPAKAI':'NO REFERENCE — HIDUPKAN PINK NOISE',pw/2,phH/2+28);pg.textAlign='left';
   }
@@ -885,7 +914,7 @@ function computeTF(){
   fftCalc(reM,imM);fftCalc(reR,imR);
   const half=N/2;
   if(!S.acc){S.acc={re:new Float64Array(half),im:new Float64Array(half),xx:new Float64Array(half),yy:new Float64Array(half)};S.accN=0}
-  const avgN=+$('average').value||8;
+  const avgN=+$('average').value||32;
   const a=1/Math.max(1,avgN);
   for(let k=0;k<half;k++){
     const mr=reM[k],mi=imM[k],rr=reR[k],ri=imR[k];
@@ -950,7 +979,8 @@ function draw(){
     const tf=computeTF();
     const pArr=normalizeToCenter(tf.freqs,tf.magP);
     const den=densify(tf.freqs,pArr,tf.ph,tf.coh);
-    S.live=den.mag;S.phaseRaw=den.phase;S.phase=S.phaseRaw.slice();S.coh=den.coh;
+    const gated=gateLowFreq(den.mag,den.phase,den.coh);
+    S.live=gated.mag;S.phaseRaw=gated.phase;S.phase=S.phaseRaw.slice();S.coh=den.coh;
     $('cohtxt').textContent=(tf.coh.reduce((s,v)=>s+v,0)/Math.max(1,tf.coh.length)).toFixed(2);
   }else{
     const pArr=normalizeToCenter(freqs,rawP);
@@ -965,11 +995,11 @@ function draw(){
 $('start').onclick=async()=>{
   autoLandscape();
   try{
-    $('fft').value='4096';
+    $('fft').value='8192';
     S.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
     await ensureCtx();
     S.src=S.ctx.createMediaStreamSource(S.stream);
-    S.an=S.ctx.createAnalyser();S.fft=4096;S.an.fftSize=S.fft;S.an.smoothingTimeConstant=0;S.an.minDecibels=-120;S.an.maxDecibels=0;
+    S.an=S.ctx.createAnalyser();S.fft=8192;S.an.fftSize=S.fft;S.an.smoothingTimeConstant=0;S.an.minDecibels=-120;S.an.maxDecibels=0;
     S.src.connect(S.an);
     if(S.refAn)S.refAn.fftSize=S.fft;
     resetAcc();S.running=true;
