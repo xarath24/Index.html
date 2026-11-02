@@ -113,9 +113,9 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
     <ol>
       <li>Sentuh layar 1x, otomatis landscape.</li>
       <li>Pencet <b>START</b> di atas, izinin mic. FFT biarin 8192.</li>
-      <li><b>CEK SINYAL DULU:</b> liat <b>dBFS PEAK</b> di kanan, harus -12 sampai -6 dBFS. Kalo masih -45 dBFS, gedein tombol volume HP sampe mentok, deketin mic 1 m dari speaker.</li>
-      <li>Pencet <b>🩷 PINK</b>, tunggu 2-3 detik, kurva nya naik, mulus, halus 1 OKT, bung kecil nya ilang.</li>
-      <li><b>〰️ SWEEP</b> 20 detik, pelan. Tunggu 20 detik penuh, kurva keisi dari kiri ke kanan, MAX-HOLD mentah + halus 1 OKT. Jangan FIND DELAY pas sweep.</li>
+      <li><b>CEK SINYAL DULU:</b> liat <b>dBFS PEAK</b> di kanan, harus -12 sampai -6 dBFS. Kalo masih -45 dBFS, gedein tombol volume HP sampe mentok, deketin mic 1 m dari speaker. Sinyal lemah = bung nya banyak, itu dari noise.</li>
+      <li>Pencet <b>🩷 PINK</b>, tunggu 3-4 detik, jangan langsung capture, kurva nya di-rata-rata 1-2 detik, baru anteng + mulus, lubang sempit nya ditutup.</li>
+      <li><b>〰️ SWEEP</b> 20 detik, pelan. Tunggu 20 detik penuh, kurva keisi, lubang nya ditutup, baru capture.</li>
       <li><b>⬜ WHITE</b> buat tes tweeter, mulai volume 30% dulu.</li>
       <li>Geser cursor, liat kotak <b>CURSOR</b> di tengah atas.</li>
       <li>Polarity <b>NORMAL ✓ / TERBALIK ⚠</b> cuma bener pas PINK / WHITE.</li>
@@ -123,7 +123,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <li>Pencet <b>📸 CAPTURE</b> pas kurva udah halus, pencet nama nya / ✏️, ubah jadi <b>box pahratel</b>.</li>
       <li>Pencet <b>■ OFF</b>, suara mati, phase capture + cursor tetep aktif.</li>
     </ol>
-    <p style="font-size:12px;line-height:1.6">Garis ijo tengah = 0 dB / 0°. Smoothing 1 OKT: bung kecil ilang, bentuk besar nya yang keliatan. Kalo jatuh nya masih 20 dB lebih, itu speaker / ruangan nya beneran, bukan smoothing.</p>
+    <p style="font-size:12px;line-height:1.6">Kurva sekarang: RTA rata-rata panjang + tutup lubang sempit + halus 1 OKT. Kalo jatuh nya masih lebar 20 dB lebih, itu speaker / ruangan nya beneran, geser mic 30 cm, ukur lagi, bandingin.</p>
     <button id="infoClose" style="width:100%;padding:9px;margin-top:6px">✕ TUTUP</button>
   </div>
 </div>
@@ -165,7 +165,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         </div>
       </div>
 
-      <div class="title"><b>MAGNITUDE</b><span>20 Hz — 20 kHz • GARIS TENGAH = 0 dB • HALUS 1 OKT</span></div>
+      <div class="title"><b>MAGNITUDE</b><span>20 Hz — 20 kHz • GARIS TENGAH = 0 dB • HALUS 1 OKT • TUTUP LUBANG</span></div>
       <canvas id="mag" width="1200" height="300"></canvas>
       <canvas id="freqscale" width="1200" height="56"></canvas>
 
@@ -279,7 +279,7 @@ const CAPCOLORS=['#fb923c','#facc15','#f472b6','#a78bfa','#34d399','#f87171','#9
 const S={ctx:null,stream:null,src:null,an:null,refAn:null,noise:null,noiseGain:null,pink:false,running:false,fft:8192,raf:0,
   cursor:4190,live:[],phase:[],phaseRaw:[],coh:[],sm:null,acc:null,accN:0,magOffset:null,captures:[],capN:0,unwrap:false,delayMs:null,
   polarity:null,phaseAvg:null,phSmooth:6,delayLo:200,delayHi:2000,cohAvg:null,foundDelay:null,foundDelayBand:null,foundDelayCoh:null,
-  clipUntil:0,peakHoldDb:-120,peakHoldUntil:0,refType:null,powAvg:null,sweepMax:null,sweepMaxFreqs:null,sweepStart:0,sweepDur:20,lastPeak:-120};
+  clipUntil:0,peakHoldDb:-120,peakHoldUntil:0,refType:null,powAvg:null,sweepMax:null,sweepMaxFreqs:null,sweepStart:0,sweepDur:20,lastPeak:-120,tfTick:0};
 
 $('infobtn').onclick=()=>{$('infoModal').classList.add('show')};
 $('infoClose').onclick=()=>{$('infoModal').classList.remove('show')};
@@ -697,9 +697,9 @@ function densify(freqs,pArr,phArr,cohArr){
 function smoothCurveDb(arr){
   if(!arr||arr.length<5)return arr;
   let cur=arr.map(o=>o.v);
-  for(let pass=0;pass<2;pass++){
+  const R=12;
+  for(let pass=0;pass<3;pass++){
     const nxt=cur.slice();
-    const R=7;
     for(let i=0;i<cur.length;i++){
       let s=0,wsum=0;
       for(let j=-R;j<=R;j++){
@@ -712,6 +712,13 @@ function smoothCurveDb(arr){
     cur=nxt;
   }
   return arr.map((o,i)=>({f:o.f,v:cur[i],x:o.x}));
+}
+function closingDb(arr){
+  if(!arr||arr.length<5)return arr;
+  const R=10,vals=arr.map(o=>o.v);
+  const dil=vals.map((_,i)=>{let m=-1e9;for(let j=-R;j<=R;j++){const k=Math.max(0,Math.min(vals.length-1,i+j));if(vals[k]>m)m=vals[k]}return m});
+  const ero=dil.map((_,i)=>{let m=1e9;for(let j=-R;j<=R;j++){const k=Math.max(0,Math.min(dil.length-1,i+j));if(dil[k]<m)m=dil[k]}return m});
+  return arr.map((o,i)=>({f:o.f,v:ero[i],x:o.x}));
 }
 function pointOn(data,f){
   if(!data.length)return null;
@@ -858,7 +865,7 @@ function computeTF(){
   fftCalc(reM,imM);fftCalc(reR,imR);
   const half=N/2;
   if(!S.acc){S.acc={re:new Float64Array(half),im:new Float64Array(half),xx:new Float64Array(half),yy:new Float64Array(half)};S.accN=0}
-  const a=1/Math.max(1,+$('average').value);
+  const a=1/40;
   for(let k=0;k<half;k++){
     const mr=reM[k],mi=imM[k],rr=reR[k],ri=imR[k];
     const xr=mr*rr+mi*ri,xi=mi*rr-mr*ri,xx=rr*rr+ri*ri,yy=mr*mr+mi*mi;
@@ -902,29 +909,38 @@ function draw(){
     const el=Math.min(S.sweepDur,(performance.now()-S.sweepStart)/1000);
     $('sweepprog').textContent='SWEEP: '+Math.floor(el)+' / '+S.sweepDur+' detik • '+(el>=S.sweepDur?'KELAR, BOLEH CAPTURE':'JANGAN CAPTURE DULU');
   }
-  let freqs,pArr,phArr,cohArr;
+  let freqs,pArr,phArr=null,cohArr=null;
   const isSweep=S.refType==='sweep';
-  if(S.pink&&S.refAn&&!isSweep){
-    const tf=computeTF();freqs=tf.freqs;phArr=tf.ph;cohArr=tf.coh;
-    pArr=normalizeToCenter(freqs,tf.magP);
+  const isNoise=S.pink&&S.refAn&&!isSweep;
+  if(isNoise&&((++S.tfTick)%3===0||!S.phaseRaw.length)){
+    const tf=computeTF();phArr=tf.ph;cohArr=tf.coh;
     $('cohtxt').textContent=(cohArr.reduce((s,v)=>s+v,0)/Math.max(1,cohArr.length)).toFixed(2);
-    S.powAvg=null;S.sweepMax=null;
-  }else{
-    freqs=[];const rawP=[];phArr=null;cohArr=null;$('cohtxt').textContent='—';
-    for(let i=1;i<n;i++){const f=i*S.ctx.sampleRate/S.fft;if(f<MINF||f>MAXF)continue;freqs.push({f});rawP.push(db2p(raw[i]))}
-    if(isSweep){
-      if(!S.sweepMax||S.sweepMax.length!==rawP.length){S.sweepMax=Float64Array.from(rawP);S.sweepMaxFreqs=freqs.slice()}
-      else for(let i=0;i<rawP.length;i++)if(rawP[i]>S.sweepMax[i])S.sweepMax[i]=rawP[i];
-      pArr=normalizeSweep(freqs,Array.from(S.sweepMax));
-    }else{
-      const alpha=1/Math.max(1,+$('average').value);
-      if(!S.powAvg||S.powAvg.length!==rawP.length)S.powAvg=Float64Array.from(rawP);
-      else for(let i=0;i<rawP.length;i++)S.powAvg[i]+=alpha*(rawP[i]-S.powAvg[i]);
-      pArr=normalizeToCenter(freqs,Array.from(S.powAvg));
-    }
+  }else if(isNoise){
+    phArr=S.phaseRaw.length?S.phaseRaw.map(o=>o.v):null;cohArr=S.coh.length?S.coh.map(o=>o.v):null;
   }
-  const den=densify(freqs,pArr,phArr,cohArr);
-  S.live=smoothCurveDb(den.mag);S.phaseRaw=phArr?den.phase:[];S.phase=S.phaseRaw.slice();S.coh=cohArr?den.coh:[];
+  freqs=[];const rawP=[];
+  for(let i=1;i<n;i++){const f=i*S.ctx.sampleRate/S.fft;if(f<MINF||f>MAXF)continue;freqs.push({f});rawP.push(db2p(raw[i]))}
+  if(isSweep){
+    if(!S.sweepMax||S.sweepMax.length!==rawP.length){S.sweepMax=Float64Array.from(rawP);S.sweepMaxFreqs=freqs.slice()}
+    else for(let i=0;i<rawP.length;i++)if(rawP[i]>S.sweepMax[i])S.sweepMax[i]=rawP[i];
+    pArr=normalizeSweep(freqs,Array.from(S.sweepMax));
+  }else{
+    const alpha=0.04;
+    if(!S.powAvg||S.powAvg.length!==rawP.length)S.powAvg=Float64Array.from(rawP);
+    else for(let i=0;i<rawP.length;i++){
+      if(rawP[i]>S.powAvg[i]*3)S.powAvg[i]=0.5*S.powAvg[i]+0.5*rawP[i];
+      else S.powAvg[i]+=alpha*(rawP[i]-S.powAvg[i]);
+    }
+    let base=Array.from(S.powAvg);
+    if(S.refType==='pink')base=base.map((v,i)=>v*(freqs[i].f/1000));
+    pArr=normalizeToCenter(freqs,base);
+  }
+  let phForDensify=null,cohForDensify=null;
+  if(phArr&&phArr.length===freqs.length){phForDensify=phArr;cohForDensify=cohArr}
+  else if(S.phaseRaw.length&&S.phaseRaw.length===301){phForDensify=null}
+  const den=densify(freqs,pArr,phForDensify,cohForDensify);
+  if(phForDensify){S.phaseRaw=den.phase;S.phase=S.phaseRaw.slice();S.coh=den.coh}
+  S.live=smoothCurveDb(closingDb(den.mag));
   if(S.pink&&!isSweep&&(++delayTick%10===0))computeDelay();
   if(S.pink&&!isSweep&&(++polTick%10===0))updatePolarityLive();
   drawAll();
