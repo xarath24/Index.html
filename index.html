@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>SMART LIVE v9 — KOTAK KECIL</title>
+<title>SMART LIVE v10 — IR ATAS</title>
 <style>
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -38,7 +38,7 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
 #mag{flex:1 1 0}
 #freqscale{flex:0 0 auto;height:24px;background:#0b0f14;border-top:1px solid #2b323e;border-radius:0 0 4px 4px}
 #phase{flex:1 1 0}
-#ir{flex:0 0 auto;height:62px}
+#ir{flex:0 0 auto;height:80px}
 .title{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#fff;margin:3px 0 2px;flex:0 0 auto;font-weight:900;white-space:nowrap;overflow:hidden}
 .title b{color:#fff;flex:0 0 auto}
 .title span{color:#cbd5e1;font-weight:900;overflow:hidden;text-overflow:ellipsis}
@@ -118,7 +118,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
   </div>
 </div>
 <div class="topbar">
-  <div class="logo"><b>SMART</b> LIVE v9 <span>MEASUREMENT • LIKE SMAART • KOTAK KECIL</span></div>
+  <div class="logo"><b>SMART</b> LIVE v10 <span>MEASUREMENT • LIKE SMAART • IR ATAS</span></div>
   <div class="topbtns">
     <span style="color:#34d399;font-size:10px;font-weight:900">↻ AUTO LANDSCAPE</span>
     <button id="start" class="go">▶ START</button>
@@ -151,6 +151,15 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
           <span class="ph" id="ctPhase">Phase —°</span>
         </div>
       </div>
+      <div class="title"><b>IMPULSE / LIVE IR</b><span id="irinfo">Time Window: 342 ms • FFT 16384</span></div>
+      <canvas id="ir" width="1200" height="90"></canvas>
+      <div class="title"><b>PHASE</b><span id="phasesub">Reference OFF — HIDUPKAN REFERENCE</span></div>
+      <div class="ctl">
+        <button id="finddelaybtn" class="find">🔍 FIND DELAY</button>
+        <button id="unwrapbtn">↩ WRAP -180/+180</button>
+        <span class="findres" id="finddelayres">Delay dikunci</span>
+      </div>
+      <canvas id="phase" width="1200" height="190"></canvas>
       <div class="title"><b>MAGNITUDE</b><span id="magRangeLbl">20 Hz — 20 kHz • Range 60 dB (+12 / -48)</span></div>
       <div class="ctl">
         <button id="zoomOut">− ZOOM MAG</button>
@@ -159,15 +168,6 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       </div>
       <canvas id="mag" width="1200" height="300"></canvas>
       <canvas id="freqscale" width="1200" height="56"></canvas>
-      <div class="title"><b>PHASE</b><span id="phasesub">Reference OFF — HIDUPKAN REFERENCE</span></div>
-      <div class="ctl">
-        <button id="finddelaybtn" class="find">🔍 FIND DELAY</button>
-        <button id="unwrapbtn">↩ WRAP -180/+180</button>
-        <span class="findres" id="finddelayres">Delay dikunci</span>
-      </div>
-      <canvas id="phase" width="1200" height="190"></canvas>
-      <div class="title"><b>IMPULSE / LIVE IR</b><span id="irinfo">Time Window: 342 ms • FFT 16384</span></div>
-      <canvas id="ir" width="1200" height="90"></canvas>
       <div class="cursor">
         <button id="curleft">◀</button>
         <input type="range" id="cursorslider" min="0" max="1000" value="980">
@@ -268,7 +268,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
   <span>Reference: <b id="refstat">OFF</b></span>
   <span>FFT: <b id="fftstat">16384</b></span>
   <span>Polarity: <b id="polstat">—</b></span>
-  <span style="margin-left:auto">SMART LIVE v9 • dBFS rel, bukan SPL terkalibrasi</span>
+  <span style="margin-left:auto">SMART LIVE v10 • dBFS rel, bukan SPL terkalibrasi</span>
 </div>
 <script>
 const _dummy=document.createElement('div');
@@ -825,7 +825,7 @@ function moveFromX(x,el){
   S.cursor=freqAtX(px,mag.width);updatePolarityLive();drawAll();
 }
 let drag=false;
-[mag,fsc,phc].forEach(el=>{
+[mag,fsc,phc,irc].forEach(el=>{
   el.addEventListener('pointerdown',e=>{drag=true;try{el.setPointerCapture(e.pointerId)}catch(err){}moveFromX(e.clientX,el)});
   el.addEventListener('pointermove',e=>{if(drag)moveFromX(e.clientX,el)});
   el.addEventListener('pointerup',()=>drag=false);
