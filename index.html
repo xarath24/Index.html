@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>SMART LIVE v22 — DELAY DIKUNCI</title>
+<title>SMART LIVE v23 — SEMUA OTOMATIS</title>
 <style>
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -108,20 +108,20 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 <div id="toast"></div>
 <div id="infoModal">
   <div class="infoBox">
-    <h3>ⓘ CARA PAKAI — DELAY DIKUNCI</h3>
+    <h3>ⓘ CARA PAKAI — SEMUA OTOMATIS</h3>
     <ol>
       <li>Mute driver lain, ukur 1 driver doang.</li>
-      <li>START, diem 5 detik. Jangan gerak, jangan geser cursor dulu.</li>
-      <li>Tunggu tulisan kanan jadi 🔒 TERKUNCI. Baru Phase nya diem.</li>
-      <li>Baru geser cursor ke 500 Hz / 5 kHz, liat Phase + Polarity.</li>
-      <li>Kalau pindah speaker / pindah mic, pencet FIND DELAY 1x, tunggu kunci lagi.</li>
-      <li>Balik + / - di DLMS, Phase harus ganti di cursor itu.</li>
+      <li>START, diem 5 detik. Delay nyari + ngunci sendiri.</li>
+      <li>Geser cursor ke daerah miringnya. Kurva otomatis nempel di 0 dB di cursor itu.</li>
+      <li>Lihat miringnya garis Magnitude yang gede itu. Di situlah titik crossover nya.</li>
+      <li>Lihat angka Phase di cursor atas, dan Polarity di bawah.</li>
+      <li>Gak usah pencet ZOOM, gak usah pencet FIND DELAY. Semua otomatis.</li>
     </ol>
     <button id="infoClose" style="width:100%;padding:7px;margin-top:6px">✕ TUTUP</button>
   </div>
 </div>
 <div class="topbar">
-  <div class="logo"><b>SMART</b> LIVE v22 <span>MEASUREMENT • LIKE SMAART • TOMBOL KANAN</span></div>
+  <div class="logo"><b>SMART</b> LIVE v23 <span>MEASUREMENT • LIKE SMAART • TOMBOL KANAN • OTOMATIS</span></div>
   <div class="topbtns">
     <span style="color:#34d399;font-size:10px;font-weight:900">↻ AUTO LANDSCAPE</span>
     <button id="start" class="go">▶ START</button>
@@ -158,12 +158,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <canvas id="ir" width="1200" height="90"></canvas>
       <div class="title"><b>PHASE</b><span id="phasesub">Reference OFF — HIDUPKAN REFERENCE</span></div>
       <canvas id="phase" width="1200" height="110"></canvas>
-      <div class="title"><b>MAGNITUDE</b><span id="magRangeLbl">20 Hz — 20 kHz • Range 30 dB (+15 / -15) • AUTO</span></div>
-      <div class="ctl">
-        <button id="zoomOut">− ZOOM MAG</button>
-        <button id="zoomIn">+ ZOOM MAG</button>
-        <span class="findres" id="rangeLbl">Range: 30 dB • AUTO</span>
-      </div>
+      <div class="title"><b>MAGNITUDE — OTOMATIS 30 dB</b><span id="magRangeLbl">20 Hz — 20 kHz • Range 30 dB (+15 / -15) • AUTO</span></div>
       <canvas id="mag" width="1200" height="300"></canvas>
       <canvas id="freqscale" width="1200" height="56"></canvas>
       <div class="cursor">
@@ -214,7 +209,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
   <span>Reference: <b id="refstat">OFF</b></span>
   <span>FFT: <b id="fftstat">16384 • AUTO</b></span>
   <span>Polarity: <b id="polstat">—</b></span>
-  <span style="margin-left:auto">SMART LIVE v22 • dBFS rel, bukan SPL terkalibrasi</span>
+  <span style="margin-left:auto">SMART LIVE v23 • dBFS rel, bukan SPL terkalibrasi</span>
 </div>
 <script>
 const _dummy=document.createElement('div');
@@ -231,12 +226,11 @@ const MAJORSET=new Set(MAJORS);
 const FREQS=[20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000];
 const CAPCOLORS=['#fb923c','#facc15','#f472b6','#a78bfa','#34d399','#f87171','#93c5fd','#fdba74','#e879f9','#4ade80','#fbbf24','#fb7185'];
 const REFLBL={pink:'PINK NOISE',white:'WHITE NOISE',brown:'BROWN NOISE',sweep:'SWEEP 20 Hz-20 kHz'};
-const RANGES=[15,30,45,60,90,120];
 const S={ctx:null,stream:null,src:null,an:null,noise:null,noiseGain:null,pink:false,refType:'pink',running:false,fft:16384,raf:0,
   cursor:800,live:[],phase:[],phaseRaw:[],acc:null,accN:0,captures:[],capN:0,unwrap:false,delayMs:null,
   polarity:null,phaseAvg:null,phSmooth:12,delayLo:200,delayHi:2000,foundDelay:null,polBand:null,
   appliedDelay:0,frameN:0,delayLocked:false,refRe:null,refIm:null,refBuf:null,delayHist:[],signHist:[],corrSign:1,corrStrength:0,ir:[],irLag:0,fracLag:0,lastAutoDelay:0,win:null,
-  lockedLag:null,lagVotes:[],locking:false};
+  lockedLag:null,lagVotes:[],locking:false,refined:false,magOff:null};
 function median(a){if(!a.length)return 0;const s=a.slice().sort((x,y)=>x-y);return s[Math.floor(s.length/2)]}
 $('infobtn').onclick=()=>{$('infoModal').classList.add('show')};
 $('infoClose').onclick=()=>{$('infoModal').classList.remove('show')};
@@ -277,18 +271,10 @@ function fmtLab(f){return f>=1000?(f/1000).toString().replace(/\.0$/,'')+'k':(''
 function yMag(v,range,h){return Math.max(0,Math.min(h,(range/2-v)/range*h))}
 function db2p(v){return Math.pow(10,Math.max(-120,v)/10)}
 function p2db(p){return 10*Math.log10(Math.max(1e-12,p))}
-function recenter(arr){
-  if(!arr.length)return arr;
-  const mid=arr.filter(o=>o.f>=500&&o.f<=2000);
-  if(!mid.length)return arr;
-  const avg=mid.reduce((s,o)=>s+o.v,0)/mid.length;
-  return arr.map(o=>({f:o.f,v:o.v-avg,x:o.x}));
-}
+function recenter(arr){return arr.slice()}
 function updateRangeLabels(){
-  const r=CFG.range;
-  const top=Math.round(r/2),bot=-top;
-  $('rangeLbl').textContent='Range: '+r+' dB • AUTO';
-  $('magRangeLbl').textContent='20 Hz — 20 kHz • Range '+r+' dB ('+(top>0?'+'+top:top)+' / '+bot+') • AUTO';
+  const r=30;
+  $('magRangeLbl').textContent='20 Hz — 20 kHz • Range 30 dB (+15 / -15) • AUTO';
   const win=Math.round(S.fft/48000*1000);
   $('irinfo').textContent='Time Window: '+win+' ms • FFT '+S.fft+' • Delay '+(S.running&&S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':'AUTO')+' • AUTO';
 }
@@ -372,7 +358,7 @@ $('capturebtn').onclick=()=>{
   const pol=detectPolarity(S.phaseRaw);
   S.captures.push({id:Date.now()+Math.random(),name:'Capture '+S.capN,color:CAPCOLORS[(S.capN-1)%CAPCOLORS.length],show:true,
     time:hh+':'+mm+':'+ss,mode:S.pink?'TF':'RTA',ref:(REFLBL[S.refType]||'TF'),polarity:pol.state,phaseAvg:pol.avg,weak:pol.weak,polBand:pol.band,delayMs:S.foundDelay,
-    mag:recenter(S.live).map(o=>({f:o.f,v:o.v,x:o.x})),
+    mag:S.live.map(o=>({f:o.f,v:o.v,x:o.x})),
     phase:S.phaseRaw.map(o=>({f:o.f,v:o.v,x:o.x})),
     phaseRaw:S.phaseRaw.map(o=>({f:o.f,v:o.v,x:o.x}))});
   renderCaptures();drawAll();toast('Capture '+S.capN+' tersimpan — '+pol.state+' @ '+pol.band);
@@ -402,8 +388,17 @@ function smoothPhaseCircular(arr,perOct){
   }
   return out;
 }
+function calcDelayIn(raw,lo,hi){
+  if(!raw.length)return null;
+  const pts=[];for(let i=0;i<raw.length;i++){if(raw[i].f>=lo&&raw[i].f<=hi)pts.push(raw[i])}
+  if(pts.length<5)return null;
+  const unw=unwrapPhase(pts);let sx=0,sy=0,sxx=0,sxy=0;const n=unw.length;
+  unw.forEach(p=>{sx+=p.f;sy+=p.v;sxx+=p.f*p.f;sxy+=p.f*p.v});
+  const den=n*sxx-sx*sx;if(!den)return null;
+  return -(n*sxy-sx*sy)/den/360*1000;
+}
 function unlockDelay(){
-  S.lockedLag=null;S.lagVotes=[];S.locking=true;S.delayLocked=false;S.foundDelay=null;S.delayMs=null;
+  S.lockedLag=null;S.lagVotes=[];S.locking=true;S.delayLocked=false;S.foundDelay=null;S.delayMs=null;S.refined=false;S.magOff=null;
   S.acc=null;S.accN=0;
   $('finddelayres').textContent='Lagi nyari delay… diem dulu 5 detik';
   updateRangeLabels();
@@ -414,10 +409,22 @@ function lockDelay(){
   S.lockedLag=locked;S.locking=false;S.delayLocked=true;
   const d=locked/48;
   S.foundDelay=d;S.delayMs=d;S.appliedDelay=d;
-  S.acc=null;S.accN=0;
+  S.acc=null;S.accN=0;S.refined=false;
   $('finddelayres').textContent='Delay: '+d.toFixed(3)+' ms 🔒 TERKUNCI';
   updateRangeLabels();updatePolarityLive();
-  toast('Delay TERKUNCI '+d.toFixed(3)+' ms — Phase udah diem');
+}
+function refineDelay(){
+  if(S.refined||S.lockedLag==null||!S.phaseRaw.length)return;
+  const res=calcDelayIn(S.phaseRaw,300,3000);
+  if(res==null||!isFinite(res)||Math.abs(res)>2)return;
+  S.refined=true;
+  if(Math.abs(res)<0.02)return;
+  S.lockedLag+=res*48;
+  const d=S.lockedLag/48;
+  S.foundDelay=d;S.delayMs=d;S.appliedDelay=d;
+  S.acc=null;S.accN=0;
+  $('finddelayres').textContent='Delay: '+d.toFixed(3)+' ms 🔒 TERKUNCI';
+  updateRangeLabels();
 }
 function findDelay(silent){
   if(!S.pink||!S.running){if(!silent)toast('START + PINK dulu, tunggu 5 detik.');return}
@@ -430,8 +437,6 @@ $('unwrapbtn').onclick=()=>{
   $('unwrapbtn').textContent=S.unwrap?'↩ UNWRAP ON':'↩ WRAP -180/+180';
   drawAll();
 };
-$('zoomIn').onclick=()=>{const i=RANGES.indexOf(CFG.range);if(i>0){CFG.range=RANGES[i-1];updateRangeLabels();drawAll()}};
-$('zoomOut').onclick=()=>{const i=RANGES.indexOf(CFG.range);if(i<RANGES.length-1){CFG.range=RANGES[i+1];updateRangeLabels();drawAll()}};
 function updatePolarityLive(){
   if(!S.pink||!S.running){refreshPolarityAfterOff();return}
   if(!S.phaseRaw.length&&!S.signHist.length){setPolarityUI(null,null,false,null);return}
@@ -439,7 +444,7 @@ function updatePolarityLive(){
   setPolarityUI(pol.state,pol.avg,pol.weak,pol.band);
 }
 function killLive(){
-  S.live=[];S.phase=[];S.phaseRaw=[];S.acc=null;S.accN=0;S.appliedDelay=0;S.ir=[];S.foundDelay=null;S.delayMs=null;S.delayHist=[];S.fracLag=0;S.lockedLag=null;S.lagVotes=[];S.locking=false;
+  S.live=[];S.phase=[];S.phaseRaw=[];S.acc=null;S.accN=0;S.appliedDelay=0;S.ir=[];S.foundDelay=null;S.delayMs=null;S.delayHist=[];S.fracLag=0;S.lockedLag=null;S.lagVotes=[];S.locking=false;S.refined=false;S.magOff=null;
   $('finddelayres').textContent='Delay otomatis nyari sendiri';
   updateRangeLabels();refreshPolarityAfterOff();
 }
@@ -515,7 +520,7 @@ async function startNoise(type){
   setRefButtons();resetAcc();S.appliedDelay=0;S.foundDelay=null;S.delayLocked=false;S.delayHist=[];S.signHist=[];S.corrSign=1;S.lastAutoDelay=0;
   unlockDelay();
   updateRangeLabels();updatePolarityLive();
-  toast(REFLBL[type]+' nyala — diem 5 detik, delay lagi dikunci');
+  toast(REFLBL[type]+' nyala — diem 5 detik, delay lagi dikunci otomatis');
 }
 function stopPink(){
   if(S.noise){try{S.noise.stop()}catch(e){}try{S.noise.disconnect()}catch(e){}S.noise=null}
@@ -606,20 +611,19 @@ function drawIR(){
   ig.fillStyle='#fff';ig.font='900 12px Arial';ig.fillText('Puncak = delay • '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms 🔒':'Lagi nyari…')+' • lag '+(S.lockedLag!=null?S.lockedLag.toFixed(1):S.fracLag.toFixed(1))+' spl',8,14);
 }
 function drawAll(){
-  const w=mag.width,h=mag.height,range=CFG.range;
+  const w=mag.width,h=mag.height,range=30;
   gridMag(mg,w,h,range);
   S.captures.forEach(cp=>{
     if(!cp.show||!cp.mag.length)return;
-    const fixed=recenter(cp.mag);
     mg.beginPath();mg.strokeStyle=cp.color;mg.lineWidth=4;mg.setLineDash([]);
-    fixed.forEach((o,i)=>{const Y=yMag(o.v,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke();
+    cp.mag.forEach((o,i)=>{const Y=yMag(o.v,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke();
   });
   if(S.live.length){mg.beginPath();mg.strokeStyle='#3fd4ec';mg.lineWidth=4;mg.lineJoin='round';mg.lineCap='round';S.live.forEach((o,i)=>{const Y=yMag(o.v,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke()}
   drawZeroLine(mg,w,h,range);
   const cx=Math.max(6,Math.min(w-6,xfreq(S.cursor,w)));
   mg.strokeStyle='#fff';mg.lineWidth=3;mg.beginPath();mg.moveTo(cx,0);mg.lineTo(cx,h);mg.stroke();
   let pt=pointOn(S.live,S.cursor);
-  if(!pt){const cp=lastVisibleCapture();if(cp&&cp.mag.length)pt=pointOn(recenter(cp.mag),S.cursor)}
+  if(!pt){const cp=lastVisibleCapture();if(cp&&cp.mag.length)pt=pointOn(cp.mag,S.cursor)}
   if(pt){const Y=yMag(pt.v,range,h);mg.beginPath();mg.arc(cx,Y,9,0,Math.PI*2);mg.fillStyle='#fff';mg.fill();$('cursorread').textContent=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB'}else{$('cursorread').textContent=fmtF(S.cursor)+' • — dB'}
   drawScale();
   const pw=phc.width,phH=phc.height;
@@ -734,10 +738,15 @@ function computeTFAligned(){
   S.accN++;
   return{freqs,magDb,ph};
 }
-function normalizeDb(freqs,magDb){
-  const mid=magDb.filter((v,i)=>freqs[i].f>=500&&freqs[i].f<=2000);
-  const avgMid=mid.reduce((s,v)=>s+v,0)/Math.max(1,mid.length);
-  return magDb.map(v=>v-avgMid);
+function normalizeAuto(freqs,magDb){
+  let target=0;
+  let lo=0,hi=magDb.length-1;
+  for(let i=0;i<magDb.length;i++){if(freqs[i].f<=S.cursor)lo=i;if(freqs[i].f>=S.cursor){hi=i;break}}
+  if(hi>lo){const t=(Math.log(S.cursor)-Math.log(freqs[lo].f))/(Math.log(freqs[hi].f)-Math.log(freqs[lo].f)||1);target=magDb[lo]+(magDb[hi]-magDb[lo])*Math.max(0,Math.min(1,t))}
+  else target=magDb[lo]||0;
+  if(S.magOff==null)S.magOff=target;
+  else S.magOff+=0.06*(target-S.magOff);
+  return magDb.map(v=>v-S.magOff);
 }
 let polTick=0;
 function draw(){
@@ -750,16 +759,17 @@ function draw(){
   let freqs,pArr,phArr;
   if(S.pink&&S.refRe&&S.refType!=='sweep'){
     const tf=computeTFAligned();freqs=tf.freqs;phArr=tf.ph;
-    pArr=normalizeDb(freqs,tf.magDb);
+    pArr=normalizeAuto(freqs,tf.magDb);
   }else{
     const n=S.an.frequencyBinCount,raw=new Float32Array(n);S.an.getFloatFrequencyData(raw);
     freqs=[];const rawDb=[];phArr=null;
     for(let i=1;i<n;i++){const f=i*S.ctx.sampleRate/S.fft;if(f<MINF||f>MAXF)continue;freqs.push({f});rawDb.push(raw[i])}
-    pArr=normalizeDb(freqs,rawDb);
+    pArr=normalizeAuto(freqs,rawDb);
   }
   const den=densify(freqs,pArr,phArr);
   S.live=den.mag;
   S.phaseRaw=phArr?den.phase:[];S.phase=S.phaseRaw.slice();
+  if(S.lockedLag!=null&&!S.refined&&S.accN>30)refineDelay();
   if(S.pink&&(++polTick%3===0))updatePolarityLive();
   drawAll();
   S.raf=requestAnimationFrame(draw);
