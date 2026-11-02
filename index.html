@@ -86,8 +86,8 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 .peakMeterFill{height:100%;width:0%;background:#22ff88;border-radius:6px;transition:width .06s linear}
 .setRow{display:flex;flex-direction:column;gap:4px}
 .setRow label{font-size:11px;color:#fff;display:flex;flex-direction:column;gap:2px;font-weight:900}
-.miniRef{display:flex;gap:5px}
-.miniRef button{flex:1;padding:6px 4px;font-size:11px;font-weight:900;white-space:nowrap}
+.miniRef{display:flex;gap:5px;margin-bottom:5px}
+.miniRef button{flex:1;padding:6px 3px;font-size:11px;font-weight:900;white-space:nowrap}
 .miniVol{display:block;margin-top:5px;color:#fff;font-size:11px;font-weight:900}
 .miniVol input{margin-top:2px;height:16px}
 .miniVol b{color:#fff}
@@ -113,13 +113,13 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
     <ol>
       <li>Sentuh layar 1x, otomatis landscape.</li>
       <li>Pencet <b>START</b> di atas, izinin mic.</li>
-      <li>Pencet <b>🩷 PINK</b> di kanan bawah, volume 100%, mic 1 m dari speaker.</li>
+      <li>Pencet <b>🩷 PINK</b> / <b>〰️ SWEEP</b> / <b>⬜ WHITE</b> di kanan bawah, volume 100%, mic 1 m dari speaker. PINK buat cek biasa, SWEEP buat denger naik nya freq, WHITE buat tes tweeter.</li>
       <li>Liat <b>dBFS PEAK</b> di kanan, bagus nya -12 sampai -6 dBFS. Kalo angka nya merah / 0 dBFS, kecilin volume.</li>
       <li>Geser cursor di grafik, liat kotak <b>CURSOR</b> di tengah atas: freq + dB + derajat phase nya.</li>
       <li>Liat kiri grafik phase, tulisan kecil: <b>NORMAL ✓ / TERBALIK ⚠</b>, itu polarity nya.</li>
       <li>Pencet <b>🔍 FIND DELAY</b>, hasil delay nya nongol di atas grafik phase.</li>
       <li>Pencet <b>📸 CAPTURE</b> di bawah kotak List, pencet nama capture nya / tombol ✏️, ubah jadi misal <b>box pahratel</b>.</li>
-      <li>Pencet <b>■ OFF</b> di kanan bawah, pink mati, phase capture + cursor tetep aktif.</li>
+      <li>Pencet <b>■ OFF</b> di kanan bawah, suara mati, phase capture + cursor tetep aktif.</li>
     </ol>
     <p style="font-size:12px;line-height:1.6">Garis ijo tengah = 0 dB / 0°. dBFS rel, bukan SPL terkalibrasi.</p>
     <button id="infoClose" style="width:100%;padding:9px;margin-top:6px">✕ TUTUP</button>
@@ -235,6 +235,10 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <h3>REFERENCE • KECIL</h3>
       <div class="miniRef">
         <button id="pinkbtn">🩷 PINK</button>
+        <button id="sweepbtn">〰️ SWEEP</button>
+      </div>
+      <div class="miniRef">
+        <button id="whitebtn">⬜ WHITE</button>
         <button id="noiseoff">■ OFF</button>
       </div>
       <label class="miniVol">VOLUME <b id="voltxt" style="color:#fff">30%</b>
@@ -270,7 +274,7 @@ const CAPCOLORS=['#fb923c','#facc15','#f472b6','#a78bfa','#34d399','#f87171','#9
 const S={ctx:null,stream:null,src:null,an:null,refAn:null,noise:null,noiseGain:null,pink:false,running:false,fft:8192,raf:0,
   cursor:4190,live:[],phase:[],phaseRaw:[],coh:[],sm:null,acc:null,accN:0,magOffset:null,captures:[],capN:0,unwrap:false,delayMs:null,
   polarity:null,phaseAvg:null,phSmooth:6,delayLo:200,delayHi:2000,cohAvg:null,foundDelay:null,foundDelayBand:null,foundDelayCoh:null,
-  clipUntil:0,peakHoldDb:-120,peakHoldUntil:0};
+  clipUntil:0,peakHoldDb:-120,peakHoldUntil:0,refType:null};
 
 $('infobtn').onclick=()=>{$('infoModal').classList.add('show')};
 $('infoClose').onclick=()=>{$('infoModal').classList.remove('show')};
@@ -563,17 +567,46 @@ function pinkBuffer(c){
   for(let i=0;i<N;i++)d[i]=re[i]*(0.35/r);
   return b;
 }
+function whiteBuffer(c){
+  const N=65536,b=c.createBuffer(1,N,c.sampleRate),d=b.getChannelData(0);
+  for(let i=0;i<N;i++)d[i]=(Math.random()*2-1)*0.30;
+  return b;
+}
+function sweepBuffer(c){
+  const sr=c.sampleRate,T=8,N=Math.floor(sr*T),b=c.createBuffer(1,N,sr),d=b.getChannelData(0);
+  let ph=0;const f0=20,f1=20000,k=Math.pow(f1/f0,1/T);
+  for(let i=0;i<N;i++){
+    const t=i/sr,f=f0*Math.pow(k,t);
+    ph+=2*Math.PI*f/sr;
+    let env=1;
+    const fade=Math.floor(sr*0.08);
+    if(i<fade)env=0.5-0.5*Math.cos(Math.PI*i/fade);
+    else if(i>=N-fade)env=0.5-0.5*Math.cos(Math.PI*(N-1-i)/fade);
+    d[i]=Math.sin(ph)*0.32*env;
+  }
+  return b;
+}
 function resetAcc(){S.acc=null;S.accN=0;S.sm=null;S.magOffset=null}
-async function startPink(){
+function setRefButtons(type){
+  $('pinkbtn').classList.toggle('on',type==='pink');
+  $('sweepbtn').classList.toggle('on',type==='sweep');
+  $('whitebtn').classList.toggle('on',type==='white');
+}
+async function startRef(type){
   stopPinkNoiseOnly();
   await ensureCtx();const c=S.ctx;
-  S.noise=c.createBufferSource();S.noise.buffer=pinkBuffer(c);S.noise.loop=true;
+  const buf=type==='sweep'?sweepBuffer(c):type==='white'?whiteBuffer(c):pinkBuffer(c);
+  S.noise=c.createBufferSource();S.noise.buffer=buf;S.noise.loop=true;
   S.noiseGain=c.createGain();S.noiseGain.gain.value=($('noisevol').value/100)*0.5;
   S.refAn=c.createAnalyser();S.refAn.fftSize=S.fft;S.refAn.smoothingTimeConstant=0;
   S.noise.connect(S.noiseGain);S.noiseGain.connect(c.destination);S.noiseGain.connect(S.refAn);S.noise.start();
-  S.pink=true;$('refstat').textContent='PINK NOISE';$('modetxt').textContent='TF';$('phasesub').textContent='Pink ON — Phase jalan';
-  $('pinkbtn').classList.add('on');resetAcc();
+  S.pink=true;S.refType=type;
+  $('refstat').textContent=type==='sweep'?'SWEEP':type==='white'?'WHITE NOISE':'PINK NOISE';
+  $('modetxt').textContent='TF';
+  $('phasesub').textContent=type==='sweep'?'Sweep ON — 20 Hz ke 20 kHz, muter terus':type==='white'?'White ON — Phase jalan':'Pink ON — Phase jalan';
+  setRefButtons(type);resetAcc();
 }
+async function startPink(){return startRef('pink')}
 function stopPinkNoiseOnly(){
   if(S.noise){try{S.noise.stop()}catch(e){}try{S.noise.disconnect()}catch(e){}S.noise=null}
   if(S.noiseGain){try{S.noiseGain.disconnect()}catch(e){}S.noiseGain=null}
@@ -581,12 +614,14 @@ function stopPinkNoiseOnly(){
 }
 function stopPink(){
   stopPinkNoiseOnly();
-  S.pink=false;
+  S.pink=false;S.refType=null;
   $('refstat').textContent='OFF';$('modetxt').textContent='RTA';$('phasesub').textContent='Pink OFF — Live mati, phase capture tetep aktif';
-  $('pinkbtn').classList.remove('on');
+  setRefButtons(null);
   killLive();drawAll();
 }
-$('pinkbtn').onclick=()=>{autoLandscape();S.pink?stopPink():startPink()};
+$('pinkbtn').onclick=()=>{autoLandscape();S.refType==='pink'?stopPink():startRef('pink')};
+$('sweepbtn').onclick=()=>{autoLandscape();S.refType==='sweep'?stopPink():startRef('sweep')};
+$('whitebtn').onclick=()=>{autoLandscape();S.refType==='white'?stopPink():startRef('white')};
 $('noiseoff').onclick=stopPink;
 $('noisevol').oninput=e=>{$('voltxt').textContent=e.target.value+'%';if(S.noiseGain&&S.ctx)S.noiseGain.gain.setTargetAtTime((e.target.value/100)*0.5,S.ctx.currentTime,.02)};
 
