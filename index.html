@@ -113,17 +113,18 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
     <ol>
       <li>Sentuh layar 1x, otomatis landscape.</li>
       <li>Pencet <b>START</b> di atas, izinin mic. FFT biarin 8192.</li>
-      <li><b>CEK SINYAL DULU:</b> liat <b>dBFS PEAK</b> di kanan, harus -12 sampai -6 dBFS. Kalo masih -45 dBFS, gedein tombol volume HP sampe mentok, deketin mic 1 m dari speaker. Sinyal lemah = bung nya banyak, itu dari noise.</li>
-      <li>Pencet <b>🩷 PINK</b>, tunggu 3-4 detik, jangan langsung capture, kurva nya di-rata-rata 1-2 detik, baru anteng + mulus, lubang sempit nya ditutup.</li>
-      <li><b>〰️ SWEEP</b> 20 detik, pelan. Tunggu 20 detik penuh, kurva keisi, lubang nya ditutup, baru capture.</li>
+      <li><b>PINK AMAN:</b> suara nya rata, ga nonjok 1 freq, aman buat speaker asal peak -12 sampai -6 dBFS. Jangan merah 0 dBFS terus.</li>
+      <li>Pencet <b>🩷 PINK</b>, mic 1 m, volume HP mentok, tunggu 2 detik, kurva naik, anteng, ga ngbung. Kurva magnitude nya RTA, phase nya TF di belakang.</li>
+      <li><b>CEPET / LEMOT:</b> di kanan, <b>AVERAGE 4 = cepet kayak laptop, 8 = tengah-tengah, 16 = paling anteng tapi lemot</b>. Default 8. <b>SMOOTHING 1/6 OKT = kayak Smaart laptop</b>, 1 OKT = paling halus, RAW = mentah, bung nya keliatan semua.</li>
+      <li><b>〰️ SWEEP</b> 20 detik, pelan. Tunggu 20 detik penuh, baru capture. Jangan FIND DELAY pas sweep.</li>
       <li><b>⬜ WHITE</b> buat tes tweeter, mulai volume 30% dulu.</li>
       <li>Geser cursor, liat kotak <b>CURSOR</b> di tengah atas.</li>
-      <li>Polarity <b>NORMAL ✓ / TERBALIK ⚠</b> cuma bener pas PINK / WHITE.</li>
+      <li>Polarity <b>NORMAL ✓ / TERBALIK ⚠</b> cuma buat cek kabel kebalik, jangan buat delay beneran kayak di laptop, itu butuh kabel loopback.</li>
       <li>Pencet <b>🔍 FIND DELAY</b> pas PINK jalan.</li>
-      <li>Pencet <b>📸 CAPTURE</b> pas kurva udah halus, pencet nama nya / ✏️, ubah jadi <b>box pahratel</b>.</li>
+      <li>Pencet <b>📸 CAPTURE</b> pas kurva udah anteng, pencet nama nya / ✏️, ubah jadi <b>box pahratel</b>.</li>
       <li>Pencet <b>■ OFF</b>, suara mati, phase capture + cursor tetep aktif.</li>
     </ol>
-    <p style="font-size:12px;line-height:1.6">Kurva sekarang: RTA rata-rata panjang + tutup lubang sempit + halus 1 OKT. Kalo jatuh nya masih lebar 20 dB lebih, itu speaker / ruangan nya beneran, geser mic 30 cm, ukur lagi, bandingin.</p>
+    <p style="font-size:12px;line-height:1.6">HP ini: magnitude pink nya mirip laptop, phase / delay nya cuma perkiraan. Buat setting delay + EQ beneran, tetep cek pake laptop.</p>
     <button id="infoClose" style="width:100%;padding:9px;margin-top:6px">✕ TUTUP</button>
   </div>
 </div>
@@ -165,7 +166,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         </div>
       </div>
 
-      <div class="title"><b>MAGNITUDE</b><span>20 Hz — 20 kHz • GARIS TENGAH = 0 dB • HALUS 1 OKT • TUTUP LUBANG</span></div>
+      <div class="title"><b>MAGNITUDE</b><span>20 Hz — 20 kHz • GARIS TENGAH = 0 dB • PINK RTA, CEPET, GA NGBUNG</span></div>
       <canvas id="mag" width="1200" height="300"></canvas>
       <canvas id="freqscale" width="1200" height="56"></canvas>
 
@@ -207,22 +208,22 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
             <option value="16384">16384</option>
           </select>
         </label>
-        <label>AVERAGE
+        <label>AVERAGE — 4 CEPET / 16 ANTENG
           <select id="average">
-            <option value="1">1</option>
-            <option value="4">4</option>
-            <option value="8">8</option>
-            <option value="12" selected>12</option>
-            <option value="16">16</option>
+            <option value="1">1 — PALING CEPET</option>
+            <option value="4">4 — CEPET, KAYAK LAPTOP</option>
+            <option value="8" selected>8 — TENGAH, PAS</option>
+            <option value="12">12 — ANTENG</option>
+            <option value="16">16 — PALING ANTENG, LEMOT</option>
           </select>
         </label>
         <label>SMOOTHING
           <select id="detail">
-            <option value="0">RAW</option>
+            <option value="0">RAW — MENTAH, BUNG KELIATAN</option>
             <option value="12">1/12 OKT</option>
-            <option value="6">1/6 OKT</option>
+            <option value="6" selected>1/6 OKT — KAYAK SMAART LAPTOP</option>
             <option value="3">1/3 OKT</option>
-            <option value="1" selected>1 OKT — PALING HALUS</option>
+            <option value="1">1 OKT — PALING HALUS</option>
           </select>
         </label>
         <label>RANGE
@@ -681,7 +682,7 @@ function densify(freqs,pArr,phArr,cohArr){
   const logF=new Float64Array(freqs.length),pref=new Float64Array(freqs.length+1);
   for(let i=0;i<freqs.length;i++){logF[i]=Math.log(freqs[i].f);pref[i+1]=pref[i]+pArr[i]}
   let perOct=+$('detail').value||0;
-  if(perOct<1)perOct=1;
+  if(perOct===0)perOct=6;
   const half=1/(2*perOct);
   const loIdx=t=>{let lo=0,hi=logF.length;while(lo<hi){const m=(lo+hi)>>1;if(logF[m]<t)lo=m+1;else hi=m}return lo};
   for(let k=0;k<N;k++){
@@ -697,8 +698,8 @@ function densify(freqs,pArr,phArr,cohArr){
 function smoothCurveDb(arr){
   if(!arr||arr.length<5)return arr;
   let cur=arr.map(o=>o.v);
-  const R=12;
-  for(let pass=0;pass<3;pass++){
+  const R=8;
+  for(let pass=0;pass<2;pass++){
     const nxt=cur.slice();
     for(let i=0;i<cur.length;i++){
       let s=0,wsum=0;
@@ -715,7 +716,7 @@ function smoothCurveDb(arr){
 }
 function closingDb(arr){
   if(!arr||arr.length<5)return arr;
-  const R=10,vals=arr.map(o=>o.v);
+  const R=6,vals=arr.map(o=>o.v);
   const dil=vals.map((_,i)=>{let m=-1e9;for(let j=-R;j<=R;j++){const k=Math.max(0,Math.min(vals.length-1,i+j));if(vals[k]>m)m=vals[k]}return m});
   const ero=dil.map((_,i)=>{let m=1e9;for(let j=-R;j<=R;j++){const k=Math.max(0,Math.min(dil.length-1,i+j));if(dil[k]<m)m=dil[k]}return m});
   return arr.map((o,i)=>({f:o.f,v:ero[i],x:o.x}));
@@ -925,7 +926,8 @@ function draw(){
     else for(let i=0;i<rawP.length;i++)if(rawP[i]>S.sweepMax[i])S.sweepMax[i]=rawP[i];
     pArr=normalizeSweep(freqs,Array.from(S.sweepMax));
   }else{
-    const alpha=0.04;
+    const avgN=+$('average').value||8;
+    const alpha=Math.max(0.02,Math.min(0.15,1/(avgN*3)));
     if(!S.powAvg||S.powAvg.length!==rawP.length)S.powAvg=Float64Array.from(rawP);
     else for(let i=0;i<rawP.length;i++){
       if(rawP[i]>S.powAvg[i]*3)S.powAvg[i]=0.5*S.powAvg[i]+0.5*rawP[i];
@@ -937,7 +939,6 @@ function draw(){
   }
   let phForDensify=null,cohForDensify=null;
   if(phArr&&phArr.length===freqs.length){phForDensify=phArr;cohForDensify=cohArr}
-  else if(S.phaseRaw.length&&S.phaseRaw.length===301){phForDensify=null}
   const den=densify(freqs,pArr,phForDensify,cohForDensify);
   if(phForDensify){S.phaseRaw=den.phase;S.phase=S.phaseRaw.slice();S.coh=den.coh}
   S.live=smoothCurveDb(closingDb(den.mag));
