@@ -9,7 +9,7 @@
 html,body{height:100%}
 body{margin:0;background:#0a0c10;color:#e8eaf0;font:700 11px system-ui,Arial;overflow:hidden}
 button,select{font:700 11px system-ui,Arial;cursor:pointer;font-weight:900}
-.topbar{height:36px;background:#10141a;border-bottom:2px solid #3fd4ec;display:flex;align-items:center;gap:10px;padding:0 10px;position:sticky;top:0;z-index:20;white-space:nowrap;min-width:900px}
+.topbar{height:36px;background:#10141a;border-bottom:2px solid #3fd4ec;display:flex;align-items:center;gap:10px;padding:0 10px;position:sticky;top:0;z-index:20;white-space:nowrap;min-width:860px}
 .logo{font-weight:900;font-size:14px}.logo b{color:#3fd4ec}.logo span{color:#cbd5e1;font-weight:900;font-size:8px;display:block;letter-spacing:2px}
 .topbtns{margin-left:auto;display:flex;gap:5px;align-items:center}
 .topbtns span{font-weight:900}
@@ -19,11 +19,11 @@ button.on{background:#c2410c!important;border-color:#fb923c!important;color:#fff
 button.cap{background:#7c3aed;border-color:#a78bfa;font-weight:900}
 button.danger{background:#7f1d1d;border-color:#ef4444}
 button.find{background:#7c3aed;border-color:#a78bfa;font-weight:900;padding:4px 8px}
-select{background:#222b37;color:#fff;border:1px solid #4a5566;border-radius:5px;padding:3px 4px;width:100%;font-weight:900;height:26px}
-.layout{display:grid;grid-template-columns:230px minmax(640px,1fr) 160px;gap:6px;padding:5px 6px;max-width:1600px;margin:auto;min-width:900px;align-items:stretch;height:calc(100dvh - 36px - 26px)}
+select{background:#222b37;color:#fff;border:1px solid #4a5566;border-radius:5px;padding:2px 3px;width:100%;font-weight:900;height:22px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.layout{display:grid;grid-template-columns:210px minmax(560px,1fr) 185px;gap:6px;padding:5px 6px;max-width:1600px;margin:auto;min-width:860px;align-items:stretch;height:calc(100dvh - 36px - 26px)}
 .leftCol{display:flex;flex-direction:column;min-height:0;height:100%}
-.panel{background:#14181f;border:1px solid #2b323e;border-radius:8px;padding:6px 7px}
-main{display:flex;min-height:0}
+.panel{background:#14181f;border:1px solid #2b323e;border-radius:8px;padding:6px 7px;min-width:0;overflow:hidden}
+main{display:flex;min-height:0;min-width:0}
 main .panel{flex:1;height:100%;overflow:hidden;display:flex;flex-direction:column;min-height:0}
 .listBox{flex:1;display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden}
 .listBox h3{font-size:13px;color:#fff;letter-spacing:1px;flex:0 0 auto;margin-bottom:3px;font-weight:900}
@@ -33,21 +33,21 @@ main .panel{flex:1;height:100%;overflow:hidden;display:flex;flex-direction:colum
 #caplist::-webkit-scrollbar-track{background:#1f2937;border-radius:5px;border:1px solid #2b323e}
 #caplist::-webkit-scrollbar-thumb{background:#3fd4ec;border-radius:5px;border:1px solid #0a0c10}
 #caplist::-webkit-scrollbar-thumb:active{background:#fff}
-h3{margin:0 0 4px;font-size:11px;letter-spacing:1px;color:#fff;font-weight:900}
+h3{margin:0 0 3px;font-size:10px;letter-spacing:.5px;color:#fff;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-resize;touch-action:none;min-height:0}
 #mag{flex:1 1 0}
 #freqscale{flex:0 0 auto;height:24px;background:#0b0f14;border-top:1px solid #2b323e;border-radius:0 0 4px 4px}
 #phase{flex:1 1 0}
 #ir{flex:0 0 auto;height:62px}
-.title{display:flex;justify-content:space-between;font-size:11px;color:#fff;margin:3px 0 2px;flex:0 0 auto;font-weight:900}
-.title b{color:#fff}
-.title span{color:#cbd5e1;font-weight:900}
+.title{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#fff;margin:3px 0 2px;flex:0 0 auto;font-weight:900;white-space:nowrap;overflow:hidden}
+.title b{color:#fff;flex:0 0 auto}
+.title span{color:#cbd5e1;font-weight:900;overflow:hidden;text-overflow:ellipsis}
 .ctl{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:3px;align-items:stretch;flex:0 0 auto}
 .ctl button{padding:4px 8px;font-size:11px}
 .cursor{display:flex;gap:6px;align-items:center;margin-top:4px;background:#090d12;border:1px solid #2b323e;border-radius:6px;padding:3px 5px;flex:0 0 auto;font-weight:900}
 .cursor input{flex:1;accent-color:#fff}
 .cursor b{color:#fff;font-weight:900}
-.statusbar{height:26px;background:#10141a;border-top:1px solid #2b323e;padding:4px 10px;display:flex;gap:14px;flex-wrap:wrap;color:#fff;font-size:11px;position:sticky;bottom:0;min-width:900px;align-items:center;overflow:hidden;white-space:nowrap;font-weight:900}
+.statusbar{height:26px;background:#10141a;border-top:1px solid #2b323e;padding:4px 10px;display:flex;gap:14px;flex-wrap:wrap;color:#fff;font-size:11px;position:sticky;bottom:0;min-width:860px;align-items:center;overflow:hidden;white-space:nowrap;font-weight:900}
 .statusbar b{color:#7ee0ad}
 input[type=range]{width:100%;accent-color:#3fd4ec}
 .capBtns{display:flex;gap:4px;margin-top:5px;padding-top:6px;border-top:1px solid #2b323e;flex:0 0 auto}
@@ -82,20 +82,20 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 .peakBig small{display:block;color:#e2e8f0;font-size:9px;letter-spacing:1px;margin-top:2px;font-weight:900}
 .peakMeter{height:8px;background:#1f2937;border-radius:6px;overflow:hidden;margin-top:5px;position:relative}
 .peakMeterFill{height:100%;width:0%;background:#22ff88;border-radius:6px;transition:width .06s linear}
-.setRow{display:flex;flex-direction:column;gap:3px}
-.setRow label{font-size:10px;color:#fff;display:flex;flex-direction:column;gap:1px;font-weight:900}
+.setRow{display:flex;flex-direction:column;gap:2px}
+.setRow label{font-size:9px;line-height:1.2;color:#fff;display:flex;flex-direction:column;gap:1px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .miniRef{display:flex;gap:4px;flex-wrap:wrap}
 .miniRef button{flex:1 1 45%;padding:4px 3px;font-size:10px;font-weight:900;white-space:nowrap}
-.miniVol{display:block;margin-top:4px;color:#fff;font-size:10px;font-weight:900}
+.miniVol{display:block;margin-top:4px;color:#fff;font-size:10px;font-weight:900;white-space:nowrap}
 .miniVol input{margin-top:2px;height:14px}
 .miniVol b{color:#fff}
-.rightCol{display:flex;flex-direction:column;min-height:0;height:100%;overflow-y:auto;scrollbar-width:thin}
+.rightCol{display:flex;flex-direction:column;min-height:0;height:100%;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;min-width:0}
 .rightCol .panel{flex:0 0 auto;margin-top:6px}
 .rightCol .panel:first-child{margin-top:0}
 #infoModal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:center;justify-content:center;padding:16px}
 #infoModal.show{display:flex}
 .infoBox{background:#14181f;border:1px solid #3fd4ec;border-radius:10px;max-width:520px;width:100%;max-height:88vh;overflow:auto;padding:14px;font-weight:700}
-.infoBox h3{font-size:13px;color:#fff;letter-spacing:0}
+.infoBox h3{font-size:13px;color:#fff;letter-spacing:0;white-space:normal}
 .infoBox ol{margin:8px 0 0;padding-left:18px;color:#fff;font-size:12px;line-height:1.9;font-weight:800}
 .infoBox b{color:#fff}
 .infoBox p{color:#e2e8f0;font-weight:800}
@@ -187,7 +187,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <div id="weakwarn" style="display:none;color:#f87171;font-size:10px;font-weight:900;margin-top:5px;text-align:center;line-height:1.4">⚠ SINYAL LEMAH — VOLUME MENTOK + MIC 30 CM</div>
     </div>
     <div class="panel">
-      <h3>⚙️ PENGATURAN — ALA SMAART 8</h3>
+      <h3>⚙️ PENGATURAN — SMAART 8</h3>
       <div class="setRow">
         <label>FFT — TIME WINDOW
           <select id="fft">
@@ -206,7 +206,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
             <option value="128">128</option>
           </select>
         </label>
-        <label>MAG SMOOTHING — 1/24 OKT
+        <label>MAG SMOOTHING
           <select id="detail">
             <option value="0">RAW</option>
             <option value="24" selected>1/24 OKT</option>
@@ -215,7 +215,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
             <option value="3">1/3 OKT</option>
           </select>
         </label>
-        <label>PHASE SMOOTHING — 1/24 OKT
+        <label>PHASE SMOOTHING
           <select id="phasesmooth">
             <option value="0">RAW</option>
             <option value="24" selected>1/24 OKT</option>
@@ -232,7 +232,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
             <option value="120">120 dB</option>
           </select>
         </label>
-        <label>RANGE PHASE — DERAJAT
+        <label>RANGE PHASE
           <select id="phaserange">
             <option value="180" selected>-180° sampai +180° — WRAP</option>
             <option value="360">UNWRAP — muter terus</option>
