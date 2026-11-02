@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>SMART LIVE v10 — IR ATAS</title>
+<title>SMART LIVE v11 — IR TIPIS</title>
 <style>
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -38,7 +38,7 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
 #mag{flex:1 1 0}
 #freqscale{flex:0 0 auto;height:24px;background:#0b0f14;border-top:1px solid #2b323e;border-radius:0 0 4px 4px}
 #phase{flex:1 1 0}
-#ir{flex:0 0 auto;height:80px}
+#ir{flex:0 0 auto;height:38px}
 .title{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#fff;margin:3px 0 2px;flex:0 0 auto;font-weight:900;white-space:nowrap;overflow:hidden}
 .title b{color:#fff;flex:0 0 auto}
 .title span{color:#cbd5e1;font-weight:900;overflow:hidden;text-overflow:ellipsis}
@@ -118,7 +118,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
   </div>
 </div>
 <div class="topbar">
-  <div class="logo"><b>SMART</b> LIVE v10 <span>MEASUREMENT • LIKE SMAART • IR ATAS</span></div>
+  <div class="logo"><b>SMART</b> LIVE v11 <span>MEASUREMENT • LIKE SMAART • IR TIPIS</span></div>
   <div class="topbtns">
     <span style="color:#34d399;font-size:10px;font-weight:900">↻ AUTO LANDSCAPE</span>
     <button id="start" class="go">▶ START</button>
@@ -268,7 +268,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
   <span>Reference: <b id="refstat">OFF</b></span>
   <span>FFT: <b id="fftstat">16384</b></span>
   <span>Polarity: <b id="polstat">—</b></span>
-  <span style="margin-left:auto">SMART LIVE v10 • dBFS rel, bukan SPL terkalibrasi</span>
+  <span style="margin-left:auto">SMART LIVE v11 • dBFS rel, bukan SPL terkalibrasi</span>
 </div>
 <script>
 const _dummy=document.createElement('div');
@@ -659,14 +659,14 @@ function drawIR(){
   ig.clearRect(0,0,W,H);ig.fillStyle='#05070a';ig.fillRect(0,0,W,H);
   ig.strokeStyle='#22ff88';ig.lineWidth=2;ig.beginPath();ig.moveTo(0,H/2);ig.lineTo(W,H/2);ig.stroke();
   if(!S.ir.length){
-    ig.fillStyle='#fff';ig.font='900 14px Arial';ig.textAlign='center';ig.fillText('NO IR — START + PINK, FIND DELAY',W/2,H/2-10);ig.textAlign='left';return;
+    ig.fillStyle='#fff';ig.font='900 13px Arial';ig.textAlign='center';ig.fillText('NO IR — START + PINK, FIND DELAY',W/2,H/2+4);ig.textAlign='left';return;
   }
   ig.beginPath();ig.strokeStyle='#facc15';ig.lineWidth=3;
-  S.ir.forEach((v,i)=>{const x=i/(S.ir.length-1)*W;const y=H/2-v*(H/2-6);if(i===0)ig.moveTo(x,y);else ig.lineTo(x,y)});
+  S.ir.forEach((v,i)=>{const x=i/(S.ir.length-1)*W;const y=H/2-v*(H/2-4);if(i===0)ig.moveTo(x,y);else ig.lineTo(x,y)});
   ig.stroke();
   const cx=W/2;
   ig.strokeStyle='#fff';ig.lineWidth=2;ig.beginPath();ig.moveTo(cx,0);ig.lineTo(cx,H);ig.stroke();
-  ig.fillStyle='#fff';ig.font='900 13px Arial';ig.fillText('Puncak = delay • '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':'—'),8,16);
+  ig.fillStyle='#fff';ig.font='900 12px Arial';ig.fillText('Puncak = delay • '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':'—'),8,14);
 }
 function drawAll(){
   const w=mag.width,h=mag.height,range=+$('range').value;
