@@ -113,17 +113,17 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
     <ol>
       <li>Sentuh layar 1x, otomatis landscape.</li>
       <li>Pencet <b>START</b> di atas, izinin mic. FFT biarin 8192.</li>
-      <li><b>CEK SINYAL DULU:</b> liat <b>dBFS PEAK</b> di kanan, harus -12 sampai -6 dBFS. Kalo masih -45 dBFS, gedein tombol volume HP sampe mentok, deketin mic 1 m dari speaker, jangan ketutup tangan.</li>
-      <li>Pencet <b>🩷 PINK</b> buat kurva anteng, tunggu 2-3 detik, kurva nya naik semua.</li>
-      <li><b>〰️ SWEEP</b> sekarang 20 detik, pelan. Tunggu 20 detik penuh, kurva keisi dari kiri ke kanan, pake MAX-HOLD mentah, ga pake rata-rata. Jangan pencet FIND DELAY pas sweep, polarity nya abaikan pas sweep.</li>
+      <li><b>CEK SINYAL DULU:</b> liat <b>dBFS PEAK</b> di kanan, harus -12 sampai -6 dBFS. Kalo masih -45 dBFS, gedein tombol volume HP sampe mentok, deketin mic 1 m dari speaker.</li>
+      <li>Pencet <b>🩷 PINK</b>, tunggu 2-3 detik, kurva nya naik, mulus, halus 1 OKT, bung kecil nya ilang.</li>
+      <li><b>〰️ SWEEP</b> 20 detik, pelan. Tunggu 20 detik penuh, kurva keisi dari kiri ke kanan, MAX-HOLD mentah + halus 1 OKT. Jangan FIND DELAY pas sweep.</li>
       <li><b>⬜ WHITE</b> buat tes tweeter, mulai volume 30% dulu.</li>
       <li>Geser cursor, liat kotak <b>CURSOR</b> di tengah atas.</li>
-      <li>Liat kiri grafik phase: <b>NORMAL ✓ / TERBALIK ⚠</b>, cuma bener pas PINK / WHITE.</li>
+      <li>Polarity <b>NORMAL ✓ / TERBALIK ⚠</b> cuma bener pas PINK / WHITE.</li>
       <li>Pencet <b>🔍 FIND DELAY</b> pas PINK jalan.</li>
-      <li>Pencet <b>📸 CAPTURE</b> pas kurva nya udah anteng / sweep nya udah 20 detik kelar, pencet nama nya / ✏️, ubah jadi <b>box pahratel</b>.</li>
+      <li>Pencet <b>📸 CAPTURE</b> pas kurva udah halus, pencet nama nya / ✏️, ubah jadi <b>box pahratel</b>.</li>
       <li>Pencet <b>■ OFF</b>, suara mati, phase capture + cursor tetep aktif.</li>
     </ol>
-    <p style="font-size:12px;line-height:1.6">Garis ijo tengah = 0 dB / 0°. dBFS rel, bukan SPL terkalibrasi.</p>
+    <p style="font-size:12px;line-height:1.6">Garis ijo tengah = 0 dB / 0°. Smoothing 1 OKT: bung kecil ilang, bentuk besar nya yang keliatan. Kalo jatuh nya masih 20 dB lebih, itu speaker / ruangan nya beneran, bukan smoothing.</p>
     <button id="infoClose" style="width:100%;padding:9px;margin-top:6px">✕ TUTUP</button>
   </div>
 </div>
@@ -165,7 +165,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         </div>
       </div>
 
-      <div class="title"><b>MAGNITUDE</b><span>20 Hz — 20 kHz • GARIS TENGAH = 0 dB</span></div>
+      <div class="title"><b>MAGNITUDE</b><span>20 Hz — 20 kHz • GARIS TENGAH = 0 dB • HALUS 1 OKT</span></div>
       <canvas id="mag" width="1200" height="300"></canvas>
       <canvas id="freqscale" width="1200" height="56"></canvas>
 
@@ -221,7 +221,8 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
             <option value="0">RAW</option>
             <option value="12">1/12 OKT</option>
             <option value="6">1/6 OKT</option>
-            <option value="3" selected>1/3 OKT</option>
+            <option value="3">1/3 OKT</option>
+            <option value="1" selected>1 OKT — PALING HALUS</option>
           </select>
         </label>
         <label>RANGE
@@ -680,7 +681,7 @@ function densify(freqs,pArr,phArr,cohArr){
   const logF=new Float64Array(freqs.length),pref=new Float64Array(freqs.length+1);
   for(let i=0;i<freqs.length;i++){logF[i]=Math.log(freqs[i].f);pref[i+1]=pref[i]+pArr[i]}
   let perOct=+$('detail').value||0;
-  if(perOct<3)perOct=3;
+  if(perOct<1)perOct=1;
   const half=1/(2*perOct);
   const loIdx=t=>{let lo=0,hi=logF.length;while(lo<hi){const m=(lo+hi)>>1;if(logF[m]<t)lo=m+1;else hi=m}return lo};
   for(let k=0;k<N;k++){
@@ -692,6 +693,25 @@ function densify(freqs,pArr,phArr,cohArr){
     if(phArr){const idx=Math.max(0,Math.min(phArr.length-1,loIdx(lf)));ph.push({f,v:phArr[idx],x});co.push({f,v:cohArr?cohArr[idx]:0,x})}
   }
   return{mag:out,phase:ph,coh:co};
+}
+function smoothCurveDb(arr){
+  if(!arr||arr.length<5)return arr;
+  let cur=arr.map(o=>o.v);
+  for(let pass=0;pass<2;pass++){
+    const nxt=cur.slice();
+    const R=7;
+    for(let i=0;i<cur.length;i++){
+      let s=0,wsum=0;
+      for(let j=-R;j<=R;j++){
+        const k=Math.max(0,Math.min(cur.length-1,i+j));
+        const w=R+1-Math.abs(j);
+        s+=cur[k]*w;wsum+=w;
+      }
+      nxt[i]=s/wsum;
+    }
+    cur=nxt;
+  }
+  return arr.map((o,i)=>({f:o.f,v:cur[i],x:o.x}));
 }
 function pointOn(data,f){
   if(!data.length)return null;
@@ -904,7 +924,7 @@ function draw(){
     }
   }
   const den=densify(freqs,pArr,phArr,cohArr);
-  S.live=den.mag;S.phaseRaw=phArr?den.phase:[];S.phase=S.phaseRaw.slice();S.coh=cohArr?den.coh:[];
+  S.live=smoothCurveDb(den.mag);S.phaseRaw=phArr?den.phase:[];S.phase=S.phaseRaw.slice();S.coh=cohArr?den.coh:[];
   if(S.pink&&!isSweep&&(++delayTick%10===0))computeDelay();
   if(S.pink&&!isSweep&&(++polTick%10===0))updatePolarityLive();
   drawAll();
