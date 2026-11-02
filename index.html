@@ -112,19 +112,16 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
     <h3>ⓘ CARA PAKAI — SMART LIVE</h3>
     <ol>
       <li>Sentuh layar 1x, otomatis landscape.</li>
-      <li>Pencet <b>START</b> di atas, izinin mic. FFT biarin 8192.</li>
-      <li><b>PINK AMAN:</b> suara nya rata, ga nonjok 1 freq, aman buat speaker asal peak -12 sampai -6 dBFS. Jangan merah 0 dBFS terus.</li>
-      <li>Pencet <b>🩷 PINK</b>, mic 1 m, volume HP mentok, tunggu 2 detik, kurva naik, anteng, ga ngbung. Kurva magnitude nya RTA, phase nya TF di belakang.</li>
-      <li><b>CEPET / LEMOT:</b> di kanan, <b>AVERAGE 4 = cepet kayak laptop, 8 = tengah-tengah, 16 = paling anteng tapi lemot</b>. Default 8. <b>SMOOTHING 1/6 OKT = kayak Smaart laptop</b>, 1 OKT = paling halus, RAW = mentah, bung nya keliatan semua.</li>
-      <li><b>〰️ SWEEP</b> 20 detik, pelan. Tunggu 20 detik penuh, baru capture. Jangan FIND DELAY pas sweep.</li>
-      <li><b>⬜ WHITE</b> buat tes tweeter, mulai volume 30% dulu.</li>
-      <li>Geser cursor, liat kotak <b>CURSOR</b> di tengah atas.</li>
-      <li>Polarity <b>NORMAL ✓ / TERBALIK ⚠</b> cuma buat cek kabel kebalik, jangan buat delay beneran kayak di laptop, itu butuh kabel loopback.</li>
+      <li>Pencet <b>START</b> di atas, izinin mic.</li>
+      <li>Pencet <b>🩷 PINK</b> / <b>〰️ SWEEP</b> / <b>⬜ WHITE</b> di kanan bawah, volume 100%, mic 1 m dari speaker.</li>
+      <li>Liat <b>dBFS PEAK</b> di kanan, bagus nya -12 sampai -6 dBFS.</li>
+      <li>Geser cursor di grafik, liat kotak <b>CURSOR</b> di tengah atas.</li>
+      <li>Liat kiri grafik phase: <b>NORMAL ✓ / TERBALIK ⚠</b>.</li>
       <li>Pencet <b>🔍 FIND DELAY</b> pas PINK jalan.</li>
-      <li>Pencet <b>📸 CAPTURE</b> pas kurva udah anteng, pencet nama nya / ✏️, ubah jadi <b>box pahratel</b>.</li>
+      <li>Pencet <b>📸 CAPTURE</b>, pencet nama nya / ✏️, ubah jadi <b>box pahratel</b>.</li>
       <li>Pencet <b>■ OFF</b>, suara mati, phase capture + cursor tetep aktif.</li>
     </ol>
-    <p style="font-size:12px;line-height:1.6">HP ini: magnitude pink nya mirip laptop, phase / delay nya cuma perkiraan. Buat setting delay + EQ beneran, tetep cek pake laptop.</p>
+    <p style="font-size:12px;line-height:1.6">Garis ijo tengah = 0 dB / 0°. dBFS rel, bukan SPL terkalibrasi.</p>
     <button id="infoClose" style="width:100%;padding:9px;margin-top:6px">✕ TUTUP</button>
   </div>
 </div>
@@ -166,7 +163,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         </div>
       </div>
 
-      <div class="title"><b>MAGNITUDE</b><span>20 Hz — 20 kHz • GARIS TENGAH = 0 dB • PINK RTA, CEPET, GA NGBUNG</span></div>
+      <div class="title"><b>MAGNITUDE</b><span>20 Hz — 20 kHz • GARIS TENGAH = 0 dB</span></div>
       <canvas id="mag" width="1200" height="300"></canvas>
       <canvas id="freqscale" width="1200" height="56"></canvas>
 
@@ -208,22 +205,22 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
             <option value="16384">16384</option>
           </select>
         </label>
-        <label>AVERAGE — 4 CEPET / 16 ANTENG
+        <label>AVERAGE
           <select id="average">
-            <option value="1">1 — PALING CEPET</option>
-            <option value="4">4 — CEPET, KAYAK LAPTOP</option>
-            <option value="8" selected>8 — TENGAH, PAS</option>
-            <option value="12">12 — ANTENG</option>
-            <option value="16">16 — PALING ANTENG, LEMOT</option>
+            <option value="1">1</option>
+            <option value="4">4</option>
+            <option value="8" selected>8</option>
+            <option value="12">12</option>
+            <option value="16">16</option>
           </select>
         </label>
         <label>SMOOTHING
           <select id="detail">
-            <option value="0">RAW — MENTAH, BUNG KELIATAN</option>
+            <option value="0">RAW</option>
             <option value="12">1/12 OKT</option>
-            <option value="6" selected>1/6 OKT — KAYAK SMAART LAPTOP</option>
+            <option value="6" selected>1/6 OKT</option>
             <option value="3">1/3 OKT</option>
-            <option value="1">1 OKT — PALING HALUS</option>
+            <option value="1">1 OKT</option>
           </select>
         </label>
         <label>RANGE
