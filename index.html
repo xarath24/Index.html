@@ -54,16 +54,18 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 .capBtns button{padding:6px 4px;font-size:11px;font-weight:900;white-space:nowrap}
 .capBtns .cap{flex:2}
 .capBtns .mini{flex:0 0 auto}
-.capitem{display:flex;align-items:center;gap:6px;padding:5px 4px;border-bottom:1px solid #2b323e}
-.capitem .dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
-.capitem .nm{flex:1;min-width:0}
-.capitem .nm b{display:block;color:#fff;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text;font-weight:900}
+.capitem{display:flex;align-items:center;gap:5px;padding:3px 3px;border-bottom:1px solid #2b323e;min-height:34px}
+.capitem .dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.capitem label{display:flex;align-items:center}
+.capitem input{width:14px;height:14px;margin:0;accent-color:#3fd4ec}
+.capitem .nm{flex:1;min-width:0;line-height:1.25}
+.capitem .nm b{display:block;color:#fff;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text;font-weight:900}
 .capitem .nm b:hover{color:#3fd4ec;text-decoration:underline}
-.capitem .nm span{color:#e2e8f0;font-size:11px;display:block;font-weight:800}
+.capitem .nm span{color:#e2e8f0;font-size:9px;display:block;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .capitem .nm span.pol-ok{color:#4ade80}.capitem .nm span.pol-bad{color:#f87171}
-.capitem button{padding:4px 7px;font-size:11px;font-weight:900}
+.capitem button{padding:3px 5px;font-size:10px;font-weight:900;line-height:1;flex-shrink:0}
 .renameBtn{background:#222b37;border-color:#3fd4ec;color:#3fd4ec}
-.renameInput{width:100%;background:#090d12;color:#fff;border:1px solid #3fd4ec;border-radius:5px;padding:4px 6px;font-size:11px;font-weight:900;outline:none}
+.renameInput{width:100%;background:#090d12;color:#fff;border:1px solid #3fd4ec;border-radius:5px;padding:3px 5px;font-size:11px;font-weight:900;outline:none}
 .capempty{color:#e2e8f0;font-size:12px;line-height:1.6;padding:4px 0;font-weight:800}
 .findres{font-weight:900;color:#fff;white-space:nowrap;font-size:12px}
 .findres small{color:#e2e8f0;font-weight:800}
@@ -414,9 +416,10 @@ function renderCaptures(){
   el.innerHTML='';
   S.captures.forEach((cp,idx)=>{
     const row=document.createElement('div');row.className='capitem';
-    const pol=cp.polarity?('<span class="'+(cp.polarity==='TERBALIK'?'pol-bad':'pol-ok')+'">Polarity: '+cp.polarity+(cp.polarity==='TERBALIK'?' ⚠':' ✓')+(cp.phaseAvg!=null?' ('+cp.phaseAvg.toFixed(0)+'°)':'')+'</span>'):'<span>Polarity: —</span>';
-    const dl=cp.delayMs!=null?('<span>Delay: '+cp.delayMs.toFixed(3)+' ms</span>'):'';
-    row.innerHTML='<span class="dot" style="background:'+cp.color+'"></span><label style="display:flex;align-items:center;gap:4px"><input type="checkbox" '+(cp.show?'checked':'')+' style="accent-color:'+cp.color+'"></label><div class="nm"><b title="Pencet buat ganti nama">'+cp.name+'</b><span>'+cp.time+' • '+(cp.mode||'RTA')+'</span>'+pol+dl+'</div><button class="renameBtn" title="Ganti nama">✏️</button><button>Hapus</button>';
+    const polTxt=cp.polarity?cp.polarity+(cp.polarity==='TERBALIK'?' ⚠':' ✓')+(cp.phaseAvg!=null?' '+cp.phaseAvg.toFixed(0)+'°':''):'—';
+    const dlTxt=cp.delayMs!=null?cp.delayMs.toFixed(3)+' ms':'—';
+    const meta=cp.time+' • '+(cp.mode||'RTA')+' • '+polTxt+' • '+dlTxt;
+    row.innerHTML='<span class="dot" style="background:'+cp.color+'"></span><label><input type="checkbox" '+(cp.show?'checked':'')+' style="accent-color:'+cp.color+'"></label><div class="nm"><b title="Pencet buat ganti nama">'+cp.name+'</b><span title="'+meta+'">'+meta+'</span></div><button class="renameBtn" title="Ganti nama">✏️</button><button title="Hapus capture ini">✕</button>';
     row.querySelector('input').onchange=e=>{cp.show=e.target.checked;refreshPolarityAfterOff();drawAll()};
     const nameEl=row.querySelector('.nm b');
     nameEl.onclick=e=>{e.stopPropagation();startRename(cp,nameEl)};
