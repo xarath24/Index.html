@@ -293,14 +293,6 @@ function updatePeakPanel(peakDb){
   fill.style.background=peakDb>=-1?'#ef4444':peakDb>=-6?'#facc15':'#22ff88';
 }
 updatePeakPanel(null);
-function updateSignalUI(){
-  if(!S.an||!S.running)return;
-  const td=new Float32Array(S.an.fftSize);
-  S.an.getFloatTimeDomainData(td);
-  let peak=0;
-  for(let i=0;i<td.length;i++){const a=Math.abs(td[i]);if(a>peak)peak=a}
-  return peak<=0.00001?-120:20*Math.log10(peak);
-}
 let toastTimer=0;
 function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2800)}
 let lastAutoTry=0;
@@ -344,10 +336,9 @@ function setPolarityUI(state,avg,cohAvg){
   if(S.refType==='sweep'||!S.running||!S.pink){state=null;avg=null;cohAvg=null}
   S.polarity=state;S.phaseAvg=avg;S.cohAvg=cohAvg;
   const el2=$('polstat');
-  if(!state){el2.textContent='—';$('phaseavgtxt').textContent='—';return}
+  if(!state){el2.textContent='—';return}
   const low=cohAvg!=null&&cohAvg<0.3;
   el2.textContent=(state==='TERBALIK'?'TERBALIK ⚠':'NORMAL ✓')+(low?' ?':'');
-  $('phaseavgtxt').textContent=avg.toFixed(0)+'°'+(low?' (coh rendah)':'');
 }
 function lastVisibleCapture(){for(let i=S.captures.length-1;i>=0;i--){if(S.captures[i].show)return S.captures[i]}return null}
 function refreshPolarityAfterOff(){if(S.running&&S.pink&&S.refType!=='sweep')return;setPolarityUI(null,null,null)}
@@ -371,7 +362,7 @@ function startRename(cp,nameEl){
   input.addEventListener('pointerdown',e=>e.stopPropagation());
 }
 function renderCaptures(){
-  const el=$('caplist');$('capcount').textContent=S.captures.length;
+  const el=$('caplist');
   if(!S.captures.length){el.innerHTML='<div class="capempty">Belum ada capture.<br>Pencet CAPTURE pas kurva nya lagi bagus.</div>';refreshPolarityAfterOff();return}
   el.innerHTML='';
   S.captures.forEach((cp,idx)=>{
@@ -401,21 +392,22 @@ function sweepHoldCurve(){
 }
 $('capturebtn').onclick=()=>{
   autoLandscape();
-  if(S.refType==='sweep'){
+  let magCurve=S.live.slice();
+  let mode=S.refType==='sweep'?'SWEEP':S.pink?'TF':'RTA';
+  if(S.refType==='sweep'&&S.sweepDone){
     const full=sweepHoldCurve();
-    if(!full||!S.sweepDone){toast('Sweep belum kelar 8 detik, tunggu dulu, baru CAPTURE.');return}
-    S.capN++;
-    const now=new Date(),hh=String(now.getHours()).padStart(2,'0'),mm=String(now.getMinutes()).padStart(2,'0'),ss=String(now.getSeconds()).padStart(2,'0');
-    S.captures.push({id:Date.now()+Math.random(),name:'Capture '+S.capN,color:CAPCOLORS[(S.capN-1)%CAPCOLORS.length],show:true,time:hh+':'+mm+':'+ss,mode:'SWEEP',polarity:null,phaseAvg:null,cohAvg:null,delayMs:S.foundDelay!=null?S.foundDelay:null,mag:full.map(o=>({f:o.f,v:o.v,x:o.x})),phase:[],phaseRaw:[]});
-    renderCaptures();drawAll();toast('Capture '+S.capN+' tersimpan');return;
+    if(full&&full.length)magCurve=full;
   }
-  if(!S.running||!S.pink){toast('START + PINK dulu, baru CAPTURE. Jangan capture pas STANDBY.');return}
-  if(!S.live.length){toast('Belum ada kurva. START dulu, tunggu grafik jalan, baru CAPTURE.');return}
+  if(!magCurve.length){
+    const cp=lastVisibleCapture();
+    if(cp&&cp.mag.length)magCurve=cp.mag.slice();
+  }
+  if(!magCurve.length){toast('Belum ada kurva di layar. START dulu, tunggu kurva jalan, baru CAPTURE.');return}
   S.capN++;
   const now=new Date(),hh=String(now.getHours()).padStart(2,'0'),mm=String(now.getMinutes()).padStart(2,'0'),ss=String(now.getSeconds()).padStart(2,'0');
   const pol=detectPolarity(S.phaseRaw,S.coh);
-  S.captures.push({id:Date.now()+Math.random(),name:'Capture '+S.capN,color:CAPCOLORS[(S.capN-1)%CAPCOLORS.length],show:true,time:hh+':'+mm+':'+ss,mode:'TF',polarity:pol.state,phaseAvg:pol.avg,cohAvg:pol.cohAvg,delayMs:S.foundDelay!=null?S.foundDelay:calcDelayIn(S.phaseRaw,S.coh,S.delayLo,S.delayHi),mag:S.live.map(o=>({f:o.f,v:o.v,x:o.x})),phase:S.phase.map(o=>({f:o.f,v:o.v,x:o.x})),phaseRaw:S.phaseRaw.map(o=>({f:o.f,v:o.v,x:o.x}))});
-  renderCaptures();drawAll();toast('Capture '+S.capN+' tersimpan — pencet namanya buat ganti nama');
+  S.captures.push({id:Date.now()+Math.random(),name:'Capture '+S.capN,color:CAPCOLORS[(S.capN-1)%CAPCOLORS.length],show:true,time:hh+':'+mm+':'+ss,mode:mode,polarity:pol.state,phaseAvg:pol.avg,cohAvg:pol.cohAvg,delayMs:S.foundDelay!=null?S.foundDelay:calcDelayIn(S.phaseRaw,S.coh,S.delayLo,S.delayHi),mag:magCurve.map(o=>({f:o.f,v:o.v,x:o.x})),phase:S.phase.map(o=>({f:o.f,v:o.v,x:o.x})),phaseRaw:S.phaseRaw.map(o=>({f:o.f,v:o.v,x:o.x}))});
+  renderCaptures();drawAll();toast('Capture '+S.capN+' tersimpan');
 };
 $('clearcap').onclick=()=>{
   if(!S.captures.length){toast('Belum ada capture.');return}
@@ -469,17 +461,14 @@ function findDelay(){
   S.appliedDelay=best.d;S.acc=null;S.accN=0;
   const low=best.c<0.3;
   $('finddelayres').innerHTML='Delay: '+best.d.toFixed(3)+' ms'+(low?' ?':'')+' <small>• '+best.band[0]+'–'+best.band[1]+' Hz • coh '+best.c.toFixed(2)+(low?' • coh rendah, deketin mic':'')+'</small>';
-  $('finddelaytxt').textContent=best.d.toFixed(3)+' ms'+(low?' ?':'');
-  $('delaytxt').textContent=best.d.toFixed(3)+' ms';
   drawAll();
 }
 $('finddelaybtn').onclick=findDelay;
-function computeDelay(){const d=calcDelayIn(S.phaseRaw,S.coh,S.delayLo,S.delayHi);S.delayMs=d;$('delaytxt').textContent=d==null?'—':d.toFixed(3)+' ms'}
+function computeDelay(){const d=calcDelayIn(S.phaseRaw,S.coh,S.delayLo,S.delayHi);S.delayMs=d}
 function updatePolarityLive(){if(!S.pink||!S.running||S.refType==='sweep'){setPolarityUI(null,null,null);return}const pol=detectPolarity(S.phaseRaw,S.coh);setPolarityUI(pol.state,pol.avg,pol.cohAvg)}
 function killLive(){
   S.live=[];S.phase=[];S.phaseRaw=[];S.coh=[];S.acc=null;S.accN=0;S.delayMs=null;S.powAvg=null;S.sweepStart=0;S.prevSweepElapsed=0;S.sweepDone=false;S.sweepHold=null;S.sweepHoldFreqs=null;
-  $('cohtxt').textContent='—';$('peakdb').textContent='—';$('peakfreq').textContent='—';$('sweepprog').style.display='none';
-  if(S.foundDelay!=null)$('delaytxt').textContent=S.foundDelay.toFixed(3)+' ms';else $('delaytxt').textContent='—';
+  $('sweepprog').style.display='none';
   setPolarityUI(null,null,null);
 }
 async function ensureCtx(){if(!S.ctx)S.ctx=new(window.AudioContext||window.webkitAudioContext)({latencyHint:'interactive',sampleRate:48000});if(S.ctx.state==='suspended')await S.ctx.resume();return S.ctx}
@@ -510,12 +499,6 @@ function sweepBuffer(c){
 }
 function resetAcc(){S.acc=null;S.accN=0;S.live=[];S.phase=[];S.phaseRaw=[];S.coh=[];S.powAvg=null;S.sweepStart=0;S.prevSweepElapsed=0;S.sweepDone=false;S.sweepHold=null;S.sweepHoldFreqs=null}
 function setRefButtons(type){$('pinkbtn').classList.toggle('on',type==='pink');$('sweepbtn').classList.toggle('on',type==='sweep');$('whitebtn').classList.toggle('on',type==='white')}
-function applyAnalyserFft(){
-  if(!S.an)return;
-  const want=S.refType==='sweep'?2048:8192;
-  S.fft=want;S.an.fftSize=want;if(S.refAn)S.refAn.fftSize=want;
-  $('fft').value=String(want);$('fftstat').textContent=want;
-}
 async function startRef(type){
   stopPinkNoiseOnly();
   await ensureCtx();const c=S.ctx;
@@ -527,17 +510,16 @@ async function startRef(type){
   S.sweepStartCtx=c.currentTime+0.05;S.noise.start(S.sweepStartCtx);
   S.pink=true;S.refType=type;
   $('refstat').textContent=type==='sweep'?'SWEEP':type==='white'?'WHITE NOISE':'PINK NOISE';
-  $('modetxt').textContent='TF';
   $('phasesub').textContent=type==='sweep'?'Sweep ON — naik gantian, 8 detik':type==='white'?'White ON — Phase jalan':'Pink ON — Phase jalan';
   setRefButtons(type);resetAcc();setPolarityUI(null,null,null);
-  S.sweepStart=performance.now();applyAnalyserFft();
-  if(type==='sweep'){S.sweepStart=performance.now();$('sweepprog').style.display='block';toast('SWEEP 8 detik, puncak jalan cepet, realtime.')}
+  S.sweepStart=performance.now();
+  if(type==='sweep'){$('sweepprog').style.display='block';toast('SWEEP 8 detik, puncak jalan cepet, realtime.')}
   drawAll();
 }
 function stopPinkNoiseOnly(){if(S.noise){try{S.noise.stop()}catch(e){}try{S.noise.disconnect()}catch(e){}S.noise=null}if(S.noiseGain){try{S.noiseGain.disconnect()}catch(e){}S.noiseGain=null}S.refAn=null}
 function stopPink(){
   stopPinkNoiseOnly();S.pink=false;S.refType=null;
-  $('refstat').textContent='OFF';$('modetxt').textContent='RTA';$('phasesub').textContent='Pink OFF — Live mati, phase capture tetep aktif';
+  $('refstat').textContent='OFF';$('phasesub').textContent='Pink OFF — Live mati, phase capture tetep aktif';
   setRefButtons(null);$('sweepprog').style.display='none';killLive();drawAll();
 }
 $('pinkbtn').onclick=()=>{autoLandscape();S.refType==='pink'?stopPink():startRef('pink')};
@@ -613,7 +595,7 @@ function drawPolarityBadge(c,pw){
 }
 function drawAll(){
   const w=mag.width,h=mag.height,range=+$('range').value;
-  gridMag(mg,w,h,range);$('cursorfreqbig').textContent=fmtF(S.cursor);
+  gridMag(mg,w,h,range);
   S.captures.forEach(cp=>{if(!cp.show||!cp.mag.length)return;mg.beginPath();mg.strokeStyle=cp.color;mg.lineWidth=3;mg.setLineDash([]);cp.mag.forEach((o,i)=>{const Y=yMag(o.v,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke()});
   if(S.live.length){mg.beginPath();mg.strokeStyle='#3fd4ec';mg.lineWidth=3;S.live.forEach((o,i)=>{const Y=yMag(o.v,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke()}
   if(S.coh.length&&S.pink&&S.refType!=='sweep'){mg.beginPath();mg.strokeStyle='#5fd68a';mg.lineWidth=2;S.coh.forEach((o,i)=>{const Y=h-Math.max(0,Math.min(1,o.v))*22-4;if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke()}
@@ -643,9 +625,9 @@ function drawAll(){
     S.captures.forEach(cp=>{if(!cp.show||!cp.phaseRaw.length)return;if(S.running&&S.refType!=='sweep')return;let carr=phaseDisplayRaw(cp.phaseRaw);pg.beginPath();pg.strokeStyle=cp.color;pg.lineWidth=2.5;pg.setLineDash([]);carr.forEach((o,i)=>{const Y=yPh(Math.max(minPh,Math.min(maxPh,o.v)));if(i===0)pg.moveTo(o.x,Y);else pg.lineTo(o.x,Y)});pg.stroke()});
     if(livePhase){pg.beginPath();pg.strokeStyle='#3fd4ec';pg.lineWidth=3.5;pg.setLineDash([]);disp.forEach((o,i)=>{const Y=yPh(Math.max(minPh,Math.min(maxPh,o.v)));if(i===0)pg.moveTo(o.x,Y);else pg.lineTo(o.x,Y)});pg.stroke()}
     pg.strokeStyle='#fff';pg.lineWidth=3;pg.beginPath();pg.moveTo(cx,0);pg.lineTo(cx,phH);pg.stroke();drawPolarityBadge(pg,pw);
-    if(pp){const Y=yPh(Math.max(minPh,Math.min(maxPh,pp.v)));pg.beginPath();pg.arc(cx,Y,8,0,Math.PI*2);pg.fillStyle='#fff';pg.fill();$('phasecursor').textContent=pp.v.toFixed(0)+'°';if(pt)$('cursorread').textContent=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB • Phase '+pp.v.toFixed(0)+'°'}else{$('phasecursor').textContent='—'}
+    if(pp){const Y=yPh(Math.max(minPh,Math.min(maxPh,pp.v)));pg.beginPath();pg.arc(cx,Y,8,0,Math.PI*2);pg.fillStyle='#fff';pg.fill();if(pt)$('cursorread').textContent=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB • Phase '+pp.v.toFixed(0)+'°'}
   }else{
-    $('phasecursor').textContent='—';pg.strokeStyle='#fff';pg.lineWidth=3;pg.beginPath();pg.moveTo(cx,0);pg.lineTo(cx,phH);pg.stroke();
+    pg.strokeStyle='#fff';pg.lineWidth=3;pg.beginPath();pg.moveTo(cx,0);pg.lineTo(cx,phH);pg.stroke();
     pg.fillStyle='#ffffff';pg.font='900 15px Arial';pg.textAlign='center';pg.fillText(S.refType==='sweep'?'SWEEP — PUNCAK JALAN GANTIAN, PHASE TIDAK DIPAKAI':'NO REFERENCE — HIDUPKAN PINK NOISE',pw/2,phH/2+28);pg.textAlign='left';
   }
   $('ctFreq').textContent=fmtF(S.cursor);$('ctDb').textContent=pt?pt.v.toFixed(1)+' dB':'— dB';$('ctPhase').textContent='Phase '+(pp?pp.v.toFixed(0)+'°':'—°');
@@ -687,12 +669,10 @@ function normalizeToCenter(freqs,powerArr){
 let delayTick=0,polTick=0;
 function draw(){
   if(!S.running||!S.an||!S.ctx)return;
-  updateSignalUI();
   const n=S.an.frequencyBinCount,raw=new Float32Array(n);S.an.getFloatFrequencyData(raw);
   let peak=-Infinity,peakBin=1;
   for(let i=1;i<n;i++){const f=i*S.ctx.sampleRate/S.fft;if(f<MINF||f>MAXF)continue;if(raw[i]>peak){peak=raw[i];peakBin=i}}
   const peakFreq=peakBin*S.ctx.sampleRate/S.fft;
-  $('peakdb').textContent=peak.toFixed(1)+' dBFS';$('peakfreq').textContent=Math.round(peakFreq)+' Hz';
   updatePeakPanel(peak);
   let sweptF=MAXF;
   if(S.refType==='sweep'&&S.ctx){
@@ -719,7 +699,6 @@ function draw(){
     const den=densify(tf.freqs,pArr,tf.ph,tf.coh);
     const gated=gateLowFreq(den.mag,den.phase,den.coh);
     S.live=gated.mag;S.phaseRaw=gated.phase;S.phase=S.phaseRaw.slice();S.coh=den.coh;
-    $('cohtxt').textContent=(tf.coh.reduce((s,v)=>s+v,0)/Math.max(1,tf.coh.length)).toFixed(2);
   }else{
     const pArr=normalizeToCenter(freqs,rawP);
     const den=densify(freqs,pArr,null,null);
@@ -733,15 +712,15 @@ function draw(){
 $('start').onclick=async()=>{
   autoLandscape();
   try{
-    $('fft').value='8192';
+    S.fft=+$('fft').value||8192;
     S.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
     await ensureCtx();
     S.src=S.ctx.createMediaStreamSource(S.stream);
-    S.an=S.ctx.createAnalyser();S.fft=8192;S.an.fftSize=S.fft;S.an.smoothingTimeConstant=0;S.an.minDecibels=-120;S.an.maxDecibels=0;
+    S.an=S.ctx.createAnalyser();S.an.fftSize=S.fft;S.an.smoothingTimeConstant=0;S.an.minDecibels=-120;S.an.maxDecibels=0;
     S.src.connect(S.an);if(S.refAn)S.refAn.fftSize=S.fft;
     resetAcc();S.running=true;
     $('start').disabled=true;$('stop').disabled=false;$('status').textContent='LIVE';$('liveind').textContent='● LIVE';
-    $('samplerate').textContent=S.ctx.sampleRate+' Hz';$('fftstat').textContent=S.fft;
+    $('fftstat').textContent=S.fft;
     draw();
   }catch(e){toast('Mic ga bisa dibuka: '+e.message);$('status').textContent='MIC GAGAL'}
 };
@@ -753,9 +732,13 @@ $('stop').onclick=()=>{
   updatePeakPanel(null);
   if(S.pink)stopPink();else{killLive();drawAll()}
 };
-$('fft').onchange=()=>{if(S.an&&S.ctx){S.fft=+$('fft').value;S.an.fftSize=S.fft;if(S.refAn)S.refAn.fftSize=S.fft;resetAcc();$('fftstat').textContent=S.fft}};
-$('average').onchange=resetAcc;
-$('detail').onchange=drawAll;
+$('fft').onchange=()=>{
+  S.fft=+$('fft').value||8192;
+  if(S.an&&S.ctx){S.an.fftSize=S.fft;if(S.refAn)S.refAn.fftSize=S.fft;resetAcc();$('fftstat').textContent=S.fft;drawAll()}
+};
+$('average').onchange=()=>{resetAcc()};
+$('detail').onchange=()=>{drawAll()};
+$('range').onchange=()=>{drawAll()};
 function moveFromX(x,el){const r=el.getBoundingClientRect();const px=Math.max(0,Math.min(mag.width,(x-r.left)/r.width*mag.width));S.cursor=freqAtX(px,mag.width);drawAll()}
 let drag=false;
 [mag,fsc,phc].forEach(el=>{
