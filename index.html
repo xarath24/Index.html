@@ -109,8 +109,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <li>Sentuh layar 1x, otomatis landscape.</li>
       <li>Pencet <b>START</b>, izinin mic. Volume tombol HP mentok, bukan cuma slider di app.</li>
       <li>Pencet <b>🩷 PINK</b>, mic 30 cm - 1 m dari speaker. Pake speaker luar kalo ada.</li>
-      <li>Liat <b>dBFS PEAK</b> di kanan, bagus nya -12 sampai -6. Kalo masih -38, deketin mic / gedein volume HP.</li>
-      <li>Tunggu 3 detik, kurva langsung naik ke 0 dB, phase otomatis datar.</li>
+      <li>Tunggu 3 detik, kurva naik ke 0 dB, ngikut bentuk speaker, ga ada rak melayang.</li>
       <li>Pencet <b>📸 CAPTURE</b>, pencet nama nya / ✏️, ubah jadi <b>box pahratel</b>.</li>
     </ol>
     <p style="font-size:12px;line-height:1.6">Garis ijo tengah = 0 dB / 0°. dBFS rel, bukan SPL terkalibrasi.</p>
@@ -262,7 +261,7 @@ const CAPCOLORS=['#fb923c','#facc15','#f472b6','#a78bfa','#34d399','#f87171','#9
 const S={ctx:null,stream:null,src:null,an:null,refAn:null,noise:null,noiseGain:null,pink:false,running:false,fft:8192,raf:0,
   cursor:4190,live:[],phase:[],phaseRaw:[],coh:[],acc:null,accN:0,captures:[],capN:0,unwrap:false,delayMs:null,
   polarity:null,phaseAvg:null,phSmooth:24,delayLo:200,delayHi:2000,cohAvg:null,foundDelay:null,foundDelayBand:null,foundDelayCoh:null,
-  clipUntil:0,peakHoldDb:-120,peakHoldUntil:0,appliedDelay:0,autoDelayTick:0,frameN:0};
+  clipUntil:0,peakHoldDb:-120,peakHoldUntil:0,appliedDelay:0,frameN:0};
 $('infobtn').onclick=()=>{$('infoModal').classList.add('show')};
 $('infoClose').onclick=()=>{$('infoModal').classList.remove('show')};
 $('infoModal').addEventListener('click',e=>{if(e.target.id==='infoModal')$('infoModal').classList.remove('show')});
@@ -302,6 +301,13 @@ function fmtLab(f){return f>=1000?(f/1000).toString().replace(/\.0$/,'')+'k':(''
 function yMag(v,range,h){return Math.max(0,Math.min(h,(range/2-v)/range*h))}
 function db2p(v){return Math.pow(10,Math.max(-120,v)/10)}
 function p2db(p){return 10*Math.log10(Math.max(1e-12,p))}
+function recenter(arr){
+  if(!arr.length)return arr;
+  const mid=arr.filter(o=>o.f>=500&&o.f<=2000);
+  if(!mid.length)return arr;
+  const avg=mid.reduce((s,o)=>s+o.v,0)/mid.length;
+  return arr.map(o=>({f:o.f,v:o.v-avg,x:o.x}));
+}
 function detectPolarity(raw,coh){
   if(!raw.length)return{state:null,avg:null,cohAvg:null};
   let sx=0,sy=0,wsum=0,csum=0,cn=0;
@@ -378,7 +384,7 @@ $('capturebtn').onclick=()=>{
   S.captures.push({id:Date.now()+Math.random(),name:'Capture '+S.capN,color:CAPCOLORS[(S.capN-1)%CAPCOLORS.length],show:true,
     time:hh+':'+mm+':'+ss,mode:S.pink?'TF':'RTA',polarity:pol.state,phaseAvg:pol.avg,cohAvg:pol.cohAvg,
     delayMs:S.foundDelay!=null?S.foundDelay:calcDelayIn(S.phaseRaw,S.coh,S.delayLo,S.delayHi),
-    mag:S.live.map(o=>({f:o.f,v:o.v,x:o.x})),phase:S.phase.map(o=>({f:o.f,v:o.v,x:o.x})),phaseRaw:S.phaseRaw.map(o=>({f:o.f,v:o.v,x:o.x}))});
+    mag:recenter(S.live).map(o=>({f:o.f,v:o.v,x:o.x})),phase:S.phase.map(o=>({f:o.f,v:o.v,x:o.x})),phaseRaw:S.phaseRaw.map(o=>({f:o.f,v:o.v,x:o.x}))});
   renderCaptures();drawAll();toast('Capture '+S.capN+' tersimpan');
 };
 $('clearcap').onclick=()=>{
@@ -400,8 +406,7 @@ function smoothPhaseCircular(arr,perOct){
     for(let j=0;j<arr.length;j++){
       if(Math.abs(Math.log(arr[j].f)-lf)<=half*Math.LN2){const r=arr[j].v*Math.PI/180;sx+=Math.cos(r);sy+=Math.sin(r)}
     }
-    let d=Math.atan2(sy,sx)*180/Math.PI;
-    out.push({f:arr[i].f,v:d,x:arr[i].x});
+    out.push({f:arr[i].f,v:Math.atan2(sy,sx)*180/Math.PI,x:arr[i].x});
   }
   return out;
 }
@@ -543,31 +548,13 @@ function densify(freqs,pArr,phArr,cohArr){
     out.push({f,v:p2db(v),x});
     if(phArr){
       const idx=Math.max(0,Math.min(phArr.length-1,loIdx(lf)));
-      let sx=0,sy=0;const lf2=Math.log(f);
+      let sx=0,sy=0;
       for(let j=Math.max(0,idx-1);j<=Math.min(phArr.length-1,idx+1);j++){const r=phArr[j]*Math.PI/180;sx+=Math.cos(r);sy+=Math.sin(r)}
       ph.push({f,v:Math.atan2(sy,sx)*180/Math.PI,x});
       co.push({f,v:cohArr?cohArr[idx]:0,x});
     }
   }
   return{mag:out,phase:ph,coh:co};
-}
-function deStick(arr){
-  if(!arr.length)return arr;
-  const out=arr.map(o=>({...o}));
-  const win=15,sm=[];
-  for(let i=0;i<out.length;i++){let s=0,n=0;for(let j=Math.max(0,i-win);j<=Math.min(out.length-1,i+win);j++){s+=out[j].v;n++}sm.push(s/Math.max(1,n))}
-  for(let i=0;i<out.length;i++){if(out[i].v<-18&&sm[i]>out[i].v+6)out[i].v=out[i].v*0.2+sm[i]*0.8}
-  return out;
-}
-function holdEnds(magArr,cohArr){
-  if(!magArr.length||!cohArr||!cohArr.length)return deStick(magArr);
-  const trusted=magArr.map((o,i)=>(cohArr[i]&&cohArr[i].v>=0.3)?i:-1).filter(i=>i>=0);
-  if(trusted.length<10)return deStick(magArr);
-  const first=trusted[0],last=trusted[trusted.length-1];
-  const out=magArr.map(o=>({...o}));
-  for(let i=0;i<first;i++){const t=(first-i)/Math.max(1,first);out[i].v=magArr[i].v*(1-t*0.85)+magArr[first].v*(t*0.85)}
-  for(let i=last+1;i<magArr.length;i++){const t=(i-last)/Math.max(1,magArr.length-1-last);out[i].v=magArr[i].v*(1-t*0.85)+magArr[last].v*(t*0.85)}
-  return deStick(out);
 }
 function pointOn(data,f){
   if(!data.length)return null;
@@ -601,7 +588,7 @@ function drawAll(){
   gridMag(mg,w,h,range);
   S.captures.forEach(cp=>{
     if(!cp.show||!cp.mag.length)return;
-    const fixed=deStick(cp.mag);
+    const fixed=recenter(cp.mag);
     mg.beginPath();mg.strokeStyle=cp.color;mg.lineWidth=3;mg.setLineDash([]);
     fixed.forEach((o,i)=>{const Y=yMag(o.v,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke();
   });
@@ -611,7 +598,7 @@ function drawAll(){
   const cx=Math.max(6,Math.min(w-6,xfreq(S.cursor,w)));
   mg.strokeStyle='#fff';mg.lineWidth=3;mg.beginPath();mg.moveTo(cx,0);mg.lineTo(cx,h);mg.stroke();
   let pt=pointOn(S.live,S.cursor);
-  if(!pt){const cp=lastVisibleCapture();if(cp&&cp.mag.length)pt=pointOn(deStick(cp.mag),S.cursor)}
+  if(!pt){const cp=lastVisibleCapture();if(cp&&cp.mag.length)pt=pointOn(recenter(cp.mag),S.cursor)}
   if(pt){const Y=yMag(pt.v,range,h);mg.beginPath();mg.arc(cx,Y,9,0,Math.PI*2);mg.fillStyle='#fff';mg.fill();$('cursorread').textContent=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB'}else{$('cursorread').textContent=fmtF(S.cursor)+' • — dB'}
   drawScale();
   const pw=phc.width,phH=phc.height;
@@ -702,7 +689,7 @@ function draw(){
     pArr=normalizeInstant(freqs,rawP);
   }
   const den=densify(freqs,pArr,phArr,cohArr);
-  S.live=(S.pink&&cohArr)?holdEnds(den.mag,den.coh):deStick(den.mag);
+  S.live=den.mag;
   S.phaseRaw=phArr?den.phase:[];S.phase=S.phaseRaw.slice();S.coh=cohArr?den.coh:[];
   if(S.pink&&(++delayTick%10===0))computeDelay();
   if(S.pink&&(++polTick%10===0))updatePolarityLive();
