@@ -109,8 +109,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <li>Sentuh layar 1x, otomatis landscape.</li>
       <li>Pencet <b>START</b> di atas, izinin mic.</li>
       <li>Pencet <b>🩷 PINK</b> di kanan bawah, volume 100%, mic 1 m dari speaker.</li>
-      <li>Liat <b>dBFS PEAK</b> di kanan, bagus nya -12 sampai -6 dBFS.</li>
-      <li>Tunggu 3 detik, kurva anteng. Mag + phase smooth nya 1/24 OKT, kayak Smaart 7.</li>
+      <li>Tunggu 3 detik, kurva anteng. Mag + phase smooth 1/24 OKT, kayak Smaart 7.</li>
       <li>Pencet <b>🔍 FIND DELAY</b>, phase nya jadi datar.</li>
       <li>Pencet <b>📸 CAPTURE</b>, pencet nama nya / ✏️, ubah jadi <b>box pahratel</b>.</li>
       <li>Pencet <b>■ OFF</b>, pink mati, phase capture + cursor tetep aktif.</li>
@@ -527,26 +526,44 @@ function densify(freqs,pArr,phArr,cohArr){
   const loIdx=t=>{let lo=0,hi=logF.length;while(lo<hi){const m=(lo+hi)>>1;if(logF[m]<t)lo=m+1;else hi=m}return lo};
   for(let k=0;k<N;k++){
     const x=k/(N-1)*W,f=freqAtX(x,W),lf=Math.log(f);let v;
-    if(!perOct){const idx=loIdx(lf);if(idx<=0)v=pArr[0];else if(idx>=freqs.length)v=pArr[freqs.length-1];else{const t=(lf-logF[idx-1])/(logF[idx]-logF[idx-1]||1);v=pArr[idx-1]+(pArr[idx]-pArr[idx-1])*t}}
-    else{const lo=loIdx(lf-half*Math.LN2),hi=loIdx(lf+half*Math.LN2);v=(pref[hi]-pref[lo])/Math.max(1,hi-lo)}
+    if(!perOct){
+      const idx=loIdx(lf);
+      if(idx<=0)v=pArr[0];else if(idx>=freqs.length)v=pArr[freqs.length-1];
+      else{const t=(lf-logF[idx-1])/(logF[idx]-logF[idx-1]||1);v=pArr[idx-1]+(pArr[idx]-pArr[idx-1])*t}
+    }else{
+      let lo=loIdx(lf-half*Math.LN2),hi=loIdx(lf+half*Math.LN2);
+      if(hi-lo<5){const c=loIdx(lf);lo=Math.max(0,c-2);hi=Math.min(freqs.length,c+3)}
+      if(hi<=lo){hi=Math.min(freqs.length,lo+5)}
+      v=(pref[hi]-pref[lo])/Math.max(1,hi-lo);
+      if(!isFinite(v)||v<=0){
+        const idx=Math.max(0,Math.min(freqs.length-1,loIdx(lf)));
+        v=pArr[idx];
+      }
+    }
     out.push({f,v:p2db(v),x});
     if(phArr){const idx=Math.max(0,Math.min(phArr.length-1,loIdx(lf)));ph.push({f,v:phArr[idx],x});co.push({f,v:cohArr?cohArr[idx]:0,x})}
   }
   return{mag:out,phase:ph,coh:co};
 }
+function deStick(arr){
+  if(!arr.length)return arr;
+  const out=arr.map(o=>({...o}));
+  const win=15,sm=[];
+  for(let i=0;i<out.length;i++){let s=0,n=0;for(let j=Math.max(0,i-win);j<=Math.min(out.length-1,i+win);j++){s+=out[j].v;n++}sm.push(s/Math.max(1,n))}
+  for(let i=0;i<out.length;i++){
+    if(out[i].v<-18&&sm[i]>out[i].v+6)out[i].v=out[i].v*0.2+sm[i]*0.8;
+  }
+  return out;
+}
 function holdEnds(magArr,cohArr){
-  if(!magArr.length||!cohArr||!cohArr.length)return magArr;
+  if(!magArr.length||!cohArr||!cohArr.length)return deStick(magArr);
   const trusted=magArr.map((o,i)=>(cohArr[i]&&cohArr[i].v>=0.3)?i:-1).filter(i=>i>=0);
-  if(trusted.length<10)return magArr;
+  if(trusted.length<10)return deStick(magArr);
   const first=trusted[0],last=trusted[trusted.length-1];
   const out=magArr.map(o=>({...o}));
   for(let i=0;i<first;i++){const t=(first-i)/Math.max(1,first);out[i].v=magArr[i].v*(1-t*0.85)+magArr[first].v*(t*0.85)}
   for(let i=last+1;i<magArr.length;i++){const t=(i-last)/Math.max(1,magArr.length-1-last);out[i].v=magArr[i].v*(1-t*0.85)+magArr[last].v*(t*0.85)}
-  for(let i=0;i<out.length;i++){
-    const c=cohArr[i]?cohArr[i].v:0;
-    if(c<0.15){let s=0,n=0;for(let j=Math.max(0,i-10);j<=Math.min(out.length-1,i+10);j++){s+=out[j].v;n++}out[i].v=out[i].v*0.35+(s/Math.max(1,n))*0.65}
-  }
-  return out;
+  return deStick(out);
 }
 function pointOn(data,f){
   if(!data.length)return null;
@@ -580,8 +597,9 @@ function drawAll(){
   gridMag(mg,w,h,range);$('cursorfreqbig').textContent=fmtF(S.cursor);
   S.captures.forEach(cp=>{
     if(!cp.show||!cp.mag.length)return;
+    const fixed=deStick(cp.mag);
     mg.beginPath();mg.strokeStyle=cp.color;mg.lineWidth=3;mg.setLineDash([]);
-    cp.mag.forEach((o,i)=>{const Y=yMag(o.v,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke();
+    fixed.forEach((o,i)=>{const Y=yMag(o.v,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke();
   });
   if(S.live.length){mg.beginPath();mg.strokeStyle='#3fd4ec';mg.lineWidth=3;S.live.forEach((o,i)=>{const Y=yMag(o.v,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke()}
   if(S.coh.length&&S.pink){mg.beginPath();mg.strokeStyle='#5fd68a';mg.lineWidth=2;S.coh.forEach((o,i)=>{const Y=h-Math.max(0,Math.min(1,o.v))*22-4;if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke()}
@@ -589,7 +607,7 @@ function drawAll(){
   const cx=Math.max(6,Math.min(w-6,xfreq(S.cursor,w)));
   mg.strokeStyle='#fff';mg.lineWidth=3;mg.beginPath();mg.moveTo(cx,0);mg.lineTo(cx,h);mg.stroke();
   let pt=pointOn(S.live,S.cursor);
-  if(!pt){const cp=lastVisibleCapture();if(cp&&cp.mag.length)pt=pointOn(cp.mag,S.cursor)}
+  if(!pt){const cp=lastVisibleCapture();if(cp&&cp.mag.length)pt=pointOn(deStick(cp.mag),S.cursor)}
   if(pt){const Y=yMag(pt.v,range,h);mg.beginPath();mg.arc(cx,Y,9,0,Math.PI*2);mg.fillStyle='#fff';mg.fill();$('cursorread').textContent=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB'}else{$('cursorread').textContent=fmtF(S.cursor)+' • — dB'}
   drawScale();
   const pw=phc.width,phH=phc.height;
@@ -683,7 +701,7 @@ function draw(){
   if(!S.sm||S.sm.length!==pArr.length)S.sm=Float64Array.from(pArr);
   else for(let i=0;i<pArr.length;i++)S.sm[i]=0.8*S.sm[i]+0.2*pArr[i];
   const den=densify(freqs,Array.from(S.sm),phArr,cohArr);
-  S.live=(S.pink&&cohArr)?holdEnds(den.mag,den.coh):den.mag;
+  S.live=(S.pink&&cohArr)?holdEnds(den.mag,den.coh):deStick(den.mag);
   S.phaseRaw=phArr?den.phase:[];S.phase=S.phaseRaw.slice();S.coh=cohArr?den.coh:[];
   if(S.pink&&(++delayTick%10===0))computeDelay();
   if(S.pink&&(++polTick%10===0))updatePolarityLive();
