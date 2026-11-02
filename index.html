@@ -74,12 +74,6 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 .cursorTop .db{font-weight:900;font-size:16px;color:#3fd4ec}
 .cursorTop .ph{font-weight:900;font-size:16px;color:#34d399}
 .cursorTop .sep{color:#4a5566}
-.phaseCheck{flex:0 0 auto;text-align:center;border-radius:8px;padding:8px 10px;margin:3px 0 4px;border:2px solid #4a5566;background:#1f2937;font-weight:900}
-.phaseCheck .big{font-size:20px;line-height:1.2;letter-spacing:.5px}
-.phaseCheck .sub{font-size:11px;color:#e2e8f0;margin-top:2px}
-.phaseCheck.normal{background:#065f46;border-color:#4ade80;color:#fff}
-.phaseCheck.flipped{background:#7f1d1d;border-color:#f87171;color:#fff}
-.phaseCheck.unknown{background:#713f12;border-color:#facc15;color:#fff}
 .peakBig{background:#090d12;border:1px solid #2b323e;border-radius:8px;padding:7px;text-align:center}
 .peakBig .big{font-weight:900;font-size:25px;color:#fff;line-height:1.1}
 .peakBig .big.hot{color:#f87171}
@@ -114,8 +108,8 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
     <ol>
       <li>Mute driver lain, ukur 1 driver doang.</li>
       <li>Geser cursor ke tengah daerah driver itu: mid 500 Hz, tweeter 5 kHz.</li>
-      <li>Badge polarity itu polarity di cursor, bukan 1 box.</li>
-      <li>Balik + / - di DLMS, badge harus ganti di cursor itu.</li>
+      <li>Lihat angka Phase di cursor atas, dan Polarity di bawah.</li>
+      <li>Balik + / - di DLMS, angka Phase harus ganti di cursor itu.</li>
       <li>Range: Magnitude 60 dB, Phase -180 sampai +180, FFT 16k.</li>
     </ol>
     <button id="infoClose" style="width:100%;padding:9px;margin-top:6px">✕ TUTUP</button>
@@ -164,7 +158,6 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <canvas id="mag" width="1200" height="300"></canvas>
       <canvas id="freqscale" width="1200" height="56"></canvas>
       <div class="title"><b>PHASE</b><span id="phasesub">Reference OFF — HIDUPKAN REFERENCE</span></div>
-      <div class="phaseCheck unknown" id="phaseCheck"><div class="big" id="phaseCheckBig">CEK PHASE: BELUM JALAN</div><div class="sub" id="phaseCheckSub">START + PINK dulu, 1 driver doang, cursor ke 500 Hz atau 5 kHz</div></div>
       <div class="ctl">
         <button id="finddelaybtn" class="find">🔍 FIND DELAY</button>
         <button id="unwrapbtn">↩ WRAP -180/+180</button>
@@ -371,30 +364,8 @@ function detectPolarityBand(raw,center){
   return{state,avg,weak:strength<0.5,band:fmtF(center)};
 }
 function detectPolarity(raw){return detectPolarityBand(raw,S.cursor||1000)}
-function updatePhaseCheck(state,avg,weak,band){
-  const box=$('phaseCheck'),big=$('phaseCheckBig'),sub=$('phaseCheckSub');
-  if(!box||!big||!sub)return;
-  const at=band?(' @ '+band):'';
-  const deg=avg!=null?(' • Phase '+avg.toFixed(0)+'°'):'';
-  if(!state||weak){
-    box.className='phaseCheck unknown';
-    big.textContent='CEK PHASE: BELUM JELAS ?'+at;
-    sub.textContent='Jangan dibalik dulu. 1 driver doang, tunggu 5 detik, geser cursor menjauh dari crossover.'+deg;
-    return;
-  }
-  if(state==='TERBALIK'){
-    box.className='phaseCheck flipped';
-    big.textContent='CEK PHASE: KEBALIK ⚠'+at;
-    sub.textContent='Phase kebalik di cursor ini. Balik + / - di DLMS, tulisan ini harus jadi NORMAL.'+deg;
-  }else{
-    box.className='phaseCheck normal';
-    big.textContent='CEK PHASE: NORMAL ✓'+at;
-    sub.textContent='Phase normal di cursor ini. Jangan dibalik. Ini cuma buat driver di cursor ini.'+deg;
-  }
-}
 function setPolarityUI(state,avg,weak,band){
   S.polarity=state;S.phaseAvg=avg;S.polBand=band;
-  updatePhaseCheck(state,avg,weak,band);
   const el2=$('polstat');
   if(!state){el2.textContent='—';return}
   el2.textContent=(state==='TERBALIK'?'TERBALIK ⚠':'NORMAL ✓')+(weak?' ?':'')+(band?' @ '+band:'');
@@ -681,15 +652,6 @@ function drawPhaseSegments(c,arr,yPh,minPh,maxPh,color,lw){
   arr.forEach((o,i)=>{const Y=yPh(Math.max(minPh,Math.min(maxPh,o.v)));if(i===0)c.moveTo(o.x,Y);else c.lineTo(o.x,Y)});
   c.stroke();
 }
-function drawPolarityBadge(c,pw){
-  let txt,bg,stroke;
-  if(S.polarity){txt='POLARITY: '+S.polarity+(S.polarity==='TERBALIK'?' ⚠':' ✓')+(S.polBand?' @ '+S.polBand:'');bg=S.polarity==='TERBALIK'?'rgba(127,29,29,0.95)':'rgba(6,95,70,0.95)';stroke=S.polarity==='TERBALIK'?'#f87171':'#4ade80'}
-  else{txt='POLARITY: —';bg='rgba(30,35,45,0.95)';stroke='#ffffff'}
-  c.font='900 17px Arial';const tw=c.measureText(txt).width+22;const bx=14,by=38;
-  c.fillStyle=bg;c.beginPath();c.roundRect(bx,by,tw,28,7);c.fill();c.strokeStyle=stroke;c.lineWidth=2;c.beginPath();c.roundRect(bx,by,tw,28,7);c.stroke();
-  c.fillStyle='#fff';c.textAlign='center';c.textBaseline='middle';c.fillText(txt,bx+tw/2,by+15);c.textAlign='left';c.textBaseline='alphabetic';
-  if(S.foundDelay!=null){const dt='DELAY: '+S.foundDelay.toFixed(3)+' ms 🔒';c.font='900 15px Arial';const tw2=c.measureText(dt).width+18;const by2=by+34;c.fillStyle='rgba(30,27,75,0.95)';c.beginPath();c.roundRect(bx,by2,tw2,24,6);c.fill();c.strokeStyle='#a78bfa';c.lineWidth=1.5;c.beginPath();c.roundRect(bx,by2,tw2,24,6);c.stroke();c.fillStyle='#fff';c.textAlign='center';c.textBaseline='middle';c.fillText(dt,bx+tw2/2,by2+13);c.textAlign='left';c.textBaseline='alphabetic'}
-}
 function drawIR(){
   const W=irc.width,H=irc.height;
   ig.clearRect(0,0,W,H);ig.fillStyle='#05070a';ig.fillRect(0,0,W,H);
@@ -748,10 +710,9 @@ function drawAll(){
     });
     if(livePhase)drawPhaseSegments(pg,liveDisp,yPh,minPh,maxPh,'#3fd4ec',3.5);
     pg.strokeStyle='#fff';pg.lineWidth=3;pg.beginPath();pg.moveTo(cx,0);pg.lineTo(cx,phH);pg.stroke();
-    drawPolarityBadge(pg,pw);
     if(pp){const Y=yPh(Math.max(minPh,Math.min(maxPh,pp.v)));pg.beginPath();pg.arc(cx,Y,8,0,Math.PI*2);pg.fillStyle='#fff';pg.fill();if(pt)$('cursorread').textContent=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB • Phase '+pp.v.toFixed(0)+'°'}
   }else{
-    pg.strokeStyle='#fff';pg.lineWidth=3;pg.beginPath();pg.moveTo(cx,0);pg.lineTo(cx,phH);pg.stroke();drawPolarityBadge(pg,pw);
+    pg.strokeStyle='#fff';pg.lineWidth=3;pg.beginPath();pg.moveTo(cx,0);pg.lineTo(cx,phH);pg.stroke();
     pg.fillStyle='#ffffff';pg.font='900 15px Arial';pg.textAlign='center';pg.fillText('NO REFERENCE — HIDUPKAN REFERENCE',pw/2,phH/2+28);pg.textAlign='left';
   }
   drawIR();
