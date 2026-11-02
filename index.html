@@ -114,11 +114,11 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <li>Sentuh layar 1x, otomatis landscape.</li>
       <li>Pencet <b>START</b> di atas, izinin mic.</li>
       <li>Pencet <b>🩷 PINK</b> / <b>〰️ SWEEP</b> / <b>⬜ WHITE</b> di kanan bawah, volume 100%, mic 1 m dari speaker. PINK buat cek biasa, SWEEP buat denger naik nya freq, WHITE buat tes tweeter.</li>
-      <li>Liat <b>dBFS PEAK</b> di kanan, bagus nya -12 sampai -6 dBFS. Kalo angka nya merah / 0 dBFS, kecilin volume.</li>
+      <li>Liat <b>dBFS PEAK</b> di kanan, bagus nya -12 sampai -6 dBFS. Kalo angka nya merah / 0 dBFS, kecilin volume. Kalo kurva nempel di bawah, pencet OFF terus PINK lagi, kurva nya reset.</li>
       <li>Geser cursor di grafik, liat kotak <b>CURSOR</b> di tengah atas: freq + dB + derajat phase nya.</li>
       <li>Liat kiri grafik phase, tulisan kecil: <b>NORMAL ✓ / TERBALIK ⚠</b>, itu polarity nya.</li>
       <li>Pencet <b>🔍 FIND DELAY</b>, hasil delay nya nongol di atas grafik phase.</li>
-      <li>Pencet <b>📸 CAPTURE</b> di bawah kotak List, pencet nama capture nya / tombol ✏️, ubah jadi misal <b>box pahratel</b>.</li>
+      <li>Pencet <b>📸 CAPTURE</b> di bawah kotak List, pencet nama capture nya / tombol ✏️, ubah jadi misal <b>box pahratel</b>. Capture pas kurva nya udah naik, jangan pas lagi nempel di bawah.</li>
       <li>Pencet <b>■ OFF</b> di kanan bawah, suara mati, phase capture + cursor tetep aktif.</li>
     </ol>
     <p style="font-size:12px;line-height:1.6">Garis ijo tengah = 0 dB / 0°. dBFS rel, bukan SPL terkalibrasi.</p>
@@ -586,7 +586,7 @@ function sweepBuffer(c){
   }
   return b;
 }
-function resetAcc(){S.acc=null;S.accN=0;S.sm=null;S.magOffset=null}
+function resetAcc(){S.acc=null;S.accN=0;S.sm=null;S.magOffset=null;S.live=[];S.phase=[];S.phaseRaw=[];S.coh=[]}
 function setRefButtons(type){
   $('pinkbtn').classList.toggle('on',type==='pink');
   $('sweepbtn').classList.toggle('on',type==='sweep');
@@ -604,7 +604,7 @@ async function startRef(type){
   $('refstat').textContent=type==='sweep'?'SWEEP':type==='white'?'WHITE NOISE':'PINK NOISE';
   $('modetxt').textContent='TF';
   $('phasesub').textContent=type==='sweep'?'Sweep ON — 20 Hz ke 20 kHz, muter terus':type==='white'?'White ON — Phase jalan':'Pink ON — Phase jalan';
-  setRefButtons(type);resetAcc();
+  setRefButtons(type);resetAcc();drawAll();
 }
 async function startPink(){return startRef('pink')}
 function stopPinkNoiseOnly(){
@@ -843,8 +843,7 @@ function computeTF(){
 function normalizeToCenter(freqs,powerArr){
   const mid=powerArr.filter((_,i)=>freqs[i].f>=500&&freqs[i].f<=2000);
   const avgMid=mid.reduce((s,v)=>s+v,0)/Math.max(1,mid.length);
-  if(S.magOffset===null)S.magOffset=avgMid;else S.magOffset=S.magOffset*0.98+avgMid*0.02;
-  return powerArr.map(v=>v/Math.max(1e-12,S.magOffset));
+  return powerArr.map(v=>v/Math.max(1e-12,avgMid));
 }
 let delayTick=0,polTick=0;
 function draw(){
@@ -866,8 +865,12 @@ function draw(){
     for(let i=1;i<n;i++){const f=i*S.ctx.sampleRate/S.fft;if(f<MINF||f>MAXF)continue;freqs.push({f});rawP.push(db2p(raw[i]))}
     pArr=normalizeToCenter(freqs,rawP);
   }
+  if(peak<-85){S.sm=null}
   if(!S.sm||S.sm.length!==pArr.length)S.sm=Float64Array.from(pArr);
-  else for(let i=0;i<pArr.length;i++)S.sm[i]=0.8*S.sm[i]+0.2*pArr[i];
+  else for(let i=0;i<pArr.length;i++){
+    if(pArr[i]>S.sm[i]*4)S.sm[i]=pArr[i];
+    else S.sm[i]=0.55*S.sm[i]+0.45*pArr[i];
+  }
   const den=densify(freqs,Array.from(S.sm),phArr,cohArr);
   S.live=den.mag;S.phaseRaw=phArr?den.phase:[];S.phase=S.phaseRaw.slice();S.coh=cohArr?den.coh:[];
   if(S.pink&&(++delayTick%10===0))computeDelay();
