@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>SMART LIVE — Like Smaart v8</title>
+<title>SMART LIVE v9 — KOTAK KECIL</title>
 <style>
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -13,14 +13,14 @@ button,select{font:700 11px system-ui,Arial;cursor:pointer;font-weight:900}
 .logo{font-weight:900;font-size:14px}.logo b{color:#3fd4ec}.logo span{color:#cbd5e1;font-weight:900;font-size:8px;display:block;letter-spacing:2px}
 .topbtns{margin-left:auto;display:flex;gap:5px;align-items:center}
 .topbtns span{font-weight:900}
-button{background:#222b37;color:#fff;border:1px solid #4a5566;border-radius:5px;padding:4px 8px}
+button{background:#222b37;color:#fff;border:1px solid #4a5566;border-radius:5px;padding:4px 8px;white-space:nowrap}
 button.go{background:#087e91;border-color:#13b5c9}
 button.on{background:#c2410c!important;border-color:#fb923c!important;color:#fff}
 button.cap{background:#7c3aed;border-color:#a78bfa;font-weight:900}
 button.danger{background:#7f1d1d;border-color:#ef4444}
 button.find{background:#7c3aed;border-color:#a78bfa;font-weight:900;padding:4px 8px}
-select{background:#222b37;color:#fff;border:1px solid #4a5566;border-radius:5px;padding:2px 3px;width:100%;font-weight:900;height:22px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.layout{display:grid;grid-template-columns:210px minmax(560px,1fr) 185px;gap:6px;padding:5px 6px;max-width:1600px;margin:auto;min-width:860px;align-items:stretch;height:calc(100dvh - 36px - 26px)}
+select{background:#222b37;color:#fff;border:1px solid #4a5566;border-radius:5px;padding:2px 3px;width:100%;font-weight:900;height:22px;font-size:10px;white-space:nowrap}
+.layout{display:grid;grid-template-columns:200px minmax(520px,1fr) 220px;gap:6px;padding:5px 6px;max-width:1600px;margin:auto;min-width:860px;align-items:stretch;height:calc(100dvh - 36px - 26px)}
 .leftCol{display:flex;flex-direction:column;min-height:0;height:100%}
 .panel{background:#14181f;border:1px solid #2b323e;border-radius:8px;padding:6px 7px;min-width:0;overflow:hidden}
 main{display:flex;min-height:0;min-width:0}
@@ -33,7 +33,7 @@ main .panel{flex:1;height:100%;overflow:hidden;display:flex;flex-direction:colum
 #caplist::-webkit-scrollbar-track{background:#1f2937;border-radius:5px;border:1px solid #2b323e}
 #caplist::-webkit-scrollbar-thumb{background:#3fd4ec;border-radius:5px;border:1px solid #0a0c10}
 #caplist::-webkit-scrollbar-thumb:active{background:#fff}
-h3{margin:0 0 3px;font-size:10px;letter-spacing:.5px;color:#fff;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+h3{margin:0 0 3px;font-size:10px;letter-spacing:0;color:#fff;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-resize;touch-action:none;min-height:0}
 #mag{flex:1 1 0}
 #freqscale{flex:0 0 auto;height:24px;background:#0b0f14;border-top:1px solid #2b323e;border-radius:0 0 4px 4px}
@@ -83,7 +83,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 .peakMeter{height:8px;background:#1f2937;border-radius:6px;overflow:hidden;margin-top:5px;position:relative}
 .peakMeterFill{height:100%;width:0%;background:#22ff88;border-radius:6px;transition:width .06s linear}
 .setRow{display:flex;flex-direction:column;gap:2px}
-.setRow label{font-size:9px;line-height:1.2;color:#fff;display:flex;flex-direction:column;gap:1px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.setRow label{font-size:9px;line-height:1.2;letter-spacing:0;color:#fff;display:flex;flex-direction:column;gap:1px;font-weight:900;white-space:nowrap}
 .miniRef{display:flex;gap:4px;flex-wrap:wrap}
 .miniRef button{flex:1 1 45%;padding:4px 3px;font-size:10px;font-weight:900;white-space:nowrap}
 .miniVol{display:block;margin-top:4px;color:#fff;font-size:10px;font-weight:900;white-space:nowrap}
@@ -118,7 +118,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
   </div>
 </div>
 <div class="topbar">
-  <div class="logo"><b>SMART</b> LIVE <span>MEASUREMENT • LIKE SMAART v8</span></div>
+  <div class="logo"><b>SMART</b> LIVE v9 <span>MEASUREMENT • LIKE SMAART • KOTAK KECIL</span></div>
   <div class="topbtns">
     <span style="color:#34d399;font-size:10px;font-weight:900">↻ AUTO LANDSCAPE</span>
     <button id="start" class="go">▶ START</button>
@@ -187,9 +187,9 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <div id="weakwarn" style="display:none;color:#f87171;font-size:10px;font-weight:900;margin-top:5px;text-align:center;line-height:1.4">⚠ SINYAL LEMAH — VOLUME MENTOK + MIC 30 CM</div>
     </div>
     <div class="panel">
-      <h3>⚙️ PENGATURAN — SMAART 8</h3>
+      <h3>⚙️ PENGATURAN</h3>
       <div class="setRow">
-        <label>FFT — TIME WINDOW
+        <label>FFT
           <select id="fft">
             <option value="1024">1k — 21 ms</option>
             <option value="2048">2k — 43 ms</option>
@@ -198,7 +198,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
             <option value="32768">32k — 683 ms</option>
           </select>
         </label>
-        <label>AVERAGE — SLOW
+        <label>AVG
           <select id="average">
             <option value="16">16</option>
             <option value="32">32</option>
@@ -206,7 +206,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
             <option value="128">128</option>
           </select>
         </label>
-        <label>MAG SMOOTHING
+        <label>SMOOTH MAG
           <select id="detail">
             <option value="0">RAW</option>
             <option value="24" selected>1/24 OKT</option>
@@ -215,7 +215,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
             <option value="3">1/3 OKT</option>
           </select>
         </label>
-        <label>PHASE SMOOTHING
+        <label>SMOOTH PHASE
           <select id="phasesmooth">
             <option value="0">RAW</option>
             <option value="24" selected>1/24 OKT</option>
@@ -224,25 +224,25 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
             <option value="3">1/3 OKT</option>
           </select>
         </label>
-        <label>RANGE MAGNITUDE — dB
+        <label>RANGE dB
           <select id="range">
-            <option value="45">45 dB — Smaart standar</option>
+            <option value="45">45 dB</option>
             <option value="60" selected>60 dB — +12 / -48</option>
             <option value="90">90 dB</option>
             <option value="120">120 dB</option>
           </select>
         </label>
-        <label>RANGE PHASE
+        <label>RANGE °
           <select id="phaserange">
-            <option value="180" selected>-180° sampai +180° — WRAP</option>
-            <option value="360">UNWRAP — muter terus</option>
+            <option value="180" selected>-180° / +180° — WRAP</option>
+            <option value="360">UNWRAP</option>
           </select>
         </label>
-        <label>RANGE FREKUENSI
+        <label>FREQ
           <select id="freqrange">
-            <option value="full" selected>20 Hz — 20 kHz — penuh</option>
-            <option value="mid">100 Hz — 10 kHz — mid/tweeter</option>
-            <option value="low">20 Hz — 500 Hz — low</option>
+            <option value="full" selected>20 Hz — 20 kHz</option>
+            <option value="mid">100 Hz — 10 kHz</option>
+            <option value="low">20 Hz — 500 Hz</option>
           </select>
         </label>
       </div>
@@ -268,7 +268,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
   <span>Reference: <b id="refstat">OFF</b></span>
   <span>FFT: <b id="fftstat">16384</b></span>
   <span>Polarity: <b id="polstat">—</b></span>
-  <span style="margin-left:auto">SMART LIVE • dBFS rel, bukan SPL terkalibrasi</span>
+  <span style="margin-left:auto">SMART LIVE v9 • dBFS rel, bukan SPL terkalibrasi</span>
 </div>
 <script>
 const _dummy=document.createElement('div');
