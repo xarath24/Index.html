@@ -104,12 +104,12 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 <div id="toast"></div>
 <div id="infoModal">
   <div class="infoBox">
-    <h3>ⓘ CARA PAKAI</h3>
+    <h3>ⓘ CARA PAKAI — AKURAT</h3>
     <ol>
-      <li>Mute driver lain, ukur 1 driver doang.</li>
-      <li>Geser cursor ke tengah daerah driver itu: mid 500 Hz, tweeter 5 kHz.</li>
-      <li>Badge polarity itu polarity di cursor, bukan 1 box.</li>
-      <li>Balik + / - di DLMS, badge harus ganti di cursor itu.</li>
+      <li>Mic 30 cm, jangan gerak.</li>
+      <li>START, PINK, tunggu 5 detik.</li>
+      <li>FIND DELAY 1x, tunggu 5 detik lagi, baru capture.</li>
+      <li>Geser mic / ganti box = FIND DELAY lagi.</li>
     </ol>
     <button id="infoClose" style="width:100%;padding:9px;margin-top:6px">✕ TUTUP</button>
   </div>
@@ -154,7 +154,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <div class="title"><b>PHASE</b><span id="phasesub">Reference OFF — HIDUPKAN REFERENCE</span></div>
       <div class="ctl">
         <button id="finddelaybtn" class="find">🔍 FIND DELAY</button>
-        <span class="findres" id="finddelayres">Delay dikunci</span>
+        <span class="findres" id="finddelayres">Delay belum dikunci — pencet FIND DELAY</span>
       </div>
       <canvas id="phase" width="1200" height="190"></canvas>
       <div class="cursor">
@@ -259,7 +259,8 @@ const REFLBL={pink:'PINK NOISE',white:'WHITE NOISE',brown:'BROWN NOISE',sweep:'S
 const S={ctx:null,stream:null,src:null,an:null,noise:null,noiseGain:null,pink:false,refType:'pink',running:false,fft:16384,raf:0,
   cursor:1000,live:[],phase:[],phaseRaw:[],acc:null,accN:0,captures:[],capN:0,unwrap:false,delayMs:null,
   polarity:null,phaseAvg:null,phSmooth:24,delayLo:200,delayHi:2000,foundDelay:null,polBand:null,
-  appliedDelay:0,frameN:0,delayLocked:false,refRe:null,refIm:null,refBuf:null,delayHist:[],signHist:[],corrSign:1,corrStrength:0};
+  appliedDelay:0,frameN:0,delayLocked:false,refRe:null,refIm:null,refBuf:null,delayHist:[],signHist:[],corrSign:1,corrStrength:0,
+  lagHist:[],lockedLag:null,lastBestLag:0};
 function median(a){if(!a.length)return 0;const s=a.slice().sort((x,y)=>x-y);return s[Math.floor(s.length/2)]}
 $('infobtn').onclick=()=>{$('infoModal').classList.add('show')};
 $('infoClose').onclick=()=>{$('infoModal').classList.remove('show')};
@@ -321,12 +322,6 @@ function detectPolarityBand(raw,center){
   const avg=Math.atan2(sy,sx)*180/Math.PI;
   const strength=Math.hypot(sx,sy)/cn;
   let state=Math.abs(avg)>90?'TERBALIK':'NORMAL';
-  if(S.signHist.length>=10){
-    const neg=S.signHist.filter(v=>v<0).length/tot0();
-    function tot0(){return S.signHist.length}
-    if(neg>=0.7&&Math.abs(avg)>60)state='TERBALIK';
-    if(neg<=0.3&&Math.abs(avg)<120&&strength>0.5)state='NORMAL';
-  }
   return{state,avg,weak:strength<0.5,band:fmtF(center)};
 }
 function detectPolarity(raw){return detectPolarityBand(raw,S.cursor||1000)}
@@ -384,6 +379,7 @@ function renderCaptures(){
 $('capturebtn').onclick=()=>{
   autoLandscape();
   if(!S.live.length){toast('Belum ada kurva. START dulu.');return}
+  if(!S.delayLocked){toast('FIND DELAY dulu, baru capture — biar akurat.')}
   S.capN++;
   const now=new Date(),hh=String(now.getHours()).padStart(2,'0'),mm=String(now.getMinutes()).padStart(2,'0'),ss=String(now.getSeconds()).padStart(2,'0');
   const dms=S.foundDelay;
@@ -441,14 +437,23 @@ function findDelay(){
   const med=median(S.delayHist);
   const locked=Math.abs(med)<5?med:0;
   S.foundDelay=locked;S.delayMs=locked;S.appliedDelay=locked;S.delayLocked=true;
-  $('finddelayres').innerHTML='Delay: '+locked.toFixed(3)+' ms 🔒 DIKUNCI';
+  if(S.lagHist.length>=5){
+    let lag=median(S.lagHist);
+    if(lag>S.fft/2)lag-=S.fft;
+    S.lockedLag=lag;
+  }else{
+    S.lockedLag=S.lastBestLag;
+  }
+  S.signHist=[];
+  resetAcc();
+  $('finddelayres').innerHTML='Delay: '+locked.toFixed(3)+' ms 🔒 DIKUNCI — tunggu 5 detik';
   updatePolarityLive();drawAll();
-  toast('Delay '+locked.toFixed(3)+' ms DIKUNCI');
+  toast('Delay '+locked.toFixed(3)+' ms DIKUNCI, tunggu 5 detik baru capture');
 }
 $('finddelaybtn').onclick=findDelay;
 function updatePolarityLive(){
   if(!S.pink||!S.running){refreshPolarityAfterOff();return}
-  if(!S.phaseRaw.length&&!S.signHist.length){setPolarityUI(null,null,false,null);return}
+  if(!S.phaseRaw.length){setPolarityUI(null,null,false,null);return}
   const pol=detectPolarity(S.phaseRaw);
   setPolarityUI(pol.state,pol.avg,pol.weak,pol.band);
 }
@@ -525,8 +530,8 @@ async function startNoise(type){
   S.noiseGain=c.createGain();S.noiseGain.gain.value=($('noisevol').value/100)*0.9;
   S.noise.connect(S.noiseGain);S.noiseGain.connect(c.destination);S.noise.start();
   S.pink=true;$('refstat').textContent=REFLBL[type];$('phasesub').textContent=REFLBL[type]+' ON';
-  setRefButtons();resetAcc();S.appliedDelay=0;S.foundDelay=null;S.delayLocked=false;S.delayHist=[];S.signHist=[];S.corrSign=1;
-  $('finddelayres').innerHTML='Delay dikunci';
+  setRefButtons();resetAcc();S.appliedDelay=0;S.foundDelay=null;S.delayLocked=false;S.lockedLag=null;S.delayHist=[];S.signHist=[];S.lagHist=[];S.corrSign=1;
+  $('finddelayres').innerHTML='Delay belum dikunci — pencet FIND DELAY';
   updatePolarityLive();
   toast(REFLBL[type]+' nyala — tunggu 5 detik, jangan gerak');
 }
@@ -688,10 +693,15 @@ function computeTFAligned(){
     const v=corrRe[lag],av=Math.abs(v);
     if(av>bestAbs){bestAbs=av;bestLag=lag;bestVal=v}
   }
+  S.lastBestLag=bestLag;
+  S.lagHist.push(bestLag);
+  if(S.lagHist.length>40)S.lagHist.shift();
   const sign=bestVal<0?-1:1;
   S.corrSign=sign;S.corrStrength=bestAbs;
-  S.signHist.push(sign);
-  if(S.signHist.length>40)S.signHist.shift();
+  let useLag=bestLag;
+  if(S.delayLocked&&S.lockedLag!=null){
+    useLag=((S.lockedLag%N)+N)%N;
+  }
   const freqs=[],magP=[],ph=[];
   const aAvg=1/Math.max(1,+$('average').value);
   if(!S.acc){S.acc={re:new Float64Array(N/2),im:new Float64Array(N/2)};S.accN=0}
@@ -699,7 +709,7 @@ function computeTFAligned(){
     const f=k*S.ctx.sampleRate/N;if(f<MINF||f>MAXF)continue;
     const den=S.refRe[k]*S.refRe[k]+S.refIm[k]*S.refIm[k];
     if(den<1e-12){freqs.push({f});magP.push(1e-9);ph.push(0);continue}
-    const ang=2*Math.PI*k*bestLag/N,ca=Math.cos(ang),sa=Math.sin(ang);
+    const ang=2*Math.PI*k*useLag/N,ca=Math.cos(ang),sa=Math.sin(ang);
     const mr=re[k]*ca-im[k]*sa,mi=re[k]*sa+im[k]*ca;
     let tr=(mr*S.refRe[k]+mi*S.refIm[k])/den,ti=(mi*S.refRe[k]-mr*S.refIm[k])/den;
     if(S.accN===0){S.acc.re[k]=tr;S.acc.im[k]=ti}
@@ -749,7 +759,7 @@ $('start').onclick=async()=>{
     S.src=S.ctx.createMediaStreamSource(S.stream);
     S.an=S.ctx.createAnalyser();S.fft=+$('fft').value;S.an.fftSize=S.fft;S.an.smoothingTimeConstant=0;S.an.minDecibels=-120;S.an.maxDecibels=0;
     S.src.connect(S.an);
-    resetAcc();S.running=true;S.frameN=0;S.signHist=[];
+    resetAcc();S.running=true;S.frameN=0;S.signHist=[];S.lagHist=[];
     $('start').disabled=true;$('stop').disabled=false;$('status').textContent='LIVE';$('liveind').textContent='● LIVE';
     $('fftstat').textContent=S.fft;
     draw();
@@ -764,7 +774,7 @@ $('stop').onclick=()=>{
   updatePeakPanel(null);
   if(S.pink)stopPink();else{killLive();drawAll()}
 };
-$('fft').onchange=()=>{if(S.an&&S.ctx){S.fft=+$('fft').value;S.an.fftSize=S.fft;resetAcc();S.signHist=[];if(S.pink)buildRef(S.refType==='sweep'?'pink':S.refType);$('fftstat').textContent=S.fft}};
+$('fft').onchange=()=>{if(S.an&&S.ctx){S.fft=+$('fft').value;S.an.fftSize=S.fft;resetAcc();S.signHist=[];S.lagHist=[];S.lockedLag=null;S.delayLocked=false;if(S.pink)buildRef(S.refType==='sweep'?'pink':S.refType);$('fftstat').textContent=S.fft}};
 $('average').onchange=resetAcc;
 $('detail').onchange=drawAll;
 $('phasesmooth').onchange=e=>{S.phSmooth=+$('phasesmooth').value||0;drawAll()};
