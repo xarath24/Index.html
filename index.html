@@ -114,7 +114,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <li>Sentuh layar 1x, otomatis landscape.</li>
       <li>Pencet <b>START</b> di atas, izinin mic.</li>
       <li><b>🩷 PINK</b>: semua frekuensi naik bareng, itu bener nya pink.</li>
-      <li><b>〰️ SWEEP</b>: naik nya gantian, 1 frekuensi aja yang naik, puncak nya jalan dari kiri ke kanan.</li>
+      <li><b>〰️ SWEEP</b>: naik nya gantian, 1 frekuensi aja yang naik, puncak nya jalan dari kiri ke kanan, 8 detik, realtime.</li>
       <li>Liat <b>dBFS PEAK</b> di kanan, bagus nya -12 sampai -6 dBFS.</li>
       <li>Geser cursor di grafik, liat kotak <b>CURSOR</b> di tengah atas.</li>
       <li>Liat kiri grafik phase: <b>NORMAL ✓ / TERBALIK ⚠</b>.</li>
@@ -201,8 +201,8 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         <label>FFT
           <select id="fft">
             <option value="2048">2048</option>
-            <option value="4096">4096</option>
-            <option value="8192" selected>8192</option>
+            <option value="4096" selected>4096</option>
+            <option value="8192">8192</option>
             <option value="16384">16384</option>
           </select>
         </label>
@@ -247,7 +247,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <label class="miniVol">VOLUME <b id="voltxt" style="color:#fff">30%</b>
         <input type="range" id="noisevol" min="0" max="100" value="30">
       </label>
-      <div id="sweepprog" style="display:none;color:#3fd4ec;font-size:10px;font-weight:900;margin-top:5px;text-align:center">SWEEP: 0 / 20 detik</div>
+      <div id="sweepprog" style="display:none;color:#3fd4ec;font-size:10px;font-weight:900;margin-top:5px;text-align:center">SWEEP: 0 / 8 detik</div>
     </div>
   </aside>
 </div>
@@ -256,7 +256,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
   <span>● <b id="status">STANDBY</b></span>
   <span>Input: <b>Mic 1</b></span>
   <span>Reference: <b id="refstat">OFF</b></span>
-  <span>FFT: <b id="fftstat">8192</b></span>
+  <span>FFT: <b id="fftstat">4096</b></span>
   <span>Polarity: <b id="polstat">—</b></span>
   <span style="margin-left:auto">SMART LIVE • dBFS rel, bukan SPL terkalibrasi</span>
 </div>
@@ -275,10 +275,10 @@ const MAJORSET=new Set(MAJORS);
 const FREQS=[20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000];
 const CAPCOLORS=['#fb923c','#facc15','#f472b6','#a78bfa','#34d399','#f87171','#93c5fd','#fdba74','#e879f9','#4ade80','#fbbf24','#fb7185'];
 
-const S={ctx:null,stream:null,src:null,an:null,refAn:null,noise:null,noiseGain:null,pink:false,running:false,fft:8192,raf:0,
+const S={ctx:null,stream:null,src:null,an:null,refAn:null,noise:null,noiseGain:null,pink:false,running:false,fft:4096,raf:0,
   cursor:4190,live:[],phase:[],phaseRaw:[],coh:[],sm:null,acc:null,accN:0,magOffset:null,captures:[],capN:0,unwrap:false,delayMs:null,
   polarity:null,phaseAvg:null,phSmooth:6,delayLo:200,delayHi:2000,cohAvg:null,foundDelay:null,foundDelayBand:null,foundDelayCoh:null,
-  clipUntil:0,peakHoldDb:-120,peakHoldUntil:0,refType:null,powAvg:null,sweepMax:null,sweepMaxFreqs:null,sweepStart:0,sweepDur:20,lastPeak:-120,tfTick:0,prevSweepElapsed:0,sweepDone:false,sweepHold:null,sweepHoldFreqs:null};
+  clipUntil:0,peakHoldDb:-120,peakHoldUntil:0,refType:null,powAvg:null,sweepMax:null,sweepMaxFreqs:null,sweepStart:0,sweepStartCtx:0,sweepDur:8,lastPeak:-120,tfTick:0,prevSweepElapsed:0,sweepDone:false,sweepHold:null,sweepHoldFreqs:null};
 
 $('infobtn').onclick=()=>{$('infoModal').classList.add('show')};
 $('infoClose').onclick=()=>{$('infoModal').classList.remove('show')};
@@ -444,17 +444,20 @@ function renderCaptures(){
 }
 function sweepHoldCurve(){
   if(!S.sweepHold||!S.sweepHoldFreqs)return null;
-  const vals=S.sweepHold.slice().sort((a,b)=>a-b);
-  const ref=vals[Math.floor(vals.length*0.5)]||1e-12;
-  const pArr=S.sweepHold.map(v=>v/Math.max(1e-12,ref));
+  const vals=[];
+  for(let i=0;i<S.sweepHold.length;i++){const f=S.sweepHoldFreqs[i].f;if(f>=200&&f<=5000)vals.push(S.sweepHold[i])}
+  vals.sort((a,b)=>a-b);
+  const ref=vals.length?vals[Math.floor(vals.length*0.85)]:1e-12;
+  const pArr=Array.from(S.sweepHold).map(v=>v/Math.max(1e-12,ref));
   const den=densify(S.sweepHoldFreqs,pArr,null,null);
-  return smoothCurveDb(closingDb(den.mag));
+  const cl=den.mag.map(o=>({f:o.f,v:Math.max(-40,Math.min(15,o.v)),x:o.x}));
+  return smoothCurveDb(closingDb(cl));
 }
 $('capturebtn').onclick=()=>{
   autoLandscape();
   if(S.refType==='sweep'){
     const full=sweepHoldCurve();
-    if(!full||!S.sweepDone){toast('Sweep belum kelar 20 detik, tunggu dulu, baru CAPTURE.');return}
+    if(!full||!S.sweepDone){toast('Sweep belum kelar 8 detik, tunggu dulu, baru CAPTURE.');return}
     S.capN++;
     const now=new Date(),hh=String(now.getHours()).padStart(2,'0'),mm=String(now.getMinutes()).padStart(2,'0'),ss=String(now.getSeconds()).padStart(2,'0');
     S.captures.push({id:Date.now()+Math.random(),name:'Capture '+S.capN,color:CAPCOLORS[(S.capN-1)%CAPCOLORS.length],show:true,
@@ -604,13 +607,13 @@ function whiteBuffer(c){
   return b;
 }
 function sweepBuffer(c){
-  const sr=c.sampleRate,T=20,N=Math.floor(sr*T),b=c.createBuffer(1,N,sr),d=b.getChannelData(0);
+  const sr=c.sampleRate,T=8,N=Math.floor(sr*T),b=c.createBuffer(1,N,sr),d=b.getChannelData(0);
   let ph=0;const f0=20,f1=20000,k=Math.pow(f1/f0,1/T);
   for(let i=0;i<N;i++){
     const t=i/sr,f=f0*Math.pow(k,t);
     ph+=2*Math.PI*f/sr;
     let env=1;
-    const fade=Math.floor(sr*0.08);
+    const fade=Math.floor(sr*0.05);
     if(i<fade)env=0.5-0.5*Math.cos(Math.PI*i/fade);
     else if(i>=N-fade)env=0.5-0.5*Math.cos(Math.PI*(N-1-i)/fade);
     d[i]=Math.sin(ph)*0.38*env;
@@ -623,6 +626,13 @@ function setRefButtons(type){
   $('sweepbtn').classList.toggle('on',type==='sweep');
   $('whitebtn').classList.toggle('on',type==='white');
 }
+function applyAnalyserFft(){
+  if(!S.an)return;
+  const want=S.refType==='sweep'?2048:4096;
+  S.fft=want;S.an.fftSize=want;
+  if(S.refAn)S.refAn.fftSize=want;
+  $('fft').value=String(want);$('fftstat').textContent=want;
+}
 async function startRef(type){
   stopPinkNoiseOnly();
   await ensureCtx();const c=S.ctx;
@@ -630,13 +640,16 @@ async function startRef(type){
   S.noise=c.createBufferSource();S.noise.buffer=buf;S.noise.loop=true;
   S.noiseGain=c.createGain();S.noiseGain.gain.value=($('noisevol').value/100)*0.5;
   S.refAn=c.createAnalyser();S.refAn.fftSize=S.fft;S.refAn.smoothingTimeConstant=0;
-  S.noise.connect(S.noiseGain);S.noiseGain.connect(c.destination);S.noiseGain.connect(S.refAn);S.noise.start();
+  S.noise.connect(S.noiseGain);S.noiseGain.connect(c.destination);S.noiseGain.connect(S.refAn);
+  S.sweepStartCtx=c.currentTime+0.05;S.noise.start(S.sweepStartCtx);
   S.pink=true;S.refType=type;
   $('refstat').textContent=type==='sweep'?'SWEEP':type==='white'?'WHITE NOISE':'PINK NOISE';
   $('modetxt').textContent='TF';
-  $('phasesub').textContent=type==='sweep'?'Sweep ON — naik gantian':type==='white'?'White ON — Phase jalan':'Pink ON — Phase jalan';
+  $('phasesub').textContent=type==='sweep'?'Sweep ON — naik gantian, 8 detik':type==='white'?'White ON — Phase jalan':'Pink ON — Phase jalan';
   setRefButtons(type);resetAcc();setPolarityUI(null,null,null);
-  if(type==='sweep'){S.sweepStart=performance.now();$('sweepprog').style.display='block';toast('SWEEP jalan, puncak nya gantian dari kiri ke kanan.')}
+  S.sweepStart=performance.now();
+  applyAnalyserFft();
+  if(type==='sweep'){S.sweepStart=performance.now();$('sweepprog').style.display='block';toast('SWEEP 8 detik, puncak jalan cepet, realtime.')}
   drawAll();
 }
 async function startPink(){return startRef('pink')}
@@ -934,8 +947,8 @@ function draw(){
   $('peakdb').textContent=peak.toFixed(1)+' dBFS';$('peakfreq').textContent=Math.round(peakFreq)+' Hz';
   updatePeakPanel(peak,peakFreq);
   let sweepElapsed=0,sweptF=MAXF;
-  if(S.refType==='sweep'&&S.sweepStart){
-    const total=(performance.now()-S.sweepStart)/1000;
+  if(S.refType==='sweep'&&S.ctx){
+    const total=Math.max(0,S.ctx.currentTime-S.sweepStartCtx);
     sweepElapsed=total%S.sweepDur;
     if(sweepElapsed<S.prevSweepElapsed-1){S.sweepHold=null;S.sweepHoldFreqs=null;S.sweepDone=false}
     S.prevSweepElapsed=sweepElapsed;
@@ -985,11 +998,11 @@ function draw(){
 $('start').onclick=async()=>{
   autoLandscape();
   try{
-    $('fft').value='8192';
+    $('fft').value='4096';
     S.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
     await ensureCtx();
     S.src=S.ctx.createMediaStreamSource(S.stream);
-    S.an=S.ctx.createAnalyser();S.fft=8192;S.an.fftSize=S.fft;S.an.smoothingTimeConstant=0;S.an.minDecibels=-120;S.an.maxDecibels=0;
+    S.an=S.ctx.createAnalyser();S.fft=4096;S.an.fftSize=S.fft;S.an.smoothingTimeConstant=0;S.an.minDecibels=-120;S.an.maxDecibels=0;
     S.src.connect(S.an);
     if(S.refAn)S.refAn.fftSize=S.fft;
     resetAcc();S.running=true;
