@@ -108,11 +108,11 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
     <ol>
       <li>Pencet <b>START</b>, izinin mic. Volume tombol HP mentok.</li>
       <li>Pilih <b>PINK</b>. Mic 30 cm dari speaker, ruangan sepi, jangan gerak.</li>
-      <li>Tunggu 5 detik, kurva halus, jangan pindah mic.</li>
-      <li>Pencet <b>🔍 FIND DELAY 1x</b>, delay dikunci, phase datar, polarity kebaca. Jangan pencet lagi kalo mic ga pindah.</li>
+      <li>Tunggu 5 detik, kurva halus. Frekuensi respon ga peduli delay, delay cuma muter phase.</li>
+      <li>Pencet <b>🔍 FIND DELAY 1x</b>, delay dikunci dari median 60 frame, phase datar. Pencet lagi cuma kalo mic pindah, di tempat yang sama harus nya dapet angka yang sama.</li>
       <li>Pencet <b>📸 CAPTURE</b>, pencet nama nya / ✏️, ubah jadi <b>box pahratel</b>.</li>
     </ol>
-    <p style="font-size:12px;line-height:1.6">Garis ijo tengah = 0 dB / 0°. Delay manual, dikunci, ga ganti-ganti sendiri. dBFS rel, bukan SPL terkalibrasi.</p>
+    <p style="font-size:12px;line-height:1.6">Garis ijo tengah = 0 dB / 0°. Delay = jarak akustik + latency HP, latency HP itu yang goyang, makanya diambil median nya. dBFS rel, bukan SPL terkalibrasi.</p>
     <button id="infoClose" style="width:100%;padding:9px;margin-top:6px">✕ TUTUP</button>
   </div>
 </div>
@@ -156,7 +156,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <div class="title"><b>PHASE</b><span id="phasesub">Reference OFF — HIDUPKAN REFERENCE</span></div>
       <div class="ctl">
         <button id="finddelaybtn" class="find">🔍 FIND DELAY</button>
-        <span class="findres" id="finddelayres">Delay manual — dikunci <small>• pencet 1x, jangan pencet lagi kalo mic ga pindah</small></span>
+        <span class="findres" id="finddelayres">Delay manual — median 60 frame, dikunci <small>• pencet 1x, di tempat sama harus nya sama</small></span>
       </div>
       <canvas id="phase" width="1200" height="190"></canvas>
       <div class="cursor">
@@ -262,7 +262,8 @@ const REFLBL={pink:'PINK NOISE',white:'WHITE NOISE',brown:'BROWN NOISE',sweep:'S
 const S={ctx:null,stream:null,src:null,an:null,refAn:null,noise:null,noiseGain:null,pink:false,refType:'pink',running:false,fft:16384,raf:0,
   cursor:1000,live:[],phase:[],phaseRaw:[],coh:[],acc:null,accN:0,captures:[],capN:0,unwrap:false,delayMs:null,
   polarity:null,phaseAvg:null,phSmooth:24,delayLo:200,delayHi:2000,cohAvg:null,foundDelay:null,
-  appliedDelay:0,frameN:0,lastLag:0,delayLocked:false};
+  appliedDelay:0,frameN:0,lastLag:0,smoothLag:0,lagHist:[],delayLocked:false};
+function median(a){if(!a.length)return 0;const s=a.slice().sort((x,y)=>x-y);return s[Math.floor(s.length/2)]}
 $('infobtn').onclick=()=>{$('infoModal').classList.add('show')};
 $('infoClose').onclick=()=>{$('infoModal').classList.remove('show')};
 $('infoModal').addEventListener('click',e=>{if(e.target.id==='infoModal')$('infoModal').classList.remove('show')});
@@ -439,18 +440,17 @@ function findDelay(){
     if(cp&&cp.delayMs!=null){toast('Delay capture: '+cp.delayMs.toFixed(3)+' ms — udah dikunci pas capture');return}
     toast('Belum ada phase. START + PINK dulu, tunggu 5 detik, baru FIND DELAY.');return;
   }
+  if(S.lagHist.length<20){toast('Tunggu dulu, lag nya lagi dikumpulin '+S.lagHist.length+'/60 frame, jangan gerak.');return}
+  const medLag=median(S.lagHist);
   let d=null;
-  if(S.ctx&&Math.abs(S.lastLag)>0){
-    d=S.lastLag/S.ctx.sampleRate*1000;
-  }
-  if(d==null||Math.abs(d)>30){
-    d=calcDelayIn(S.phaseRaw,S.coh,S.delayLo,S.delayHi);
-  }
+  if(S.ctx&&medLag!==0){d=medLag/S.ctx.sampleRate*1000}
+  if(d==null||Math.abs(d)>30){d=calcDelayIn(S.phaseRaw,S.coh,S.delayLo,S.delayHi)}
   if(d==null||Math.abs(d)>30){toast('Delay ga ketemu, deketin mic ke 30 cm, jangan gerak.');return}
+  const prev=S.foundDelay;
   S.foundDelay=d;S.delayMs=d;S.appliedDelay=d;S.delayLocked=true;
-  $('finddelayres').innerHTML='Delay: '+d.toFixed(3)+' ms <small>• 🔒 DIKUNCI — ga ganti sendiri</small>';
+  $('finddelayres').innerHTML='Delay: '+d.toFixed(3)+' ms <small>• 🔒 DIKUNCI median • '+(prev!=null?'sebelumnya '+prev.toFixed(3)+' ms, beda '+(d-prev).toFixed(3)+' ms':'')+'</small>';
   updatePolarityLive();drawAll();
-  toast('Delay '+d.toFixed(3)+' ms DIKUNCI — phase datar, jangan pencet lagi kalo mic ga pindah');
+  toast('Delay '+d.toFixed(3)+' ms DIKUNCI (median) — di tempat sama harus nya sama');
 }
 $('finddelaybtn').onclick=findDelay;
 function computeDelay(){const d=calcDelayIn(S.phaseRaw,S.coh,S.delayLo,S.delayHi);S.delayMs=d}
@@ -519,8 +519,8 @@ async function startNoise(type){
   S.refAn=c.createAnalyser();S.refAn.fftSize=S.fft;S.refAn.smoothingTimeConstant=0;
   S.noise.connect(S.noiseGain);S.noiseGain.connect(c.destination);S.noiseGain.connect(S.refAn);S.noise.start();
   S.pink=true;$('refstat').textContent=REFLBL[type];$('phasesub').textContent=REFLBL[type]+' ON — Phase jalan';
-  setRefButtons();resetAcc();S.appliedDelay=0;S.foundDelay=null;S.delayLocked=false;
-  $('finddelayres').innerHTML='Delay manual — dikunci <small>• pencet FIND DELAY 1x, jangan pencet lagi kalo mic ga pindah</small>';
+  setRefButtons();resetAcc();S.appliedDelay=0;S.foundDelay=null;S.delayLocked=false;S.lagHist=[];S.smoothLag=0;S.lastLag=0;
+  $('finddelayres').innerHTML='Delay manual — median 60 frame, dikunci <small>• pencet 1x, di tempat sama harus nya sama</small>';
   updatePolarityLive();
   toast(REFLBL[type]+' nyala — tunggu 5 detik, jangan gerak, baru FIND DELAY 1x');
 }
@@ -690,7 +690,11 @@ function findLag(tdM,tdR){
     if(s>bestV2){bestV2=s;best2=lag}
   }
   S.lastLag=best2;
-  return best2;
+  S.lagHist.push(best2);
+  if(S.lagHist.length>60)S.lagHist.shift();
+  const med=median(S.lagHist);
+  S.smoothLag=S.smoothLag===0?med:Math.round(S.smoothLag*0.9+med*0.1);
+  return S.smoothLag;
 }
 function computeTF(){
   const N=S.fft,tdM=new Float32Array(N),tdRraw=new Float32Array(N);
@@ -763,7 +767,7 @@ $('start').onclick=async()=>{
     S.an=S.ctx.createAnalyser();S.fft=+$('fft').value;S.an.fftSize=S.fft;S.an.smoothingTimeConstant=0;S.an.minDecibels=-120;S.an.maxDecibels=0;
     S.src.connect(S.an);
     if(S.refAn)S.refAn.fftSize=S.fft;
-    resetAcc();S.running=true;S.frameN=0;S.lastLag=0;
+    resetAcc();S.running=true;S.frameN=0;S.lastLag=0;S.smoothLag=0;S.lagHist=[];
     $('start').disabled=true;$('stop').disabled=false;$('status').textContent='LIVE';$('liveind').textContent='● LIVE';
     $('fftstat').textContent=S.fft;
     draw();
