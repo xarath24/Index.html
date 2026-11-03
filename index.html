@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>SMART LIVE v13 — CURSOR SALIB</title>
+<title>SMART LIVE v13 — ETC 120ms</title>
 <style>
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -109,11 +109,11 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 <div id="toast"></div>
 <div id="infoModal">
   <div class="infoBox">
-    <h3>ⓘ CARA PAKAI — CURSOR SALIB IJO</h3>
+    <h3>ⓘ CARA PAKAI — ETC 120ms</h3>
     <ol>
-      <li><b>Tap / geser di grafik mana aja</b>: ETC, LiveIR, Magnitude. Garis salib ijo nya tembus 3 grafik, di X yang sama.</li>
-      <li>Atas nunjukin: frekuensi + dB + Phase + <b>waktu (ms)</b> di posisi salib itu.</li>
-      <li>Volume 12%, diem 5 detik, FIND DELAY, baru CAPTURE.</li>
+      <li>Volume <b>12%</b>, jangan 100%. Peak -12 sampai -6.</li>
+      <li>START, diem 5 detik. ETC harus 1 puncak, terus turun mulus.</li>
+      <li>Kalau Magnitude mulus tapi ETC masih banyak puncak, itu pantulan tembok, mic nya jauhin tembok / turunin volume.</li>
     </ol>
     <button id="infoClose" style="width:100%;padding:7px;margin-top:6px">✕ TUTUP</button>
   </div>
@@ -154,9 +154,9 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
           <span class="tm" id="ctTime">— ms</span>
         </div>
       </div>
-      <div class="title"><b>ETC ▼</b><span id="irinfo">Energy Time Curve • 0 - 330 ms • -100 - 0 dB • IR rata-rata 8, disejajarkan</span></div>
+      <div class="title"><b>ETC ▼</b><span id="irinfo">Energy Time Curve • 0 - 120 ms • -100 - 0 dB • 1 PUNCAK, TURUN MULUS = BENER</span></div>
       <canvas id="ir" width="1200" height="240"></canvas>
-      <div class="title"><b>LiveIR ▼</b><span id="phasesub">Live Impulse Response • 0 - 330 ms • AVG 8 disejajarkan • Bass &lt;50 Hz dibuang • Puncak ke atas = NORMAL</span></div>
+      <div class="title"><b>LiveIR ▼</b><span id="phasesub">Live Impulse Response • 0 - 120 ms • AVG 8 disejajarkan • Puncak ke atas = NORMAL</span></div>
       <canvas id="phase" width="1200" height="190"></canvas>
       <div class="title"><b>MAGNITUDE</b><span id="magRangeLbl">20 Hz — 20 kHz • Range 90 dB (+45 / -45) • 0 dB TENGAH • LEVEL OTOMATIS</span></div>
       <canvas id="mag" width="1200" height="300"></canvas>
@@ -219,7 +219,7 @@ const mag=$('mag'),mg=mag.getContext('2d');
 const phc=$('phase'),pg=phc.getContext('2d');
 const fsc=$('freqscale'),fg=fsc.getContext('2d');
 const irc=$('ir'),ig=irc.getContext('2d');
-const MINF=20,MAXF=20000,MAXMS=330;
+const MINF=20,MAXF=20000,MAXMS=330,IRMS=120;
 const CFG={fft:16384,avg:64,detail:24,phSmooth:24,range:90};
 const SEGS=[[20,1000,.33],[1000,3000,.17],[3000,7000,.21],[7000,10000,.10],[10000,15000,.10],[15000,20000,.09]];
 const MAJORS=[20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000];
@@ -233,12 +233,12 @@ const S={ctx:null,stream:null,src:null,an:null,noise:null,noiseGain:null,pink:fa
   polarity:null,phaseAvg:null,phSmooth:24,delayLo:200,delayHi:2000,foundDelay:null,polBand:null,
   appliedDelay:0,frameN:0,delayLocked:false,refRe:null,refIm:null,refBuf:null,delayHist:[],signHist:[],corrSign:1,corrStrength:0,ir:[],irLag:0,
   manualLag:0,corrAcc:null,corrAccN:0,magOff:null,frameLagHist:[],lastFrameLag:0,levelOff:0,levelLocked:false,autoTick:0,
-  etcData:null,liveIRData:null,peakLag:0,irAlignAvg:null,irAlignN:0,refLag:0};
+  etcData:null,liveIRData:null,peakLag:0,irAlignAvg:null,irAlignN:0,refLag:0,peakMs:30};
 function median(a){if(!a.length)return 0;const s=a.slice().sort((x,y)=>x-y);return s[Math.floor(s.length/2)]}
 function fmtOff(v){return (v>0?'+':'')+v+' dB'}
 function updateLevelUI(){const st=$('levelstat');if(st)st.textContent=fmtOff(S.levelOff)+' • AUTO • '+(S.levelLocked?'DIKUNCI 0 dB':'NYARI 0 dB')}
 function crossPx(W){return Math.max(0,Math.min(W,xfreq(S.cursor,W)))}
-function crossMs(){return crossPx(mag.width)/mag.width*MAXMS}
+function crossMs(){return crossPx(mag.width)/mag.width*IRMS}
 function setCursor(f,fromSlider){
   S.cursor=Math.max(MINF,Math.min(MAXF,f));
   const sl=$('cursorslider');
@@ -301,7 +301,7 @@ function p2db(p){return 10*Math.log10(Math.max(1e-12,p))}
 function updateRangeLabels(){
   const r=CFG.range,top=Math.round(r/2),bot=-top;
   $('magRangeLbl').textContent='20 Hz — 20 kHz • Range '+r+' dB (+'+top+' / '+bot+') • 0 dB TENGAH • LEVEL OTOMATIS • '+fmtOff(S.levelOff);
-  $('irinfo').textContent='Energy Time Curve • 0 - 330 ms • -100 - 0 dB • IR AVG 8 sejajar • Delay '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':'0 ms MANUAL');
+  $('irinfo').textContent='Energy Time Curve • 0 - 120 ms • -100 - 0 dB • 1 PUNCAK, TURUN MULUS = BENER • Delay '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':'0 ms MANUAL');
 }
 function detectPolarityBand(raw,center){
   if(!raw.length)return{state:null,avg:null,weak:true,band:null};
@@ -498,7 +498,7 @@ async function startNoise(type){
   S.noiseGain=c.createGain();S.noiseGain.gain.value=($('noisevol').value/100)*0.9;
   S.noise.connect(S.noiseGain);S.noiseGain.connect(c.destination);
   S.noise.start();
-  S.pink=true;$('refstat').textContent=REFLBL[type];$('phasesub').textContent='Live Impulse Response • 0 - 330 ms • AVG 8 disejajarkan • Bass <50 Hz dibuang';
+  S.pink=true;$('refstat').textContent=REFLBL[type];$('phasesub').textContent='Live Impulse Response • 0 - 120 ms • AVG 8 disejajarkan • Puncak ke atas = NORMAL';
   setRefButtons();resetAcc();S.appliedDelay=0;S.delayLocked=false;S.delayHist=[];S.signHist=[];S.corrSign=1;
   $('finddelayres').textContent='Delay manual — 0 ms, pencet FIND DELAY, kurva langsung berubah';
   updateRangeLabels();updatePolarityLive();
@@ -508,7 +508,7 @@ function stopPink(){
   if(S.noise){try{S.noise.stop()}catch(e){}try{S.noise.disconnect()}catch(e){}S.noise=null}
   if(S.noiseGain){try{S.noiseGain.disconnect()}catch(e){}S.noiseGain=null}
   S.pink=false;
-  $('refstat').textContent='OFF';$('phasesub').textContent='Live Impulse Response • 0 - 330 ms • AVG 8 disejajarkan • Bass <50 Hz dibuang';
+  $('refstat').textContent='OFF';$('phasesub').textContent='Live Impulse Response • 0 - 120 ms • AVG 8 disejajarkan • Puncak ke atas = NORMAL';
   setRefButtons();killLive();drawAll();
 }
 $('pinkbtn').onclick=()=>{if(!S.running){toast('START dulu.');return}startNoise('pink')};
@@ -575,10 +575,10 @@ function gridIR(c,w,h,ymin,ymax){
   c.clearRect(0,0,w,h);c.fillStyle='#05070a';c.fillRect(0,0,w,h);
   const y=v=>((ymax-v)/(ymax-ymin))*h;
   c.strokeStyle='#232a35';c.lineWidth=1;
-  for(let t=0;t<=MAXMS;t+=15){const x=t/MAXMS*w;c.beginPath();c.moveTo(x,0);c.lineTo(x,h);c.stroke()}
+  for(let t=0;t<=IRMS;t+=10){const x=t/IRMS*w;c.beginPath();c.moveTo(x,0);c.lineTo(x,h);c.stroke()}
   for(let d=ymin;d<=ymax;d+=20){const yy=y(d);c.beginPath();c.moveTo(0,yy);c.lineTo(w,yy);c.stroke();c.fillStyle='#ffffff';c.font='900 11px Arial';c.textAlign='left';c.fillText((d>0?'+'+d:''+d),3,Math.max(11,yy-2))}
   c.fillStyle='#d6d6d6';c.font='900 10px Arial';c.textAlign='center';
-  for(let t=0;t<=MAXMS;t+=15){const x=t/MAXMS*w;c.fillText(t,Math.max(12,Math.min(w-12,x)),h-4)}
+  for(let t=0;t<=IRMS;t+=10){const x=t/IRMS*w;c.fillText(t,Math.max(12,Math.min(w-12,x)),h-4)}
   c.fillText('Time (ms)',w/2,12);c.textAlign='left';
 }
 function crossV(c,W,H){
@@ -603,7 +603,7 @@ function drawETC(){
   });
   ig.beginPath();ig.strokeStyle='#facc15';ig.lineWidth=2;
   S.etcData.forEach((v,i)=>{const x=i/(S.etcData.length-1)*W,y=Math.max(0,Math.min(H,(0-v)/100*H));if(i===0)ig.moveTo(x,y);else ig.lineTo(x,y)});ig.stroke();
-  const px=(S.peakLag/(S.ctx?S.ctx.sampleRate:48000)*1000)/MAXMS*W;
+  const px=S.peakMs/IRMS*W;
   ig.strokeStyle='#fff';ig.lineWidth=2;ig.beginPath();ig.moveTo(px,0);ig.lineTo(px,H);ig.stroke();
   const cxp=crossV(ig,W,H);
   const idx=Math.max(0,Math.min(S.etcData.length-1,Math.round(cxp/W*(S.etcData.length-1))));
@@ -625,10 +625,10 @@ function drawLiveIR(){
   });
   pg.beginPath();pg.strokeStyle='#3fd4ec';pg.lineWidth=1.5;
   S.liveIRData.forEach((v,i)=>{const x=i/(S.liveIRData.length-1)*W,y=H/2-v*(H/2-14);if(i===0)pg.moveTo(x,y);else pg.lineTo(x,y)});pg.stroke();
-  const px=(S.peakLag/(S.ctx?S.ctx.sampleRate:48000)*1000)/MAXMS*W;
+  const px=S.peakMs/IRMS*W;
   pg.strokeStyle='#fff';pg.lineWidth=2;pg.beginPath();pg.moveTo(px,0);pg.lineTo(px,H);pg.stroke();
   pg.fillStyle='#fff';pg.font='900 11px Arial';pg.textAlign='right';
-  pg.fillText('Puncak = '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':(S.peakLag/(S.ctx?S.ctx.sampleRate:48000)*1000).toFixed(2)+' ms'),W-8,13);
+  pg.fillText('Puncak = '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':S.peakMs.toFixed(1)+' ms'),W-8,13);
   pg.textAlign='left';
   const cxp=crossV(pg,W,H);
   const idx=Math.max(0,Math.min(S.liveIRData.length-1,Math.round(cxp/W*(S.liveIRData.length-1))));
@@ -699,9 +699,7 @@ function computeTFAligned(){
   }
   const irRe=Float32Array.from(ire),irIm=Float32Array.from(iim);
   ifftCalc(irRe,irIm);
-  const sr=S.ctx.sampleRate,n330=Math.floor(sr*MAXMS/1000);
-  let mean=0;for(let i=0;i<n330;i++)mean+=irRe[i];mean/=n330;
-  for(let i=0;i<n330;i++)irRe[i]-=mean;
+  const sr=S.ctx.sampleRate;
   const maxLag=2400;
   let bestLag=0,bestVal=0,bestAbs=-1e18;
   for(let lag=0;lag<=maxLag;lag++){
@@ -728,18 +726,30 @@ function computeTFAligned(){
   const aligned=new Float64Array(N);
   for(let i=0;i<N;i++){aligned[i]=S.irAlignAvg[((i-S.refLag)%N+N)%N]}
   S.peakLag=S.refLag;
-  const etc=new Float32Array(n330);let run=0;
-  const win=Math.max(1,Math.floor(sr*0.0005));
-  for(let i=0;i<n330;i++){
-    const idx=i%N;run+=aligned[idx]*aligned[idx];
-    if(i>=win)run-=aligned[(i-win)%N]*aligned[(i-win)%N];
-    etc[i]=run/Math.min(win,i+1);
+  /* Jendela 120ms, puncak dikunci di 30ms, buang copy loop di luar jendela */
+  const nIr=Math.floor(sr*IRMS/1000),preMs=30,pre=Math.floor(sr*preMs/1000);
+  const winIr=new Float64Array(nIr);
+  for(let i=0;i<nIr;i++){
+    const srcIdx=((S.refLag-pre+i)%N+N)%N;
+    winIr[i]=aligned[srcIdx];
   }
-  let mx=1e-18;for(let i=0;i<n330;i++)mx=Math.max(mx,etc[i]);
-  for(let i=0;i<n330;i++)etc[i]=10*Math.log10(Math.max(1e-10,etc[i]/mx));
-  let peakA=1e-18;for(let i=0;i<n330;i++)peakA=Math.max(peakA,Math.abs(aligned[i]));
-  const live=new Float32Array(n330);
-  for(let i=0;i<n330;i++)live[i]=aligned[i%N]/(peakA||1);
+  S.peakMs=preMs;
+  let peakA=1e-18;for(let i=0;i<nIr;i++)peakA=Math.max(peakA,Math.abs(winIr[i]));
+  const live=new Float32Array(nIr);
+  for(let i=0;i<nIr;i++)live[i]=winIr[i]/(peakA||1);
+  /* ETC dihalusin 2ms, biar turun mulus kayak Magnitude */
+  const etcRaw=new Float32Array(nIr);let run=0;
+  const win=Math.max(1,Math.floor(sr*0.0005));
+  for(let i=0;i<nIr;i++){
+    run+=winIr[i]*winIr[i];
+    if(i>=win)run-=winIr[i-win]*winIr[i-win];
+    etcRaw[i]=run/Math.min(win,i+1);
+  }
+  let mx=1e-18;for(let i=0;i<nIr;i++)mx=Math.max(mx,etcRaw[i]);
+  const etcDb=new Float32Array(nIr);
+  for(let i=0;i<nIr;i++)etcDb[i]=10*Math.log10(Math.max(1e-10,etcRaw[i]/mx));
+  const sm=Math.max(1,Math.floor(sr*0.002)),etc=new Float32Array(nIr);
+  for(let i=0;i<nIr;i++){let s=0,c=0;for(let j=Math.max(0,i-sm);j<=Math.min(nIr-1,i+sm);j++){s+=etcDb[j];c++}etc[i]=s/c}
   S.etcData=etc;S.liveIRData=live;
   S.ir=[];
   for(let i=-120;i<=120;i++){const idx=((S.refLag+i)%N+N)%N;S.ir.push(aligned[idx]/(peakA||1))}
