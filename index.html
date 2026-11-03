@@ -235,7 +235,7 @@ const S={ctx:null,stream:null,src:null,an:null,noise:null,noiseGain:null,pink:fa
   cursor:1000,live:[],phase:[],phaseRaw:[],acc:null,accN:0,captures:[],capN:0,unwrap:false,delayMs:null,
   polarity:null,phaseAvg:null,phSmooth:24,delayLo:200,delayHi:2000,foundDelay:null,polBand:null,
   appliedDelay:0,frameN:0,delayLocked:false,refRe:null,refIm:null,refBuf:null,delayHist:[],signHist:[],corrSign:1,corrStrength:0,ir:[],irLag:0,
-  manualLag:0,corrAcc:null,corrAccN:0,magOff:null};
+  manualLag:0,corrAcc:null,corrAccN:0,magOff:null,frameLagHist:[],lastFrameLag:0};
 function median(a){if(!a.length)return 0;const s=a.slice().sort((x,y)=>x-y);return s[Math.floor(s.length/2)]}
 $('infobtn').onclick=()=>{$('infoModal').classList.add('show')};
 $('infoClose').onclick=()=>{$('infoModal').classList.remove('show')};
@@ -403,18 +403,18 @@ function calcDelayIn(raw,lo,hi){
   const den=n*sxx-sx*sx;if(!den)return null;
   return -(n*sxy-sx*sy)/den/360*1000;
 }
-/* MANUAL SAJA: cuma jalan pas tombol dipencet, tidak pernah dipanggil otomatis */
+/* MANUAL SAJA: cuma baca angka dari IR yang udah tajem, tidak mengubah kurva, tidak pernah dipanggil otomatis */
 function findDelayManual(){
-  if(!S.pink||!S.running||!S.phaseRaw.length){toast('START + PINK dulu, tunggu 5 detik.');return}
-  const d=calcDelayIn(S.phaseRaw,S.delayLo,S.delayHi);
-  if(d==null||!isFinite(d)||Math.abs(d)>5){toast('Delay gak ketemu, diem dulu jangan gerak');return}
+  if(!S.pink||!S.running){toast('START + PINK dulu, tunggu 5 detik.');return}
+  if(!S.frameLagHist.length){toast('Tunggu IR nya muncul dulu 5 detik.');return}
   const sr=S.ctx?S.ctx.sampleRate:48000;
-  S.manualLag=d/1000*sr;
+  const lag=median(S.frameLagHist);
+  const d=lag/sr*1000;
+  if(!isFinite(d)||Math.abs(d)>50){toast('Delay gak ketemu, diem dulu jangan gerak');return}
   S.foundDelay=d;S.delayMs=d;S.appliedDelay=d;S.delayLocked=true;
-  S.acc=null;S.accN=0;
-  $('finddelayres').textContent='Delay: '+d.toFixed(3)+' ms (manual, 1x pencet)';
+  $('finddelayres').textContent='Delay: '+d.toFixed(3)+' ms (manual, 1x pencet — angka saja)';
   updateRangeLabels();updatePolarityLive();
-  toast('Delay '+d.toFixed(3)+' ms — cuma sekali, gak auto lagi');
+  toast('Delay '+d.toFixed(3)+' ms — angka saja, kurva gak diubah');
 }
 $('finddelaybtn').onclick=findDelayManual;
 $('unwrapbtn').onclick=()=>{
@@ -432,7 +432,7 @@ function updatePolarityLive(){
 }
 function killLive(){
   S.live=[];S.phase=[];S.phaseRaw=[];S.acc=null;S.accN=0;S.appliedDelay=0;S.ir=[];
-  S.corrAcc=null;S.corrAccN=0;S.manualLag=0;S.magOff=null;S.foundDelay=null;S.delayMs=null;
+  S.corrAcc=null;S.corrAccN=0;S.manualLag=0;S.magOff=null;S.foundDelay=null;S.delayMs=null;S.frameLagHist=[];S.lastFrameLag=0;
   $('finddelayres').textContent='Delay manual — 0 ms, pencet FIND DELAY kalau mau';
   refreshPolarityAfterOff();
 }
@@ -483,7 +483,7 @@ function buildRef(type){
   fftCalc(re,im);
   S.refRe=re;S.refIm=im;
 }
-function resetAcc(){S.acc=null;S.accN=0;S.corrAcc=null;S.corrAccN=0;S.manualLag=0;S.magOff=null;S.foundDelay=null;S.delayMs=null}
+function resetAcc(){S.acc=null;S.accN=0;S.corrAcc=null;S.corrAccN=0;S.manualLag=0;S.magOff=null;S.foundDelay=null;S.delayMs=null;S.frameLagHist=[]}
 function setRefButtons(){
   ['pink','white','brown','sweep'].forEach(t=>{
     const b=$(t==='pink'?'pinkbtn':t==='white'?'whitebtn':t==='brown'?'brownbtn':'sweepbtn');
@@ -602,7 +602,7 @@ function drawIR(){
   ig.stroke();
   const cx=W/2;
   ig.strokeStyle='#fff';ig.lineWidth=2;ig.beginPath();ig.moveTo(cx,0);ig.lineTo(cx,H);ig.stroke();
-  ig.fillStyle='#fff';ig.font='900 12px Arial';ig.fillText('Puncak = delay • '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':'0 ms MANUAL'),8,14);
+  ig.fillStyle='#fff';ig.font='900 12px Arial';ig.fillText('Puncak = delay • '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':'lag '+(S.lastFrameLag||0).toFixed(1)+' spl'),8,14);
 }
 function drawAll(){
   const w=mag.width,h=mag.height,range=CFG.range;
@@ -655,41 +655,47 @@ function drawAll(){
   drawIR();
   $('ctFreq').textContent=fmtF(S.cursor);$('ctDb').textContent=pt?pt.v.toFixed(1)+' dB':'— dB';$('ctPhase').textContent='Phase '+(pp?pp.v.toFixed(0)+'°':'—°');
 }
+/* FIX UTAMA: H = Mic/Reference dulu, IFFT(H) = IR tajem, puncak IR dipakai buat meluruskan frame sebelum dirata-rata. Bukan korelasi mentah pink. */
 function computeTFAligned(){
   const N=S.fft;
   const td=new Float32Array(N);
   S.an.getFloatTimeDomainData(td);
   const re=Float32Array.from(td),im=new Float32Array(N);
   fftCalc(re,im);
-  const corrRe=new Float32Array(N),corrIm=new Float32Array(N);
+  const hre=new Float32Array(N),him=new Float32Array(N);
   for(let k=0;k<N;k++){
-    const a=re[k],b=im[k],c=S.refRe[k],d=S.refIm[k];
-    corrRe[k]=a*c+b*d;corrIm[k]=b*c-a*d;
+    const den=S.refRe[k]*S.refRe[k]+S.refIm[k]*S.refIm[k];
+    if(den<1e-12){hre[k]=0;him[k]=0;continue}
+    hre[k]=(re[k]*S.refRe[k]+im[k]*S.refIm[k])/den;
+    him[k]=(im[k]*S.refRe[k]-re[k]*S.refIm[k])/den;
   }
-  ifftCalc(corrRe,corrIm);
+  const irRe=Float32Array.from(hre),irIm=Float32Array.from(him);
+  ifftCalc(irRe,irIm);
   const maxLag=2400;
   let bestLag=0,bestVal=0,bestAbs=-1e18;
   for(let lag=0;lag<=maxLag;lag++){
-    const v=corrRe[lag],av=Math.abs(v);
+    const v=irRe[lag],av=Math.abs(v);
     if(av>bestAbs){bestAbs=av;bestLag=lag;bestVal=v}
   }
-  const sign=bestVal<0?-1:1;
-  S.corrSign=sign;S.corrStrength=bestAbs;S.irLag=bestLag;
+  let frac=0;
+  if(bestLag>0&&bestLag<maxLag){
+    const y0=irRe[bestLag-1],y1=irRe[bestLag],y2=irRe[bestLag+1];
+    const den=y0-2*y1+y2;
+    if(Math.abs(den)>1e-18){frac=0.5*(y0-y2)/den;if(!isFinite(frac)||Math.abs(frac)>1)frac=0}
+  }
+  const fracLag=bestLag+frac;
+  S.lastFrameLag=fracLag;S.irLag=bestLag;S.corrSign=bestVal<0?-1:1;S.corrStrength=bestAbs;
+  S.frameLagHist.push(fracLag);if(S.frameLagHist.length>30)S.frameLagHist.shift();
   S.ir=[];
-  for(let i=-120;i<=120;i++){const idx=((bestLag+i)%N+N)%N;S.ir.push(corrRe[idx]/(bestAbs||1))}
-  S.signHist.push(sign);
-  if(S.signHist.length>40)S.signHist.shift();
-  const useLag=S.manualLag||0;
+  for(let i=-120;i<=120;i++){const idx=((bestLag+i)%N+N)%N;S.ir.push(irRe[idx]/(bestAbs||1))}
+  S.signHist.push(S.corrSign);if(S.signHist.length>40)S.signHist.shift();
   const freqs=[],magP=[],ph=[];
   const aAvg=1/CFG.avg;
   if(!S.acc){S.acc={re:new Float64Array(N/2),im:new Float64Array(N/2)};S.accN=0}
   for(let k=1;k<N/2;k++){
     const f=k*S.ctx.sampleRate/N;if(f<MINF||f>MAXF)continue;
-    const den=S.refRe[k]*S.refRe[k]+S.refIm[k]*S.refIm[k];
-    if(den<1e-12){freqs.push({f});magP.push(1e-9);ph.push(0);continue}
-    const ang=2*Math.PI*k*useLag/N,ca=Math.cos(ang),sa=Math.sin(ang);
-    const mr=re[k]*ca-im[k]*sa,mi=re[k]*sa+im[k]*ca;
-    let tr=(mr*S.refRe[k]+mi*S.refIm[k])/den,ti=(mi*S.refRe[k]-mr*S.refIm[k])/den;
+    const ang=2*Math.PI*k*fracLag/N,ca=Math.cos(ang),sa=Math.sin(ang);
+    const tr=hre[k]*ca-him[k]*sa,ti=hre[k]*sa+him[k]*ca;
     if(S.accN===0){S.acc.re[k]=tr;S.acc.im[k]=ti}
     else{S.acc.re[k]+=aAvg*(tr-S.acc.re[k]);S.acc.im[k]+=aAvg*(ti-S.acc.im[k])}
     freqs.push({f});
