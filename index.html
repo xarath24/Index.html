@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>SMART LIVE v13 — ETC 120ms</title>
+<title>SMART LIVE v13 — IR JUJUR</title>
 <style>
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -109,11 +109,11 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 <div id="toast"></div>
 <div id="infoModal">
   <div class="infoBox">
-    <h3>ⓘ CARA PAKAI — ETC 120ms</h3>
+    <h3>ⓘ CARA BACA IR YANG BENER</h3>
     <ol>
-      <li>Volume <b>12%</b>, jangan 100%. Peak -12 sampai -6.</li>
-      <li>START, diem 5 detik. ETC harus 1 puncak, terus turun mulus.</li>
-      <li>Kalau Magnitude mulus tapi ETC masih banyak puncak, itu pantulan tembok, mic nya jauhin tembok / turunin volume.</li>
+      <li>Spike <b>paling gede = suara langsung</b>. Itu delaynya.</li>
+      <li>Spike ke-2 / ke-3 yang lebih kecil = <b>pantulan lantai / tembok</b>. Normal di ruangan.</li>
+      <li>Kalau spike ke-2 hampir segede yang pertama, mic nya kejauhan / volume kekencengan. Turunin volume, mic 1 m, jauhin tembok.</li>
     </ol>
     <button id="infoClose" style="width:100%;padding:7px;margin-top:6px">✕ TUTUP</button>
   </div>
@@ -154,9 +154,9 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
           <span class="tm" id="ctTime">— ms</span>
         </div>
       </div>
-      <div class="title"><b>ETC ▼</b><span id="irinfo">Energy Time Curve • 0 - 120 ms • -100 - 0 dB • 1 PUNCAK, TURUN MULUS = BENER</span></div>
+      <div class="title"><b>ETC ▼</b><span id="irinfo">Energy Time Curve • 0 - 120 ms • -100 - 0 dB • Garis putih = puncak beneran</span></div>
       <canvas id="ir" width="1200" height="240"></canvas>
-      <div class="title"><b>LiveIR ▼</b><span id="phasesub">Live Impulse Response • 0 - 120 ms • AVG 8 disejajarkan • Puncak ke atas = NORMAL</span></div>
+      <div class="title"><b>LiveIR ▼</b><span id="phasesub">Live Impulse Response • 0 - 120 ms • AVG 8, TANPA digeser • Puncak ke atas = NORMAL</span></div>
       <canvas id="phase" width="1200" height="190"></canvas>
       <div class="title"><b>MAGNITUDE</b><span id="magRangeLbl">20 Hz — 20 kHz • Range 90 dB (+45 / -45) • 0 dB TENGAH • LEVEL OTOMATIS</span></div>
       <canvas id="mag" width="1200" height="300"></canvas>
@@ -178,7 +178,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       </div>
       <div class="peakMeter"><div class="peakMeterFill" id="peakFill"></div></div>
       <div id="weakwarn" style="display:none;color:#f87171;font-size:10px;font-weight:900;margin-top:5px;text-align:center;line-height:1.4">⚠ SINYAL LEMAH — VOLUME MENTOK + MIC 30 CM</div>
-      <div class="autoTag" style="margin-top:6px;text-align:center">FFT 16k • AVG 64 • 1/24 OKT • AUTO • IR AVG 8 SEJAJAR</div>
+      <div class="autoTag" style="margin-top:6px;text-align:center">FFT 16k • AVG 64 • 1/24 OKT • AUTO • IR AVG 8 JUJUR</div>
     </div>
     <div class="panel">
       <h3>🔍 DELAY / PHASE — KANAN</h3>
@@ -233,7 +233,7 @@ const S={ctx:null,stream:null,src:null,an:null,noise:null,noiseGain:null,pink:fa
   polarity:null,phaseAvg:null,phSmooth:24,delayLo:200,delayHi:2000,foundDelay:null,polBand:null,
   appliedDelay:0,frameN:0,delayLocked:false,refRe:null,refIm:null,refBuf:null,delayHist:[],signHist:[],corrSign:1,corrStrength:0,ir:[],irLag:0,
   manualLag:0,corrAcc:null,corrAccN:0,magOff:null,frameLagHist:[],lastFrameLag:0,levelOff:0,levelLocked:false,autoTick:0,
-  etcData:null,liveIRData:null,peakLag:0,irAlignAvg:null,irAlignN:0,refLag:0,peakMs:30};
+  etcData:null,liveIRData:null,peakLag:0,irAvg:null,irAvgN:0,peakMs:0};
 function median(a){if(!a.length)return 0;const s=a.slice().sort((x,y)=>x-y);return s[Math.floor(s.length/2)]}
 function fmtOff(v){return (v>0?'+':'')+v+' dB'}
 function updateLevelUI(){const st=$('levelstat');if(st)st.textContent=fmtOff(S.levelOff)+' • AUTO • '+(S.levelLocked?'DIKUNCI 0 dB':'NYARI 0 dB')}
@@ -301,7 +301,7 @@ function p2db(p){return 10*Math.log10(Math.max(1e-12,p))}
 function updateRangeLabels(){
   const r=CFG.range,top=Math.round(r/2),bot=-top;
   $('magRangeLbl').textContent='20 Hz — 20 kHz • Range '+r+' dB (+'+top+' / '+bot+') • 0 dB TENGAH • LEVEL OTOMATIS • '+fmtOff(S.levelOff);
-  $('irinfo').textContent='Energy Time Curve • 0 - 120 ms • -100 - 0 dB • 1 PUNCAK, TURUN MULUS = BENER • Delay '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':'0 ms MANUAL');
+  $('irinfo').textContent='Energy Time Curve • 0 - 120 ms • -100 - 0 dB • Garis putih = puncak beneran • Delay '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':'0 ms MANUAL');
 }
 function detectPolarityBand(raw,center){
   if(!raw.length)return{state:null,avg:null,weak:true,band:null};
@@ -424,7 +424,7 @@ function updatePolarityLive(){
   setPolarityUI(pol.state,pol.avg,pol.weak,pol.band);
 }
 function killLive(){
-  S.live=[];S.phase=[];S.phaseRaw=[];S.acc=null;S.accN=0;S.appliedDelay=0;S.ir=[];S.etcData=null;S.liveIRData=null;S.irAlignAvg=null;S.irAlignN=0;S.refLag=0;
+  S.live=[];S.phase=[];S.phaseRaw=[];S.acc=null;S.accN=0;S.appliedDelay=0;S.ir=[];S.etcData=null;S.liveIRData=null;S.irAvg=null;S.irAvgN=0;
   S.corrAcc=null;S.corrAccN=0;S.manualLag=0;S.magOff=null;S.foundDelay=null;S.delayMs=null;S.frameLagHist=[];S.lastFrameLag=0;
   $('finddelayres').textContent='Delay manual — 0 ms, pencet FIND DELAY, kurva langsung berubah';
   refreshPolarityAfterOff();
@@ -476,7 +476,7 @@ function buildRef(type){
   fftCalc(re,im);
   S.refRe=re;S.refIm=im;
 }
-function resetAcc(){S.acc=null;S.accN=0;S.corrAcc=null;S.corrAccN=0;S.manualLag=0;S.magOff=null;S.foundDelay=null;S.delayMs=null;S.frameLagHist=[];S.irAlignAvg=null;S.irAlignN=0;S.refLag=0}
+function resetAcc(){S.acc=null;S.accN=0;S.corrAcc=null;S.corrAccN=0;S.manualLag=0;S.magOff=null;S.foundDelay=null;S.delayMs=null;S.frameLagHist=[];S.irAvg=null;S.irAvgN=0}
 function setRefButtons(){
   ['pink','white','brown','sweep'].forEach(t=>{
     const b=$(t==='pink'?'pinkbtn':t==='white'?'whitebtn':t==='brown'?'brownbtn':'sweepbtn');
@@ -498,7 +498,7 @@ async function startNoise(type){
   S.noiseGain=c.createGain();S.noiseGain.gain.value=($('noisevol').value/100)*0.9;
   S.noise.connect(S.noiseGain);S.noiseGain.connect(c.destination);
   S.noise.start();
-  S.pink=true;$('refstat').textContent=REFLBL[type];$('phasesub').textContent='Live Impulse Response • 0 - 120 ms • AVG 8 disejajarkan • Puncak ke atas = NORMAL';
+  S.pink=true;$('refstat').textContent=REFLBL[type];$('phasesub').textContent='Live Impulse Response • 0 - 120 ms • AVG 8, TANPA digeser • Puncak ke atas = NORMAL';
   setRefButtons();resetAcc();S.appliedDelay=0;S.delayLocked=false;S.delayHist=[];S.signHist=[];S.corrSign=1;
   $('finddelayres').textContent='Delay manual — 0 ms, pencet FIND DELAY, kurva langsung berubah';
   updateRangeLabels();updatePolarityLive();
@@ -508,7 +508,7 @@ function stopPink(){
   if(S.noise){try{S.noise.stop()}catch(e){}try{S.noise.disconnect()}catch(e){}S.noise=null}
   if(S.noiseGain){try{S.noiseGain.disconnect()}catch(e){}S.noiseGain=null}
   S.pink=false;
-  $('refstat').textContent='OFF';$('phasesub').textContent='Live Impulse Response • 0 - 120 ms • AVG 8 disejajarkan • Puncak ke atas = NORMAL';
+  $('refstat').textContent='OFF';$('phasesub').textContent='Live Impulse Response • 0 - 120 ms • AVG 8, TANPA digeser • Puncak ke atas = NORMAL';
   setRefButtons();killLive();drawAll();
 }
 $('pinkbtn').onclick=()=>{if(!S.running){toast('START dulu.');return}startNoise('pink')};
@@ -628,7 +628,7 @@ function drawLiveIR(){
   const px=S.peakMs/IRMS*W;
   pg.strokeStyle='#fff';pg.lineWidth=2;pg.beginPath();pg.moveTo(px,0);pg.lineTo(px,H);pg.stroke();
   pg.fillStyle='#fff';pg.font='900 11px Arial';pg.textAlign='right';
-  pg.fillText('Puncak = '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':S.peakMs.toFixed(1)+' ms'),W-8,13);
+  pg.fillText('Puncak = '+S.peakMs.toFixed(1)+' ms',W-8,13);
   pg.textAlign='left';
   const cxp=crossV(pg,W,H);
   const idx=Math.max(0,Math.min(S.liveIRData.length-1,Math.round(cxp/W*(S.liveIRData.length-1))));
@@ -687,12 +687,13 @@ function computeTFAligned(){
   }
   let maxDen=1e-18;
   for(let k=0;k<N;k++){const d=rRe[k]*rRe[k]+rIm[k]*rIm[k];if(d>maxDen)maxDen=d}
-  const eps=maxDen*0.02;
+  /* Wiener ringan, cuma buang <30 Hz, biar gak berdering */
+  const eps=maxDen*0.002;
   const ire=new Float32Array(N),iim=new Float32Array(N);
   const sr0=S.ctx.sampleRate;
   for(let k=0;k<N;k++){
     let f=k*sr0/N; if(f>sr0/2)f=sr0-f;
-    if(f<50||f>16000){ire[k]=0;iim[k]=0;continue}
+    if(f<30){ire[k]=0;iim[k]=0;continue}
     const den=rRe[k]*rRe[k]+rIm[k]*rIm[k]+eps;
     ire[k]=(re[k]*rRe[k]+im[k]*rIm[k])/den;
     iim[k]=(im[k]*rRe[k]-re[k]*rIm[k])/den;
@@ -700,7 +701,7 @@ function computeTFAligned(){
   const irRe=Float32Array.from(ire),irIm=Float32Array.from(iim);
   ifftCalc(irRe,irIm);
   const sr=S.ctx.sampleRate;
-  const maxLag=2400;
+  const maxLag=Math.floor(sr*IRMS/1000);
   let bestLag=0,bestVal=0,bestAbs=-1e18;
   for(let lag=0;lag<=maxLag;lag++){
     const v=irRe[lag],av=Math.abs(v);
@@ -709,50 +710,34 @@ function computeTFAligned(){
   S.lastFrameLag=bestLag;S.irLag=bestLag;S.corrSign=bestVal<0?-1:1;S.corrStrength=bestAbs;
   S.frameLagHist.push(bestLag);if(S.frameLagHist.length>30)S.frameLagHist.shift();
   S.signHist.push(S.corrSign);if(S.signHist.length>40)S.signHist.shift();
-  if(!S.irAlignAvg){S.irAlignAvg=new Float64Array(N);S.irAlignN=0;S.refLag=bestLag}
-  const jump=Math.abs(bestLag-S.refLag);
-  if(S.irAlignN>4&&jump>200){
-  }else{
-    if(S.irAlignN===0)S.refLag=bestLag;
-    else if(jump>0&&jump<=200){S.refLag=Math.round(S.refLag*0.8+bestLag*0.2)}
-    const shift=bestLag-S.refLag;
-    const a=1/8;
-    for(let i=0;i<N;i++){
-      const src=((i+shift)%N+N)%N;
-      S.irAlignAvg[i]+=a*(irRe[src]-S.irAlignAvg[i]);
-    }
-    S.irAlignN++;
-  }
-  const aligned=new Float64Array(N);
-  for(let i=0;i<N;i++){aligned[i]=S.irAlignAvg[((i-S.refLag)%N+N)%N]}
-  S.peakLag=S.refLag;
-  /* Jendela 120ms, puncak dikunci di 30ms, buang copy loop di luar jendela */
-  const nIr=Math.floor(sr*IRMS/1000),preMs=30,pre=Math.floor(sr*preMs/1000);
-  const winIr=new Float64Array(nIr);
-  for(let i=0;i<nIr;i++){
-    const srcIdx=((S.refLag-pre+i)%N+N)%N;
-    winIr[i]=aligned[srcIdx];
-  }
-  S.peakMs=preMs;
-  let peakA=1e-18;for(let i=0;i<nIr;i++)peakA=Math.max(peakA,Math.abs(winIr[i]));
+  /* RATA-RATA TANPA DIGESER — ini intinya, jangan di-shift */
+  if(!S.irAvg){S.irAvg=new Float64Array(N);S.irAvgN=0}
+  const a=1/8;
+  for(let i=0;i<N;i++)S.irAvg[i]+=a*(irRe[i]-S.irAvg[i]);
+  S.irAvgN++;
+  /* Puncak dicari dari hasil rata-rata, di waktu benerannya */
+  const nIr=maxLag;
+  let pk=0,pkAbs=-1e18;
+  for(let i=0;i<nIr;i++){const av=Math.abs(S.irAvg[i]);if(av>pkAbs){pkAbs=av;pk=i}}
+  S.peakLag=pk;S.peakMs=pk/sr*1000;
+  let peakA=pkAbs||1;
   const live=new Float32Array(nIr);
-  for(let i=0;i<nIr;i++)live[i]=winIr[i]/(peakA||1);
-  /* ETC dihalusin 2ms, biar turun mulus kayak Magnitude */
+  for(let i=0;i<nIr;i++)live[i]=S.irAvg[i]/peakA;
   const etcRaw=new Float32Array(nIr);let run=0;
   const win=Math.max(1,Math.floor(sr*0.0005));
   for(let i=0;i<nIr;i++){
-    run+=winIr[i]*winIr[i];
-    if(i>=win)run-=winIr[i-win]*winIr[i-win];
+    run+=S.irAvg[i]*S.irAvg[i];
+    if(i>=win)run-=S.irAvg[i-win]*S.irAvg[i-win];
     etcRaw[i]=run/Math.min(win,i+1);
   }
   let mx=1e-18;for(let i=0;i<nIr;i++)mx=Math.max(mx,etcRaw[i]);
   const etcDb=new Float32Array(nIr);
   for(let i=0;i<nIr;i++)etcDb[i]=10*Math.log10(Math.max(1e-10,etcRaw[i]/mx));
-  const sm=Math.max(1,Math.floor(sr*0.002)),etc=new Float32Array(nIr);
+  const sm=Math.max(1,Math.floor(sr*0.005)),etc=new Float32Array(nIr);
   for(let i=0;i<nIr;i++){let s=0,c=0;for(let j=Math.max(0,i-sm);j<=Math.min(nIr-1,i+sm);j++){s+=etcDb[j];c++}etc[i]=s/c}
   S.etcData=etc;S.liveIRData=live;
   S.ir=[];
-  for(let i=-120;i<=120;i++){const idx=((S.refLag+i)%N+N)%N;S.ir.push(aligned[idx]/(peakA||1))}
+  for(let i=-120;i<=120;i++){const idx=((pk+i)%N+N)%N;S.ir.push(S.irAvg[idx]/peakA)}
   const freqs=[],magP=[],ph=[];
   const aAvg=1/CFG.avg;
   if(!S.acc){S.acc={re:new Float64Array(N/2),im:new Float64Array(N/2)};S.accN=0}
