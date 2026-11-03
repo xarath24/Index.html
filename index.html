@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>SMART LIVE v13 — TOMBOL KANAN</title>
+<title>SMART LIVE v35 — AUTO PHASE</title>
 <style>
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -12,13 +12,14 @@ button,select{font:700 11px system-ui,Arial;cursor:pointer;font-weight:900}
 .topbar{height:36px;background:#10141a;border-bottom:2px solid #3fd4ec;display:flex;align-items:center;gap:10px;padding:0 10px;position:sticky;top:0;z-index:20;white-space:nowrap;min-width:860px}
 .logo{font-weight:900;font-size:14px}.logo b{color:#3fd4ec}.logo span{color:#cbd5e1;font-weight:900;font-size:8px;display:block;letter-spacing:2px}
 .topbtns{margin-left:auto;display:flex;gap:5px;align-items:center}
-.topbtns span{font-weight:900}
 button{background:#222b37;color:#fff;border:1px solid #4a5566;border-radius:5px;padding:4px 8px;white-space:nowrap}
 button.go{background:#087e91;border-color:#13b5c9}
 button.on{background:#c2410c!important;border-color:#fb923c!important;color:#fff}
 button.cap{background:#7c3aed;border-color:#a78bfa;font-weight:900}
 button.danger{background:#7f1d1d;border-color:#ef4444}
 button.find{background:#7c3aed;border-color:#a78bfa;font-weight:900;padding:7px 8px;width:100%}
+button.autoph{background:#14532d;border-color:#22c55e;font-weight:900;padding:7px 8px;width:100%}
+button.autoph.off{background:#222b37!important;border-color:#4a5566!important;color:#e8eaf0}
 select{background:#222b37;color:#fff;border:1px solid #4a5566;border-radius:5px;padding:2px 3px;width:100%;font-weight:900;height:22px;font-size:10px;white-space:nowrap}
 .layout{display:grid;grid-template-columns:200px minmax(520px,1fr) 190px;gap:6px;padding:5px 6px;max-width:1600px;margin:auto;min-width:860px;align-items:stretch;height:calc(100dvh - 36px - 26px)}
 .leftCol{display:flex;flex-direction:column;min-height:0;height:100%}
@@ -32,18 +33,16 @@ main .panel{flex:1;height:100%;overflow:hidden;display:flex;flex-direction:colum
 #caplist::-webkit-scrollbar{width:9px}
 #caplist::-webkit-scrollbar-track{background:#1f2937;border-radius:5px;border:1px solid #2b323e}
 #caplist::-webkit-scrollbar-thumb{background:#3fd4ec;border-radius:5px;border:1px solid #0a0c10}
-#caplist::-webkit-scrollbar-thumb:active{background:#fff}
 h3{margin:0 0 3px;font-size:10px;letter-spacing:0;color:#fff;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-resize;touch-action:none;min-height:0}
-#mag{flex:1 1 0}
+#mag{flex:1 1 0;min-height:180px}
 #freqscale{flex:0 0 auto;height:24px;background:#0b0f14;border-top:1px solid #2b323e;border-radius:0 0 4px 4px}
-#phase{flex:1 1 0}
+#phase{flex:0 0 150px;height:150px}
 #ir{flex:0 0 auto;height:38px}
 .title{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#fff;margin:3px 0 2px;flex:0 0 auto;font-weight:900;white-space:nowrap;overflow:hidden}
 .title b{color:#fff;flex:0 0 auto}
 .title span{color:#cbd5e1;font-weight:900;overflow:hidden;text-overflow:ellipsis}
 .ctl{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:3px;align-items:stretch;flex:0 0 auto}
-.ctl button{padding:4px 8px;font-size:11px}
 .cursor{display:flex;gap:6px;align-items:center;margin-top:4px;background:#090d12;border:1px solid #2b323e;border-radius:6px;padding:3px 5px;flex:0 0 auto;font-weight:900}
 .cursor input{flex:1;accent-color:#fff}
 .cursor b{color:#fff;font-weight:900}
@@ -99,8 +98,6 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 .infoBox{background:#14181f;border:1px solid #3fd4ec;border-radius:10px;max-width:520px;width:100%;max-height:88vh;overflow:auto;padding:14px;font-weight:700}
 .infoBox h3{font-size:13px;color:#fff;letter-spacing:0;white-space:normal}
 .infoBox ol{margin:8px 0 0;padding-left:18px;color:#fff;font-size:12px;line-height:1.9;font-weight:800}
-.infoBox b{color:#fff}
-.infoBox p{color:#e2e8f0;font-weight:800}
 :fullscreen body{background:#0a0c10}
 </style>
 </head>
@@ -108,19 +105,20 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 <div id="toast"></div>
 <div id="infoModal">
   <div class="infoBox">
-    <h3>ⓘ CARA PAKAI — SEMUA OTOMATIS</h3>
+    <h3>ⓘ CARA PAKAI — v35 AUTO PHASE</h3>
     <ol>
       <li>Mute driver lain, ukur 1 driver doang.</li>
-      <li>Geser cursor ke tengah daerah driver itu: mid 500 Hz, tweeter 5 kHz.</li>
-      <li>Lihat angka Phase di cursor atas, dan Polarity di bawah.</li>
-      <li>Balik + / - di DLMS, angka Phase harus ganti di cursor itu.</li>
-      <li>FFT, AVG, Range, Smoothing udah otomatis. Delay juga nyari sendiri.</li>
+      <li>START, PINK nyala. AUTO PHASE udah ON, diem 5 detik.</li>
+      <li>IR atas harus ada 1 puncak tajem di tengah. Kalau datar, mic kejauhan.</li>
+      <li>Geser cursor ke tengah driver: mid 500 Hz, tweeter 5 kHz. Phase harus datar di situ, Magnitude naik dari bawah ke atas di crossover.</li>
+      <li>Balik + / - di DLMS, Phase di cursor harus lompat ~180°. Itu polarity.</li>
+      <li>Matiin AUTO PHASE kalau mau liat Phase mentah tanpa kompensasi delay.</li>
     </ol>
     <button id="infoClose" style="width:100%;padding:7px;margin-top:6px">✕ TUTUP</button>
   </div>
 </div>
 <div class="topbar">
-  <div class="logo"><b>SMART</b> LIVE v13 <span>MEASUREMENT • LIKE SMAART • TOMBOL KANAN</span></div>
+  <div class="logo"><b>SMART</b> LIVE v35 <span>MEASUREMENT • LIKE SMAART • TOMBOL KANAN • AUTO PHASE</span></div>
   <div class="topbtns">
     <span style="color:#34d399;font-size:10px;font-weight:900">↻ AUTO LANDSCAPE</span>
     <button id="start" class="go">▶ START</button>
@@ -146,18 +144,18 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <div class="ctl">
         <div class="cursorTop">
           <span class="lab">CURSOR</span>
-          <span class="freq" id="ctFreq">4.19 kHz</span>
+          <span class="freq" id="ctFreq">800 Hz</span>
           <span class="sep">•</span>
           <span class="db" id="ctDb">— dB</span>
           <span class="sep">•</span>
           <span class="ph" id="ctPhase">Phase —°</span>
         </div>
       </div>
-      <div class="title"><b>IMPULSE / LIVE IR</b><span id="irinfo">Time Window: 342 ms • FFT 16384 • AUTO</span></div>
+      <div class="title"><b>IMPULSE / LIVE IR</b><span id="irinfo">Time Window: 342 ms • FFT 16384 • AUTO PHASE</span></div>
       <canvas id="ir" width="1200" height="90"></canvas>
-      <div class="title"><b>PHASE</b><span id="phasesub">Reference OFF — HIDUPKAN REFERENCE</span></div>
-      <canvas id="phase" width="1200" height="190"></canvas>
-      <div class="title"><b>MAGNITUDE</b><span id="magRangeLbl">20 Hz — 20 kHz • Range 60 dB (+12 / -48) • AUTO</span></div>
+      <div class="title"><b>PHASE — AUTO PHASE</b><span id="phasesub">Reference OFF — HIDUPKAN REFERENCE</span></div>
+      <canvas id="phase" width="1200" height="150"></canvas>
+      <div class="title"><b>MAGNITUDE</b><span id="magRangeLbl">20 Hz — 20 kHz • Range 60 dB • AUTO</span></div>
       <div class="ctl">
         <button id="zoomOut">− ZOOM MAG</button>
         <button id="zoomIn">+ ZOOM MAG</button>
@@ -167,7 +165,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <canvas id="freqscale" width="1200" height="56"></canvas>
       <div class="cursor">
         <button id="curleft">◀</button>
-        <input type="range" id="cursorslider" min="0" max="1000" value="980">
+        <input type="range" id="cursorslider" min="0" max="1000" value="280">
         <button id="curright">▶</button>
         <b id="cursorread" style="white-space:nowrap">—</b>
       </div>
@@ -176,21 +174,19 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
   <aside class="rightCol">
     <div class="panel">
       <h3>📊 dBFS PEAK — KANAN</h3>
-      <div class="peakBig">
-        <div class="big" id="peakBig">— dBFS</div>
-        <small>PEAK SEKARANG • INPUT MIC</small>
-      </div>
+      <div class="peakBig"><div class="big" id="peakBig">— dBFS</div><small>PEAK SEKARANG • INPUT MIC</small></div>
       <div class="peakMeter"><div class="peakMeterFill" id="peakFill"></div></div>
       <div id="weakwarn" style="display:none;color:#f87171;font-size:10px;font-weight:900;margin-top:5px;text-align:center;line-height:1.4">⚠ SINYAL LEMAH — VOLUME MENTOK + MIC 30 CM</div>
-      <div class="autoTag" style="margin-top:6px;text-align:center">FFT 16k • AVG 64 • 1/24 OKT • AUTO</div>
+      <div class="autoTag" style="margin-top:6px;text-align:center">FFT 16k • AVG 64 • 1/12 OKT • AUTO PHASE</div>
     </div>
     <div class="panel">
-      <h3>🔍 DELAY / PHASE — KANAN</h3>
+      <h3>🌀 AUTO PHASE — BARU</h3>
       <div class="sideBtns">
-        <button id="finddelaybtn" class="find">🔍 FIND DELAY — AUTO</button>
+        <button id="autophasebtn" class="autoph">🌀 AUTO PHASE: ON</button>
+        <button id="finddelaybtn" class="find">🔍 FIND DELAY — SEKALI</button>
         <button id="unwrapbtn">↩ WRAP -180/+180</button>
       </div>
-      <span class="findres" id="finddelayres">Delay otomatis nyari sendiri</span>
+      <span class="findres" id="finddelayres">Auto Phase ON — nyari + ngunci sendiri tiap 3 detik</span>
     </div>
     <div class="panel">
       <h3>REFERENCE • 4 SUARA</h3>
@@ -201,9 +197,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         <button id="sweepbtn">🌊 SWEEP</button>
         <button id="noiseoff" style="flex:1 1 100%">■ OFF</button>
       </div>
-      <label class="miniVol">VOLUME <b id="voltxt" style="color:#fff">100%</b>
-        <input type="range" id="noisevol" min="0" max="100" value="100">
-      </label>
+      <label class="miniVol">VOLUME <b id="voltxt" style="color:#fff">100%</b><input type="range" id="noisevol" min="0" max="100" value="100"></label>
     </div>
   </aside>
 </div>
@@ -212,8 +206,9 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
   <span>Input: <b>Mic 1</b></span>
   <span>Reference: <b id="refstat">OFF</b></span>
   <span>FFT: <b id="fftstat">16384 • AUTO</b></span>
+  <span>Auto Phase: <b id="apstat">ON</b></span>
   <span>Polarity: <b id="polstat">—</b></span>
-  <span style="margin-left:auto">SMART LIVE v13 • dBFS rel, bukan SPL terkalibrasi</span>
+  <span style="margin-left:auto">SMART LIVE v35 • dBFS rel, bukan SPL terkalibrasi</span>
 </div>
 <script>
 const _dummy=document.createElement('div');
@@ -223,127 +218,61 @@ const phc=$('phase'),pg=phc.getContext('2d');
 const fsc=$('freqscale'),fg=fsc.getContext('2d');
 const irc=$('ir'),ig=irc.getContext('2d');
 const MINF=20,MAXF=20000;
-const CFG={fft:16384,avg:64,detail:24,phSmooth:24,range:60};
+const CFG={fft:16384,avg:64,detail:12,phSmooth:12,range:60};
 const SEGS=[[20,1000,.33],[1000,3000,.17],[3000,7000,.21],[7000,10000,.10],[10000,15000,.10],[15000,20000,.09]];
 const MAJORS=[20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000];
 const MAJORSET=new Set(MAJORS);
 const FREQS=[20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000];
 const CAPCOLORS=['#fb923c','#facc15','#f472b6','#a78bfa','#34d399','#f87171','#93c5fd','#fdba74','#e879f9','#4ade80','#fbbf24','#fb7185'];
 const REFLBL={pink:'PINK NOISE',white:'WHITE NOISE',brown:'BROWN NOISE',sweep:'SWEEP 20 Hz-20 kHz'};
-const RANGES=[45,60,90,120];
+const RANGES=[30,45,60,90,120];
 const S={ctx:null,stream:null,src:null,an:null,noise:null,noiseGain:null,pink:false,refType:'pink',running:false,fft:16384,raf:0,
-  cursor:1000,live:[],phase:[],phaseRaw:[],acc:null,accN:0,captures:[],capN:0,unwrap:false,delayMs:null,
-  polarity:null,phaseAvg:null,phSmooth:24,delayLo:200,delayHi:2000,foundDelay:null,polBand:null,
-  appliedDelay:0,frameN:0,delayLocked:false,refRe:null,refIm:null,refBuf:null,delayHist:[],signHist:[],corrSign:1,corrStrength:0,ir:[],irLag:0,lastAutoDelay:0};
+cursor:800,live:[],phase:[],phaseRaw:[],acc:null,accN:0,captures:[],capN:0,unwrap:false,delayMs:null,
+polarity:null,phaseAvg:null,phSmooth:12,foundDelay:null,polBand:null,appliedDelay:0,frameN:0,
+refRe:null,refIm:null,refBuf:null,delayHist:[],signHist:[],corrSign:1,ir:[],irLag:0,fracLag:0,
+lockedLag:null,lagVotes:[],refined:false,magOff:null,corrSmooth:null,sliderDrag:false,
+autoPhase:true,lastAuto:0,corrAcc:null,corrAccN:0,refineTries:0};
 function median(a){if(!a.length)return 0;const s=a.slice().sort((x,y)=>x-y);return s[Math.floor(s.length/2)]}
 $('infobtn').onclick=()=>{$('infoModal').classList.add('show')};
 $('infoClose').onclick=()=>{$('infoModal').classList.remove('show')};
 $('infoModal').addEventListener('click',e=>{if(e.target.id==='infoModal')$('infoModal').classList.remove('show')});
 function updatePeakPanel(peakDb){
-  const big=$('peakBig'),fill=$('peakFill');
-  if(!big||!fill)return;
-  const w=$('weakwarn');
-  if(w)w.style.display=(peakDb!=null&&peakDb<-30&&S.running)?'block':'none';
+  const big=$('peakBig'),fill=$('peakFill');if(!big||!fill)return;
+  const w=$('weakwarn');if(w)w.style.display=(peakDb!=null&&peakDb<-30&&S.running)?'block':'none';
   if(peakDb==null){big.textContent='— dBFS';big.className='big';fill.style.width='0%';fill.style.background='#22ff88';return}
-  big.textContent=peakDb.toFixed(1)+' dBFS';
-  big.className='big'+(peakDb>=-1?' hot':peakDb>=-6?' warn':'');
-  const pct=Math.max(0,Math.min(100,(peakDb+60)/60*100));
-  fill.style.width=pct+'%';
+  big.textContent=peakDb.toFixed(1)+' dBFS';big.className='big'+(peakDb>=-1?' hot':peakDb>=-6?' warn':'');
+  fill.style.width=Math.max(0,Math.min(100,(peakDb+60)/60*100))+'%';
   fill.style.background=peakDb>=-1?'#ef4444':peakDb>=-6?'#facc15':'#22ff88';
 }
 updatePeakPanel(null);
 let toastTimer=0;
 function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2800)}
 let lastAutoTry=0;
-async function autoLandscape(){
-  const now=Date.now();
-  if(document.fullscreenElement)return;
-  if(now-lastAutoTry<2000)return;
-  lastAutoTry=now;
-  try{const el=document.documentElement;if(el.requestFullscreen)await el.requestFullscreen();else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen()}catch(e){}
-  try{if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock('landscape')}catch(e){}
-  setTimeout(drawAll,300);
-}
-document.addEventListener('pointerdown',autoLandscape);
-document.addEventListener('touchstart',autoLandscape,{passive:true});
-document.addEventListener('fullscreenchange',()=>setTimeout(drawAll,300));
-window.addEventListener('orientationchange',()=>setTimeout(drawAll,300));
+async function autoLandscape(){const now=Date.now();if(document.fullscreenElement)return;if(now-lastAutoTry<2000)return;lastAutoTry=now;try{const el=document.documentElement;if(el.requestFullscreen)await el.requestFullscreen()}catch(e){}try{if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock('landscape')}catch(e){}setTimeout(drawAll,300)}
+document.addEventListener('pointerdown',autoLandscape);document.addEventListener('touchstart',autoLandscape,{passive:true});
+document.addEventListener('fullscreenchange',()=>setTimeout(drawAll,300));window.addEventListener('orientationchange',()=>setTimeout(drawAll,300));
 function xfreq(f,w){f=Math.max(MINF,Math.min(MAXF,f));let s=0;for(const[a,b,p]of SEGS){if(f<=b||a===15000)return(s+Math.log(f/a)/Math.log(b/a)*p)*w;s+=p}return w}
 function freqAtX(x,w){const r=Math.max(0,Math.min(1,x/w));let s=0;for(const[a,b,p]of SEGS){if(r<=s+p||a===15000)return a*Math.exp(((r-s)/p)*Math.log(b/a));s+=p}return MAXF}
 function fmtF(f){return f>=1000?(f/1000).toFixed(2).replace(/0+$/,'').replace(/\.$/,'')+' kHz':Math.round(f)+' Hz'}
 function fmtLab(f){return f>=1000?(f/1000).toString().replace(/\.0$/,'')+'k':(''+f)}
 function yMag(v,range,h){return Math.max(0,Math.min(h,(range/2-v)/range*h))}
-function db2p(v){return Math.pow(10,Math.max(-120,v)/10)}
 function p2db(p){return 10*Math.log10(Math.max(1e-12,p))}
-function wrapDeg(d){return ((d+180)%360+360)%360-180}
-function recenter(arr){
-  if(!arr.length)return arr;
-  const mid=arr.filter(o=>o.f>=500&&o.f<=2000);
-  if(!mid.length)return arr;
-  const avg=mid.reduce((s,o)=>s+o.v,0)/mid.length;
-  return arr.map(o=>({f:o.f,v:o.v-avg,x:o.x}));
-}
-function updateRangeLabels(){
-  const r=CFG.range;
-  const top=Math.round(r*0.2),bot=top-r;
-  $('rangeLbl').textContent='Range: '+r+' dB • AUTO';
-  $('magRangeLbl').textContent='20 Hz — 20 kHz • Range '+r+' dB ('+(top>0?'+'+top:top)+' / '+bot+') • AUTO';
-  const win=Math.round(S.fft/48000*1000);
-  $('irinfo').textContent='Time Window: '+win+' ms • FFT '+S.fft+' • Delay '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':'AUTO')+' • AUTO';
-}
+function updateRangeLabels(){const r=CFG.range;const top=Math.round(r*0.2),bot=top-r;$('rangeLbl').textContent='Range: '+r+' dB • AUTO';$('magRangeLbl').textContent='20 Hz — 20 kHz • Range '+r+' dB ('+(top>0?'+'+top:top)+' / '+bot+') • AUTO';const win=Math.round(S.fft/(S.ctx?S.ctx.sampleRate:48000)*1000);$('irinfo').textContent='Time Window: '+win+' ms • FFT '+S.fft+' • Delay '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':'AUTO PHASE')+' • AUTO'}
 function detectPolarityBand(raw,center){
   if(!raw.length)return{state:null,avg:null,weak:true,band:null};
-  const lo=center/1.5,hi=center*1.5;
-  let sx=0,sy=0,cn=0;
-  for(let i=0;i<raw.length;i++){
-    if(raw[i].f<lo||raw[i].f>hi)continue;
-    cn++;const r=raw[i].v*Math.PI/180;
-    sx+=Math.cos(r);sy+=Math.sin(r);
-  }
+  center=Math.max(500,center);const lo=center/1.5,hi=center*1.5;let sx=0,sy=0,cn=0;
+  for(let i=0;i<raw.length;i++){if(raw[i].f<lo||raw[i].f>hi)continue;cn++;const r=raw[i].v*Math.PI/180;sx+=Math.cos(r);sy+=Math.sin(r)}
   if(cn<3)return{state:null,avg:null,weak:true,band:fmtF(center)};
-  const avg=Math.atan2(sy,sx)*180/Math.PI;
-  const strength=Math.hypot(sx,sy)/cn;
+  const avg=Math.atan2(sy,sx)*180/Math.PI;const strength=Math.hypot(sx,sy)/cn;
   let state=Math.abs(avg)>90?'TERBALIK':'NORMAL';
-  if(S.signHist.length>=10){
-    const neg=S.signHist.filter(v=>v<0).length/S.signHist.length;
-    if(neg>=0.7&&Math.abs(avg)>60)state='TERBALIK';
-    if(neg<=0.3&&Math.abs(avg)<120&&strength>0.5)state='NORMAL';
-  }
+  if(S.signHist.length>=10){const neg=S.signHist.filter(v=>v<0).length/S.signHist.length;if(neg>=0.7&&Math.abs(avg)>60)state='TERBALIK';if(neg<=0.3&&Math.abs(avg)<120&&strength>0.5)state='NORMAL'}
   return{state,avg,weak:strength<0.5,band:fmtF(center)};
 }
-function detectPolarity(raw){return detectPolarityBand(raw,S.cursor||1000)}
-function setPolarityUI(state,avg,weak,band){
-  S.polarity=state;S.phaseAvg=avg;S.polBand=band;
-  const el2=$('polstat');
-  if(!state){el2.textContent='—';return}
-  el2.textContent=(state==='TERBALIK'?'TERBALIK ⚠':'NORMAL ✓')+(weak?' ?':'')+(band?' @ '+band:'');
-}
+function detectPolarity(raw){return detectPolarityBand(raw,S.cursor||800)}
+function setPolarityUI(state,avg,weak,band){S.polarity=state;S.phaseAvg=avg;S.polBand=band;const el2=$('polstat');if(!state){el2.textContent='—';return}el2.textContent=(state==='TERBALIK'?'TERBALIK ⚠':'NORMAL ✓')+(weak?' ?':'')+(band?' @ '+band:'')}
 function lastVisibleCapture(){for(let i=S.captures.length-1;i>=0;i--){if(S.captures[i].show)return S.captures[i]}return null}
-function refreshPolarityAfterOff(){
-  if(S.pink&&S.running)return;
-  const cp=lastVisibleCapture();
-  if(cp&&cp.polarity)setPolarityUI(cp.polarity,cp.phaseAvg,cp.weak,cp.polBand);
-  else setPolarityUI(null,null,false,null);
-}
-function startRename(cp,nameEl){
-  if(nameEl.querySelector('input'))return;
-  const oldName=cp.name;
-  const input=document.createElement('input');
-  input.className='renameInput';input.type='text';input.value=oldName;input.maxLength=40;
-  nameEl.textContent='';nameEl.appendChild(input);input.focus();input.select();
-  let done=false;
-  const save=(cancel)=>{
-    if(done)return;done=true;
-    const v=input.value.trim();
-    if(!cancel&&v&&v!==oldName){cp.name=v;toast('Capture diganti jadi: '+v)}
-    else if(!cancel&&!v){toast('Nama kosong, balik ke nama lama.')}
-    renderCaptures();
-  };
-  input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();save(false)}else if(e.key==='Escape'){save(true)}e.stopPropagation()});
-  input.addEventListener('blur',()=>save(false));
-  input.addEventListener('click',e=>e.stopPropagation());
-  input.addEventListener('pointerdown',e=>e.stopPropagation());
-}
+function refreshPolarityAfterOff(){if(S.pink&&S.running)return;const cp=lastVisibleCapture();if(cp&&cp.polarity)setPolarityUI(cp.polarity,cp.phaseAvg,cp.weak,cp.polBand);else setPolarityUI(null,null,false,null)}
+function startRename(cp,nameEl){if(nameEl.querySelector('input'))return;const oldName=cp.name;const input=document.createElement('input');input.className='renameInput';input.type='text';input.value=oldName;input.maxLength=40;nameEl.textContent='';nameEl.appendChild(input);input.focus();input.select();let done=false;const save=(cancel)=>{if(done)return;done=true;const v=input.value.trim();if(!cancel&&v&&v!==oldName){cp.name=v;toast('Capture diganti jadi: '+v)}else if(!cancel&&!v){toast('Nama kosong, balik ke nama lama.')}renderCaptures()};input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();save(false)}else if(e.key==='Escape'){save(true)}e.stopPropagation()});input.addEventListener('blur',()=>save(false));input.addEventListener('click',e=>e.stopPropagation());input.addEventListener('pointerdown',e=>e.stopPropagation())}
 function renderCaptures(){
   const el=$('caplist');
   if(!S.captures.length){el.innerHTML='<div class="capempty">Belum ada capture.<br>Pencet CAPTURE pas kurva nya lagi bagus.</div>';refreshPolarityAfterOff();return}
@@ -355,360 +284,187 @@ function renderCaptures(){
     const meta=cp.time+' • '+(cp.ref||'TF')+' • '+polTxt+' • '+dlTxt;
     row.innerHTML='<span class="dot" style="background:'+cp.color+'"></span><label><input type="checkbox" '+(cp.show?'checked':'')+' style="accent-color:'+cp.color+'"></label><div class="nm"><b title="Pencet buat ganti nama">'+cp.name+'</b><span title="'+meta+'">'+meta+'</span></div><button class="renameBtn">✏️</button><button>✕</button>';
     row.querySelector('input').onchange=e=>{cp.show=e.target.checked;refreshPolarityAfterOff();drawAll()};
-    const nameEl=row.querySelector('.nm b');
-    nameEl.onclick=e=>{e.stopPropagation();startRename(cp,nameEl)};
+    const nameEl=row.querySelector('.nm b');nameEl.onclick=e=>{e.stopPropagation();startRename(cp,nameEl)};
     row.querySelector('.renameBtn').onclick=e=>{e.stopPropagation();startRename(cp,nameEl)};
     row.querySelectorAll('button')[1].onclick=()=>{S.captures.splice(idx,1);renderCaptures();refreshPolarityAfterOff();drawAll();toast('Capture dihapus')};
     el.appendChild(row);
   });
   refreshPolarityAfterOff();
 }
-$('capturebtn').onclick=()=>{
-  autoLandscape();
-  if(!S.live.length){toast('Belum ada kurva. START dulu.');return}
-  S.capN++;
-  const now=new Date(),hh=String(now.getHours()).padStart(2,'0'),mm=String(now.getMinutes()).padStart(2,'0'),ss=String(now.getSeconds()).padStart(2,'0');
-  const pol=detectPolarity(S.phaseRaw);
-  S.captures.push({id:Date.now()+Math.random(),name:'Capture '+S.capN,color:CAPCOLORS[(S.capN-1)%CAPCOLORS.length],show:true,
-    time:hh+':'+mm+':'+ss,mode:S.pink?'TF':'RTA',ref:(REFLBL[S.refType]||'TF'),polarity:pol.state,phaseAvg:pol.avg,weak:pol.weak,polBand:pol.band,delayMs:S.foundDelay,
-    mag:recenter(S.live).map(o=>({f:o.f,v:o.v,x:o.x})),
-    phase:S.phaseRaw.map(o=>({f:o.f,v:o.v,x:o.x})),
-    phaseRaw:S.phaseRaw.map(o=>({f:o.f,v:o.v,x:o.x}))});
-  renderCaptures();drawAll();toast('Capture '+S.capN+' tersimpan — '+pol.state+' @ '+pol.band);
-};
-$('clearcap').onclick=()=>{
-  if(!S.captures.length){toast('Belum ada capture.');return}
-  const n=S.captures.length;S.captures=[];renderCaptures();refreshPolarityAfterOff();drawAll();toast(n+' capture dihapus');
-};
+$('capturebtn').onclick=()=>{autoLandscape();if(!S.live.length){toast('Belum ada kurva. START dulu.');return}S.capN++;const now=new Date(),hh=String(now.getHours()).padStart(2,'0'),mm=String(now.getMinutes()).padStart(2,'0'),ss=String(now.getSeconds()).padStart(2,'0');const pol=detectPolarity(S.phaseRaw);const off=S.magOff||0;S.captures.push({id:Date.now()+Math.random(),name:'Capture '+S.capN,color:CAPCOLORS[(S.capN-1)%CAPCOLORS.length],show:true,time:hh+':'+mm+':'+ss,mode:S.pink?'TF':'RTA',ref:(REFLBL[S.refType]||'TF'),polarity:pol.state,phaseAvg:pol.avg,weak:pol.weak,polBand:pol.band,delayMs:S.foundDelay,mag:S.live.map(o=>({f:o.f,v:o.v+off,x:o.x})),phase:S.phaseRaw.map(o=>({f:o.f,v:o.v,x:o.x})),phaseRaw:S.phaseRaw.map(o=>({f:o.f,v:o.v,x:o.x}))});renderCaptures();drawAll();toast('Capture '+S.capN+' tersimpan — '+pol.state+' @ '+pol.band)};
+$('clearcap').onclick=()=>{if(!S.captures.length){toast('Belum ada capture.');return}const n=S.captures.length;S.captures=[];renderCaptures();refreshPolarityAfterOff();drawAll();toast(n+' capture dihapus')};
 renderCaptures();
-function unwrapPhase(arr){
-  if(!arr.length)return arr;
-  const out=[{f:arr[0].f,v:arr[0].v,x:arr[0].x}];let off=0,prev=arr[0].v;
-  for(let i=1;i<arr.length;i++){let d=arr[i].v-prev;if(d>180)off-=360;else if(d<-180)off+=360;prev=arr[i].v;out.push({f:arr[i].f,v:arr[i].v+off,x:arr[i].x})}
-  return out;
+function unwrapPhase(arr){if(!arr.length)return arr;const out=[{f:arr[0].f,v:arr[0].v,x:arr[0].x}];let off=0,prev=arr[0].v;for(let i=1;i<arr.length;i++){let d=arr[i].v-prev;if(d>180)off-=360;else if(d<-180)off+=360;prev=arr[i].v;out.push({f:arr[i].f,v:arr[i].v+off,x:arr[i].x})}return out}
+function smoothPhaseCircular(arr,perOct){if(!perOct||arr.length<3)return arr;const half=1/(2*perOct),out=[];for(let i=0;i<arr.length;i++){let sx=0,sy=0,ws=0;const lf=Math.log(arr[i].f);for(let j=0;j<arr.length;j++){if(Math.abs(Math.log(arr[j].f)-lf)<=half*Math.LN2){const r=arr[j].v*Math.PI/180;sx+=Math.cos(r);sy+=Math.sin(r);ws+=1}}out.push({f:arr[i].f,v:ws?Math.atan2(sy,sx)*180/Math.PI:arr[i].v,x:arr[i].x})}return out}
+function calcDelayIn(raw,lo,hi){if(!raw.length)return null;const pts=[];for(let i=0;i<raw.length;i++){if(raw[i].f>=lo&&raw[i].f<=hi)pts.push(raw[i])}if(pts.length<5)return null;const unw=unwrapPhase(pts);let sx=0,sy=0,sxx=0,sxy=0;const n=unw.length;unw.forEach(p=>{sx+=p.f;sy+=p.v;sxx+=p.f*p.f;sxy+=p.f*p.v});const den=n*sxx-sx*sx;if(!den)return null;return -(n*sxy-sx*sy)/den/360*1000}
+// --- AUTO PHASE ---
+function setAutoPhase(on){
+  S.autoPhase=on;
+  $('autophasebtn').textContent=on?'🌀 AUTO PHASE: ON':'🌀 AUTO PHASE: OFF';
+  $('autophasebtn').classList.toggle('off',!on);
+  $('apstat').textContent=on?'ON':'OFF';
+  S.lockedLag=null;S.lagVotes=[];S.corrAcc=null;S.corrAccN=0;S.acc=null;S.accN=0;S.refined=false;S.refineTries=0;
+  if(!on){S.foundDelay=null;S.delayMs=null;S.appliedDelay=0;$('finddelayres').textContent='Auto Phase OFF — Phase mentah, tanpa kompensasi delay';updateRangeLabels()}
+  else{$('finddelayres').textContent='Auto Phase ON — nyari + ngunci sendiri tiap 3 detik';toast('AUTO PHASE ON — diem 5 detik')}
 }
-function smoothPhaseCircular(arr,perOct){
-  if(!perOct||arr.length<3)return arr;
-  const half=1/(2*perOct),out=[];
-  for(let i=0;i<arr.length;i++){
-    let sx=0,sy=0,ws=0;const lf=Math.log(arr[i].f);
-    for(let j=0;j<arr.length;j++){
-      if(Math.abs(Math.log(arr[j].f)-lf)<=half*Math.LN2){
-        const r=arr[j].v*Math.PI/180;sx+=Math.cos(r);sy+=Math.sin(r);ws+=1;
-      }
-    }
-    out.push({f:arr[i].f,v:ws?Math.atan2(sy,sx)*180/Math.PI:arr[i].v,x:arr[i].x});
-  }
-  return out;
-}
-function calcDelayIn(raw,lo,hi){
-  if(!raw.length)return null;
-  const pts=[];for(let i=0;i<raw.length;i++){if(raw[i].f>=lo&&raw[i].f<=hi)pts.push(raw[i])}
-  if(pts.length<5)return null;
-  const unw=unwrapPhase(pts);let sx=0,sy=0,sxx=0,sxy=0;const n=unw.length;
-  unw.forEach(p=>{sx+=p.f;sy+=p.v;sxx+=p.f*p.f;sxy+=p.f*p.v});
-  const den=n*sxx-sx*sx;if(!den)return null;
-  return -(n*sxy-sx*sy)/den/360*1000;
-}
-function applyDelay(d){
-  if(d==null||Math.abs(d)>5){d=0}
-  S.delayHist.push(d);
-  if(S.delayHist.length>40)S.delayHist.shift();
-  const med=median(S.delayHist);
-  const locked=Math.abs(med)<5?med:0;
-  S.foundDelay=locked;S.delayMs=locked;S.appliedDelay=locked;S.delayLocked=true;
-  $('finddelayres').textContent='Delay: '+locked.toFixed(3)+' ms 🔒 AUTO';
+$('autophasebtn').onclick=()=>setAutoPhase(!S.autoPhase);
+function lockFromVotes(){
+  if(!S.lagVotes.length)return;
+  const locked=median(S.lagVotes);S.lockedLag=locked;
+  const sr=S.ctx?S.ctx.sampleRate:48000;const d=locked/sr*1000;
+  S.foundDelay=d;S.delayMs=d;S.appliedDelay=d;S.refined=false;S.refineTries=0;
+  S.acc=null;S.accN=0;
+  $('finddelayres').textContent='Delay: '+d.toFixed(3)+' ms 🔒 AUTO PHASE';
   updateRangeLabels();updatePolarityLive();
 }
-function findDelay(silent){
-  if(!S.pink||!S.running||!S.phaseRaw.length){if(!silent)toast('START + PINK dulu, tunggu 5 detik.');return}
-  applyDelay(calcDelayIn(S.phaseRaw,S.delayLo,S.delayHi));
-  if(!silent)toast('Delay '+S.foundDelay.toFixed(3)+' ms DIKUNCI');
+function refineFromPhase(){
+  if(!S.autoPhase||S.lockedLag==null||!S.phaseRaw.length||S.refineTries>=2)return;
+  const res=calcDelayIn(S.phaseRaw,300,3000);
+  if(res==null||!isFinite(res)||Math.abs(res)>1.5)return;
+  S.refineTries++;
+  if(Math.abs(res)<0.02){S.refined=true;return}
+  const sr=S.ctx?S.ctx.sampleRate:48000;S.lockedLag+=res/1000*sr;
+  const d=S.lockedLag/sr*1000;S.foundDelay=d;S.delayMs=d;S.appliedDelay=d;
+  S.acc=null;S.accN=0;S.refined=true;
+  $('finddelayres').textContent='Delay: '+d.toFixed(3)+' ms 🔒 AUTO PHASE (halus)';
+  updateRangeLabels();
 }
-$('finddelaybtn').onclick=()=>findDelay(false);
-$('unwrapbtn').onclick=()=>{
-  S.unwrap=!S.unwrap;
-  $('unwrapbtn').textContent=S.unwrap?'↩ UNWRAP ON':'↩ WRAP -180/+180';
-  drawAll();
-};
+function findDelayOnce(){
+  if(!S.pink||!S.running){toast('START + PINK dulu.');return}
+  S.lockedLag=null;S.lagVotes=[];S.corrAcc=null;S.corrAccN=0;S.refined=false;S.refineTries=0;
+  $('finddelayres').textContent='Lagi nyari delay sekali… diem 5 detik';
+  toast('Lagi nyari delay sekali…');
+}
+$('finddelaybtn').onclick=findDelayOnce;
+$('unwrapbtn').onclick=()=>{S.unwrap=!S.unwrap;$('unwrapbtn').textContent=S.unwrap?'↩ UNWRAP ON':'↩ WRAP -180/+180';drawAll()};
 $('zoomIn').onclick=()=>{const i=RANGES.indexOf(CFG.range);if(i>0){CFG.range=RANGES[i-1];updateRangeLabels();drawAll()}};
 $('zoomOut').onclick=()=>{const i=RANGES.indexOf(CFG.range);if(i<RANGES.length-1){CFG.range=RANGES[i+1];updateRangeLabels();drawAll()}};
-function updatePolarityLive(){
-  if(!S.pink||!S.running){refreshPolarityAfterOff();return}
-  if(!S.phaseRaw.length&&!S.signHist.length){setPolarityUI(null,null,false,null);return}
-  const pol=detectPolarity(S.phaseRaw);
-  setPolarityUI(pol.state,pol.avg,pol.weak,pol.band);
-}
-function killLive(){
-  S.live=[];S.phase=[];S.phaseRaw=[];S.acc=null;S.accN=0;S.appliedDelay=0;S.ir=[];
-  refreshPolarityAfterOff();
-}
-async function ensureCtx(){
-  if(!S.ctx)S.ctx=new(window.AudioContext||window.webkitAudioContext)({latencyHint:'interactive',sampleRate:48000});
-  if(S.ctx.state==='suspended')await S.ctx.resume();
-  return S.ctx;
-}
-function fftCalc(re,im){
-  const n=re.length;
-  for(let i=1,j=0;i<n;i++){let bit=n>>1;for(;j&bit;bit>>=1)j^=bit;j^=bit;if(i<j){let t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t}}
-  for(let len=2;len<=n;len<<=1){
-    const ang=-2*Math.PI/len,wr=Math.cos(ang),wi=Math.sin(ang);
-    for(let i=0;i<n;i+=len){let cwr=1,cwi=0;for(let j=0;j<len/2;j++){const ur=re[i+j],ui=im[i+j],vr=re[i+j+len/2]*cwr-im[i+j+len/2]*cwi,vi=re[i+j+len/2]*cwi+im[i+j+len/2]*cwr;re[i+j]=ur+vr;im[i+j]=ui+vi;re[i+j+len/2]=ur-vr;im[i+j+len/2]=ui-vi;const t=cwr*wr-cwi*wi;cwi=cwr*wi+cwi*wr;cwr=t}}
-  }
-}
+function updatePolarityLive(){if(!S.pink||!S.running){refreshPolarityAfterOff();return}if(!S.phaseRaw.length&&!S.signHist.length){setPolarityUI(null,null,false,null);return}const pol=detectPolarity(S.phaseRaw);setPolarityUI(pol.state,pol.avg,pol.weak,pol.band)}
+function killLive(){S.live=[];S.phase=[];S.phaseRaw=[];S.acc=null;S.accN=0;S.appliedDelay=0;S.ir=[];S.foundDelay=null;S.delayMs=null;S.lockedLag=null;S.lagVotes=[];S.corrAcc=null;S.corrAccN=0;S.magOff=null;S.corrSmooth=null;$('finddelayres').textContent=S.autoPhase?'Auto Phase ON — nyari + ngunci sendiri tiap 3 detik':'Auto Phase OFF';updateRangeLabels();refreshPolarityAfterOff()}
+async function ensureCtx(){if(!S.ctx)S.ctx=new(window.AudioContext||window.webkitAudioContext)({latencyHint:'interactive',sampleRate:48000});if(S.ctx.state==='suspended')await S.ctx.resume();return S.ctx}
+function fftCalc(re,im){const n=re.length;for(let i=1,j=0;i<n;i++){let bit=n>>1;for(;j&bit;bit>>=1)j^=bit;j^=bit;if(i<j){let t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t}}for(let len=2;len<=n;len<<=1){const ang=-2*Math.PI/len,wr=Math.cos(ang),wi=Math.sin(ang);for(let i=0;i<n;i+=len){let cwr=1,cwi=0;for(let j=0;j<len/2;j++){const ur=re[i+j],ui=im[i+j],vr=re[i+j+len/2]*cwr-im[i+j+len/2]*cwi,vi=re[i+j+len/2]*cwi+im[i+j+len/2]*cwr;re[i+j]=ur+vr;im[i+j]=ui+vi;re[i+j+len/2]=ur-vr;im[i+j+len/2]=ui-vi;const t=cwr*wr-cwi*wi;cwi=cwr*wi+cwi*wr;cwr=t}}}}
 function ifftCalc(re,im){for(let i=0;i<re.length;i++)im[i]=-im[i];fftCalc(re,im);const n=re.length;for(let i=0;i<n;i++){re[i]/=n;im[i]=-im[i]/n}}
-function periodicBuffer(c,type,N){
-  const re=new Float32Array(N),im=new Float32Array(N),sr=c.sampleRate,k0=Math.max(1,Math.floor(20*N/sr));
-  const exp=type==='white'?0:type==='brown'?-1: -0.5;
-  for(let k=k0;k<N/2;k++){const a=Math.pow(k,exp),p=Math.random()*2*Math.PI;re[k]=a*Math.cos(p);im[k]=a*Math.sin(p);re[N-k]=re[k];im[N-k]=-im[k]}
-  ifftCalc(re,im);
-  const b=c.createBuffer(1,N,sr),d=b.getChannelData(0);let r=0;
-  for(let i=0;i<N;i++)r+=re[i]*re[i];r=Math.sqrt(r/N)||1;
-  for(let i=0;i<N;i++)d[i]=re[i]*(0.35/r);
-  return b;
-}
-function sweepBuffer(c){
-  const sr=c.sampleRate,dur=4,N=Math.floor(sr*dur);
-  const b=c.createBuffer(1,N,sr),d=b.getChannelData(0);
-  let phase=0;
-  const f0=20,f1=20000,k=Math.log(f1/f0)/dur;
-  for(let i=0;i<N;i++){
-    const t=i/sr,f=f0*Math.exp(k*t);
-    phase+=2*Math.PI*f/sr;
-    const fade=Math.min(1,Math.min(i, N-1-i)/(sr*0.05));
-    d[i]=Math.sin(phase)*0.35*fade;
-  }
-  return b;
-}
-function buildRef(type){
-  if(!S.ctx)return;
-  const N=S.fft;
-  const buf=periodicBuffer(S.ctx,type,N);
-  S.refBuf=buf;
-  const d=buf.getChannelData(0);
-  const re=Float32Array.from(d),im=new Float32Array(N);
-  fftCalc(re,im);
-  S.refRe=re;S.refIm=im;
-}
+function periodicBuffer(c,type,N){const re=new Float32Array(N),im=new Float32Array(N),sr=c.sampleRate,k0=Math.max(1,Math.floor(20*N/sr));const exp=type==='white'?0:type==='brown'?-1:-0.5;for(let k=k0;k<N/2;k++){const a=Math.pow(k,exp),p=Math.random()*2*Math.PI;re[k]=a*Math.cos(p);im[k]=a*Math.sin(p);re[N-k]=re[k];im[N-k]=-im[k]}ifftCalc(re,im);const b=c.createBuffer(1,N,sr),d=b.getChannelData(0);let r=0;for(let i=0;i<N;i++)r+=re[i]*re[i];r=Math.sqrt(r/N)||1;for(let i=0;i<N;i++)d[i]=re[i]*(0.35/r);return b}
+function sweepBuffer(c){const sr=c.sampleRate,dur=4,N=Math.floor(sr*dur);const b=c.createBuffer(1,N,sr),d=b.getChannelData(0);let phase=0;const f0=20,f1=20000,k=Math.log(f1/f0)/dur;for(let i=0;i<N;i++){const t=i/sr,f=f0*Math.exp(k*t);phase+=2*Math.PI*f/sr;const fade=Math.min(1,Math.min(i,N-1-i)/(sr*0.05));d[i]=Math.sin(phase)*0.35*fade}return b}
+function buildRef(type){if(!S.ctx)return;const N=S.fft;const buf=periodicBuffer(S.ctx,type,N);S.refBuf=buf;const d=buf.getChannelData(0);const re=Float32Array.from(d),im=new Float32Array(N);fftCalc(re,im);S.refRe=re;S.refIm=im}
 function resetAcc(){S.acc=null;S.accN=0}
-function setRefButtons(){
-  ['pink','white','brown','sweep'].forEach(t=>{
-    const b=$(t==='pink'?'pinkbtn':t==='white'?'whitebtn':t==='brown'?'brownbtn':'sweepbtn');
-    if(b)b.classList.toggle('on',S.pink&&S.refType===t);
-  });
-}
+function setRefButtons(){['pink','white','brown','sweep'].forEach(t=>{const b=$(t==='pink'?'pinkbtn':t==='white'?'whitebtn':t==='brown'?'brownbtn':'sweepbtn');if(b)b.classList.toggle('on',S.pink&&S.refType===t)})}
 async function startNoise(type){
+  if(type==='brown'){toast('BROWN gak bisa buat ukur Phase — otomatis balik ke PINK');type='pink'}
   if(S.noise){try{S.noise.stop()}catch(e){}try{S.noise.disconnect()}catch(e){}S.noise=null}
   if(S.noiseGain){try{S.noiseGain.disconnect()}catch(e){}S.noiseGain=null}
-  S.refType=type;
-  await ensureCtx();const c=S.ctx;
-  if(type==='sweep'){
-    S.noise=c.createBufferSource();S.noise.buffer=sweepBuffer(c);S.noise.loop=true;
-    buildRef('pink');
-  }else{
-    buildRef(type);
-    S.noise=c.createBufferSource();S.noise.buffer=S.refBuf;S.noise.loop=true;
-  }
+  S.refType=type;await ensureCtx();const c=S.ctx;
+  if(type==='sweep'){S.noise=c.createBufferSource();S.noise.buffer=sweepBuffer(c);S.noise.loop=true;buildRef('pink')}
+  else{buildRef(type);S.noise=c.createBufferSource();S.noise.buffer=S.refBuf;S.noise.loop=true}
   S.noiseGain=c.createGain();S.noiseGain.gain.value=($('noisevol').value/100)*0.9;
   S.noise.connect(S.noiseGain);S.noiseGain.connect(c.destination);S.noise.start();
-  S.pink=true;$('refstat').textContent=REFLBL[type];$('phasesub').textContent=REFLBL[type]+' ON • Phase -180/+180 • AUTO';
-  setRefButtons();resetAcc();S.appliedDelay=0;S.foundDelay=null;S.delayLocked=false;S.delayHist=[];S.signHist=[];S.corrSign=1;S.lastAutoDelay=0;
-  $('finddelayres').textContent='Delay otomatis nyari sendiri…';
-  updateRangeLabels();updatePolarityLive();
-  toast(REFLBL[type]+' nyala — delay nyari sendiri, jangan gerak');
+  S.pink=true;$('refstat').textContent=REFLBL[type];$('phasesub').textContent=REFLBL[type]+' ON • Phase -180/+180 • AUTO PHASE';
+  setRefButtons();resetAcc();S.appliedDelay=0;S.foundDelay=null;S.delayHist=[];S.signHist=[];S.corrSign=1;
+  S.lockedLag=null;S.lagVotes=[];S.corrAcc=null;S.corrAccN=0;S.refined=false;S.refineTries=0;S.lastAuto=Date.now();
+  $('finddelayres').textContent=S.autoPhase?'Auto Phase ON — nyari + ngunci sendiri tiap 3 detik':'Auto Phase OFF';
+  updateRangeLabels();updatePolarityLive();toast(REFLBL[type]+' nyala — Auto Phase lagi nyari delay, diem dulu');
 }
-function stopPink(){
-  if(S.noise){try{S.noise.stop()}catch(e){}try{S.noise.disconnect()}catch(e){}S.noise=null}
-  if(S.noiseGain){try{S.noiseGain.disconnect()}catch(e){}S.noiseGain=null}
-  S.pink=false;
-  $('refstat').textContent='OFF';$('phasesub').textContent='Reference OFF — Phase capture tetep datar';
-  setRefButtons();killLive();drawAll();
-}
+function stopPink(){if(S.noise){try{S.noise.stop()}catch(e){}try{S.noise.disconnect()}catch(e){}S.noise=null}if(S.noiseGain){try{S.noiseGain.disconnect()}catch(e){}S.noiseGain=null}S.pink=false;$('refstat').textContent='OFF';$('phasesub').textContent='Reference OFF — Phase capture tetep datar';setRefButtons();killLive();drawAll()}
 $('pinkbtn').onclick=()=>{autoLandscape();if(!S.running){toast('START dulu.');return}startNoise('pink')};
 $('whitebtn').onclick=()=>{autoLandscape();if(!S.running){toast('START dulu.');return}startNoise('white')};
 $('brownbtn').onclick=()=>{autoLandscape();if(!S.running){toast('START dulu.');return}startNoise('brown')};
 $('sweepbtn').onclick=()=>{autoLandscape();if(!S.running){toast('START dulu.');return}startNoise('sweep')};
 $('noiseoff').onclick=stopPink;
 $('noisevol').oninput=e=>{$('voltxt').textContent=e.target.value+'%';if(S.noiseGain&&S.ctx)S.noiseGain.gain.setTargetAtTime((e.target.value/100)*0.9,S.ctx.currentTime,.02)};
-function drawZeroLine(c,w,h,range){
-  const y=yMag(0,range,h);c.strokeStyle='#22ff88';c.lineWidth=4;c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();c.fillStyle='#22ff88';c.font='900 16px Arial';c.textAlign='left';c.fillText('0 dB',6,y-7);
-}
-function drawScale(){
-  const c=fg,W=fsc.width,H=fsc.height;
-  c.clearRect(0,0,W,H);c.fillStyle='#0b0f14';c.fillRect(0,0,W,H);
-  MAJORS.forEach(f=>{const x=xfreq(f,W);c.strokeStyle='#e2e8f0';c.lineWidth=3;c.beginPath();c.moveTo(x,0);c.lineTo(x,14);c.stroke();const lab=f===20?'20':f===20000?'20 kHz':fmtLab(f);c.fillStyle='#ffffff';c.font='900 16px Arial';if(f===20000){c.textAlign='right';c.fillText(lab,W-4,30)}else{c.textAlign='left';c.fillText(lab,Math.min(W-44,x+6),30)}});
-  const cx=xfreq(S.cursor,W);c.strokeStyle='#fff';c.lineWidth=3;c.beginPath();c.moveTo(cx,0);c.lineTo(cx,H);c.stroke();c.textAlign='left';
-}
-function gridMag(c,w,h,range){
-  c.clearRect(0,0,w,h);c.fillStyle='#05070a';c.fillRect(0,0,w,h);
-  FREQS.forEach(f=>{const x=xfreq(f,w);c.strokeStyle=MAJORSET.has(f)?'#3a4452':'#232a35';c.lineWidth=1;c.beginPath();c.moveTo(x,0);c.lineTo(x,h);c.stroke()});
-  const half=range/2;c.textAlign='left';
-  for(let d=-half;d<=half;d+=10){if(d===0)continue;const y=yMag(d,range,h);c.strokeStyle='#232a35';c.lineWidth=1;c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();c.fillStyle='#ffffff';c.font='900 14px Arial';c.fillText((d>0?'+'+d:''+d)+' dB',4,Math.max(13,Math.min(h-2,y+11)))}
-}
-function densify(freqs,pArr,phArr){
-  const W=mag.width,N=301,out=[],ph=[];
-  const logF=new Float64Array(freqs.length),pref=new Float64Array(freqs.length+1);
-  for(let i=0;i<freqs.length;i++){logF[i]=Math.log(freqs[i].f);pref[i+1]=pref[i]+pArr[i]}
-  const perOct=CFG.detail,half=perOct?1/(2*perOct):0;
+function drawZeroLine(c,w,h,range){const y=yMag(0,range,h);c.strokeStyle='#22ff88';c.lineWidth=3;c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();c.fillStyle='#05070a';c.fillRect(2,y-16,52,18);c.fillStyle='#22ff88';c.font='900 14px Arial';c.textAlign='left';c.fillText('0 dB',6,y-3)}
+function drawScale(){const c=fg,W=fsc.width,H=fsc.height;c.clearRect(0,0,W,H);c.fillStyle='#0b0f14';c.fillRect(0,0,W,H);MAJORS.forEach(f=>{const x=xfreq(f,W);c.strokeStyle='#e2e8f0';c.lineWidth=3;c.beginPath();c.moveTo(x,0);c.lineTo(x,14);c.stroke();const lab=f===20?'20':f===20000?'20 kHz':fmtLab(f);c.fillStyle='#ffffff';c.font='900 16px Arial';if(f===20000){c.textAlign='right';c.fillText(lab,W-4,30)}else{c.textAlign='left';c.fillText(lab,Math.min(W-44,x+6),30)}});const cx=xfreq(S.cursor,W);c.strokeStyle='#fff';c.lineWidth=3;c.beginPath();c.moveTo(cx,0);c.lineTo(cx,H);c.stroke();c.textAlign='left'}
+function gridMag(c,w,h,range){c.clearRect(0,0,w,h);c.fillStyle='#05070a';c.fillRect(0,0,w,h);FREQS.forEach(f=>{const x=xfreq(f,w);c.strokeStyle=MAJORSET.has(f)?'#3a4452':'#232a35';c.lineWidth=1;c.beginPath();c.moveTo(x,0);c.lineTo(x,h);c.stroke()});const half=range/2;c.textAlign='left';for(let d=-half;d<=half;d+=10){const y=yMag(d,range,h);c.strokeStyle='#232a35';c.lineWidth=1;c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();if(d%20===0&&d!==0){const txt=(d>0?'+'+d:'-'+Math.abs(d))+' dB';c.fillStyle='#05070a';c.fillRect(2,Math.max(0,Math.min(h-18,y-9)),56,18);c.fillStyle='#ffffff';c.font='900 13px Arial';c.fillText(txt,4,Math.max(13,Math.min(h-4,y+4)))}}}
+function densify(freqs,magDb,phArr){
+  const W=mag.width,N=401,out=[],ph=[];const logF=new Float64Array(freqs.length);for(let i=0;i<freqs.length;i++)logF[i]=Math.log(freqs[i].f);
+  const perOct=CFG.detail,halfW=perOct?1/(2*perOct):0;
   const loIdx=t=>{let lo=0,hi=logF.length;while(lo<hi){const m=(lo+hi)>>1;if(logF[m]<t)lo=m+1;else hi=m}return lo};
-  for(let k=0;k<N;k++){
-    const x=k/(N-1)*W,f=freqAtX(x,W),lf=Math.log(f);let v;
-    if(!perOct){
-      const idx=loIdx(lf);
-      if(idx<=0)v=pArr[0];else if(idx>=freqs.length)v=pArr[freqs.length-1];
-      else{const t=(lf-logF[idx-1])/(logF[idx]-logF[idx-1]||1);v=pArr[idx-1]+(pArr[idx]-pArr[idx-1])*t}
-    }else{
-      let lo=loIdx(lf-half*Math.LN2),hi=loIdx(lf+half*Math.LN2);
-      if(hi-lo<5){const c=loIdx(lf);lo=Math.max(0,c-2);hi=Math.min(freqs.length,c+3)}
-      if(hi<=lo){hi=Math.min(freqs.length,lo+5)}
-      v=(pref[hi]-pref[lo])/Math.max(1,hi-lo);
-      if(!isFinite(v)||v<=0){const idx=Math.max(0,Math.min(freqs.length-1,loIdx(lf)));v=pArr[idx]}
-    }
-    out.push({f,v:p2db(v),x});
-    if(phArr){
-      const idx=Math.max(0,Math.min(phArr.length-1,loIdx(lf)));
-      let sx=0,sy=0;
-      for(let j=Math.max(0,idx-1);j<=Math.min(phArr.length-1,idx+1);j++){const r=phArr[j]*Math.PI/180;sx+=Math.cos(r);sy+=Math.sin(r)}
-      ph.push({f,v:Math.atan2(sy,sx)*180/Math.PI,x});
-    }
-  }
+  for(let k=0;k<N;k++){const x=k/(N-1)*W,f=freqAtX(x,W),lf=Math.log(f);let vDb;const lo=loIdx(lf-halfW*Math.LN2),hi=loIdx(lf+halfW*Math.LN2);let s=0,c=0;for(let j=Math.max(0,lo);j<Math.min(freqs.length,Math.max(hi,lo+1));j++){s+=magDb[j];c++}if(c===0){const idx=Math.max(0,Math.min(freqs.length-1,loIdx(lf)));vDb=magDb[idx]}else vDb=s/c;out.push({f,v:vDb,x});if(phArr){let sx=0,sy=0,sw=0;const j0=Math.max(0,lo),j1=Math.min(phArr.length,Math.max(hi,j0+1));for(let j=j0;j<j1;j++){const r=phArr[j]*Math.PI/180;sx+=Math.cos(r);sy+=Math.sin(r);sw+=1}ph.push({f,v:sw?Math.atan2(sy,sx)*180/Math.PI:phArr[Math.max(0,Math.min(phArr.length-1,loIdx(lf)))],x})}}
   return{mag:out,phase:ph};
 }
-function pointOn(data,f){
-  if(!data.length)return null;
-  const cx=xfreq(f,mag.width);
-  if(cx<=data[0].x)return data[0];
-  if(cx>=data[data.length-1].x)return data[data.length-1];
-  let lo=0,hi=data.length-1;
-  while(hi-lo>1){const m=(lo+hi)>>1;if(data[m].x<=cx)lo=m;else hi=m}
-  const a=data[lo],b=data[hi],t=b.x===a.x?0:(cx-a.x)/(b.x-a.x);
-  return{f,v:a.v+(b.v-a.v)*t,x:cx};
-}
-function phaseDisplayRaw(raw){
-  let arr=raw.slice();
-  const sm=CFG.phSmooth;
-  if(sm)arr=smoothPhaseCircular(arr,sm);
-  if(S.unwrap)arr=unwrapPhase(arr);
-  return arr;
-}
-function drawPhaseSegments(c,arr,yPh,minPh,maxPh,color,lw){
-  if(!arr.length)return;
-  c.beginPath();c.strokeStyle=color;c.lineWidth=lw;c.setLineDash([]);
-  arr.forEach((o,i)=>{const Y=yPh(Math.max(minPh,Math.min(maxPh,o.v)));if(i===0)c.moveTo(o.x,Y);else c.lineTo(o.x,Y)});
-  c.stroke();
-}
-function drawIR(){
-  const W=irc.width,H=irc.height;
-  ig.clearRect(0,0,W,H);ig.fillStyle='#05070a';ig.fillRect(0,0,W,H);
-  if(!S.ir.length){
-    ig.fillStyle='#fff';ig.font='900 13px Arial';ig.textAlign='center';ig.fillText('NO IR — START + PINK, DELAY OTOMATIS',W/2,H/2+4);ig.textAlign='left';return;
-  }
-  ig.strokeStyle='#22ff88';ig.lineWidth=2;ig.beginPath();ig.moveTo(0,H/2);ig.lineTo(W,H/2);ig.stroke();
-  ig.beginPath();ig.strokeStyle='#facc15';ig.lineWidth=3;
-  S.ir.forEach((v,i)=>{const x=i/(S.ir.length-1)*W;const y=H/2-v*(H/2-4);if(i===0)ig.moveTo(x,y);else ig.lineTo(x,y)});
-  ig.stroke();
-  const cx=W/2;
-  ig.strokeStyle='#fff';ig.lineWidth=2;ig.beginPath();ig.moveTo(cx,0);ig.lineTo(cx,H);ig.stroke();
-  ig.fillStyle='#fff';ig.font='900 12px Arial';ig.fillText('Puncak = delay • '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':'AUTO'),8,14);
-}
+function pointOn(data,f){if(!data.length)return null;const cx=xfreq(f,mag.width);if(cx<=data[0].x)return data[0];if(cx>=data[data.length-1].x)return data[data.length-1];let lo=0,hi=data.length-1;while(hi-lo>1){const m=(lo+hi)>>1;if(data[m].x<=cx)lo=m;else hi=m}const a=data[lo],b=data[hi],t=b.x===a.x?0:(cx-a.x)/(b.x-a.x);return{f,v:a.v+(b.v-a.v)*t,x:cx}}
+function phaseDisplayRaw(raw){let arr=raw.slice();const sm=CFG.phSmooth;if(sm)arr=smoothPhaseCircular(arr,sm);if(S.unwrap)arr=unwrapPhase(arr);return arr}
+function drawPhaseSegments(c,arr,yPh,minPh,maxPh,color,lw){if(!arr.length)return;c.beginPath();c.strokeStyle=color;c.lineWidth=lw;c.setLineDash([]);arr.forEach((o,i)=>{const Y=yPh(Math.max(minPh,Math.min(maxPh,o.v)));if(i===0)c.moveTo(o.x,Y);else c.lineTo(o.x,Y)});c.stroke()}
+function drawIR(){const W=irc.width,H=irc.height;ig.clearRect(0,0,W,H);ig.fillStyle='#05070a';ig.fillRect(0,0,W,H);if(!S.ir.length){ig.fillStyle='#fff';ig.font='900 13px Arial';ig.textAlign='center';ig.fillText('NO IR — START + PINK, AUTO PHASE',W/2,H/2+4);ig.textAlign='left';return}ig.strokeStyle='#22ff88';ig.lineWidth=2;ig.beginPath();ig.moveTo(0,H/2);ig.lineTo(W,H/2);ig.stroke();ig.beginPath();ig.strokeStyle='#facc15';ig.lineWidth=3;S.ir.forEach((v,i)=>{const x=i/(S.ir.length-1)*W;const y=H/2-v*(H/2-4);if(i===0)ig.moveTo(x,y);else ig.lineTo(x,y)});ig.stroke();const cx=W/2;ig.strokeStyle='#fff';ig.lineWidth=2;ig.beginPath();ig.moveTo(cx,0);ig.lineTo(cx,H);ig.stroke();ig.fillStyle='#fff';ig.font='900 12px Arial';ig.fillText('Puncak = delay • '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms 🔒 AUTO PHASE':'Lagi nyari…')+' • lag '+(S.lockedLag!=null?S.lockedLag.toFixed(1):S.fracLag.toFixed(1))+' spl',8,14)}
 function drawAll(){
-  const w=mag.width,h=mag.height,range=CFG.range;
+  const w=mag.width,h=mag.height,range=CFG.range,off=S.magOff||0;
   gridMag(mg,w,h,range);
-  S.captures.forEach(cp=>{
-    if(!cp.show||!cp.mag.length)return;
-    const fixed=recenter(cp.mag);
-    mg.beginPath();mg.strokeStyle=cp.color;mg.lineWidth=3;mg.setLineDash([]);
-    fixed.forEach((o,i)=>{const Y=yMag(o.v,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke();
-  });
-  if(S.live.length){mg.beginPath();mg.strokeStyle='#3fd4ec';mg.lineWidth=3;S.live.forEach((o,i)=>{const Y=yMag(o.v,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke()}
+  S.captures.forEach(cp=>{if(!cp.show||!cp.mag.length)return;mg.beginPath();mg.strokeStyle=cp.color;mg.lineWidth=4;mg.setLineDash([]);cp.mag.forEach((o,i)=>{const Y=yMag(o.v-off,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke()});
+  if(S.live.length){mg.beginPath();mg.strokeStyle='#3fd4ec';mg.lineWidth=4;mg.lineJoin='round';mg.lineCap='round';S.live.forEach((o,i)=>{const Y=yMag(o.v,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke()}
   drawZeroLine(mg,w,h,range);
-  const cx=Math.max(6,Math.min(w-6,xfreq(S.cursor,w)));
-  mg.strokeStyle='#fff';mg.lineWidth=3;mg.beginPath();mg.moveTo(cx,0);mg.lineTo(cx,h);mg.stroke();
-  let pt=pointOn(S.live,S.cursor);
-  if(!pt){const cp=lastVisibleCapture();if(cp&&cp.mag.length)pt=pointOn(recenter(cp.mag),S.cursor)}
+  const cx=Math.max(6,Math.min(w-6,xfreq(S.cursor,w)));mg.strokeStyle='#fff';mg.lineWidth=3;mg.beginPath();mg.moveTo(cx,0);mg.lineTo(cx,h);mg.stroke();
+  let pt=pointOn(S.live,S.cursor);if(!pt){const cp=lastVisibleCapture();if(cp&&cp.mag.length){const sh=cp.mag.map(o=>({f:o.f,v:o.v-off,x:o.x}));pt=pointOn(sh,S.cursor)}}
   if(pt){const Y=yMag(pt.v,range,h);mg.beginPath();mg.arc(cx,Y,9,0,Math.PI*2);mg.fillStyle='#fff';mg.fill();$('cursorread').textContent=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB'}else{$('cursorread').textContent=fmtF(S.cursor)+' • — dB'}
   drawScale();
-  const pw=phc.width,phH=phc.height;
-  const livePhase=S.pink&&S.running&&S.phaseRaw.length>0;
-  const capPhase=S.captures.some(cp=>cp.show&&cp.phaseRaw.length);
-  const phaseActive=livePhase||capPhase;
-  const liveDisp=livePhase?phaseDisplayRaw(S.phaseRaw):[];
-  const capDisp=capPhase?phaseDisplayRaw(lastVisibleCapture().phaseRaw):[];
-  const disp=livePhase?liveDisp:capDisp;
-  let allPh=[];
-  if(livePhase)allPh=allPh.concat(liveDisp);
-  S.captures.forEach(cp=>{if(cp.show&&cp.phaseRaw.length)allPh=allPh.concat(phaseDisplayRaw(cp.phaseRaw))});
-  const minPh=S.unwrap&&allPh.length?(Math.min(...allPh.map(o=>o.v),-180)):-180;
-  const maxPh=S.unwrap&&allPh.length?(Math.max(...allPh.map(o=>o.v),180)):180;
-  const yPh=v=>{if(S.unwrap){const span=Math.max(360,maxPh-minPh);return((maxPh-v)/span)*phH}return((180-v)/360)*phH};
-  pg.clearRect(0,0,pw,phH);pg.fillStyle='#05070a';pg.fillRect(0,0,pw,phH);pg.strokeStyle='#232a35';pg.lineWidth=1;
-  FREQS.forEach(f=>{const x=xfreq(f,pw);pg.beginPath();pg.moveTo(x,0);pg.lineTo(x,phH);pg.stroke()});
+  const pw=phc.width,phH=phc.height;const livePhase=S.pink&&S.running&&S.phaseRaw.length>0;const capPhase=S.captures.some(cp=>cp.show&&cp.phaseRaw.length);const phaseActive=livePhase||capPhase;const liveDisp=livePhase?phaseDisplayRaw(S.phaseRaw):[];const capDisp=capPhase?phaseDisplayRaw(lastVisibleCapture().phaseRaw):[];const disp=livePhase?liveDisp:capDisp;let allPh=[];if(livePhase)allPh=allPh.concat(liveDisp);S.captures.forEach(cp=>{if(cp.show&&cp.phaseRaw.length)allPh=allPh.concat(phaseDisplayRaw(cp.phaseRaw))});const minPh=S.unwrap&&allPh.length?(Math.min(...allPh.map(o=>o.v),-180)):-180;const maxPh=S.unwrap&&allPh.length?(Math.max(...allPh.map(o=>o.v),180)):180;const yPh=v=>{if(S.unwrap){const span=Math.max(360,maxPh-minPh);return((maxPh-v)/span)*phH}return((180-v)/360)*phH};
+  pg.clearRect(0,0,pw,phH);pg.fillStyle='#05070a';pg.fillRect(0,0,pw,phH);pg.strokeStyle='#232a35';pg.lineWidth=1;FREQS.forEach(f=>{const x=xfreq(f,pw);pg.beginPath();pg.moveTo(x,0);pg.lineTo(x,phH);pg.stroke()});
   if(!S.unwrap){pg.strokeStyle='#ff6b6b';pg.lineWidth=1;[180,-180].forEach(d=>{const y=yPh(d);pg.beginPath();pg.moveTo(0,y);pg.lineTo(pw,y);pg.stroke();pg.fillStyle='#ff6b6b';pg.font='900 13px Arial';pg.fillText('±180°',10,d===180?13:y+13)})}
-  pg.strokeStyle='#22ff88';pg.lineWidth=4;pg.beginPath();pg.moveTo(0,yPh(0));pg.lineTo(pw,yPh(0));pg.stroke();
-  pg.fillStyle='#22ff88';pg.font='900 13px Arial';pg.fillText(S.unwrap?'0° (unwrap)':'0°',10,Math.max(13,Math.min(phH-2,yPh(0)+13)));
+  pg.strokeStyle='#22ff88';pg.lineWidth=4;pg.beginPath();pg.moveTo(0,yPh(0));pg.lineTo(pw,yPh(0));pg.stroke();pg.fillStyle='#22ff88';pg.font='900 13px Arial';pg.fillText(S.unwrap?'0° (unwrap)':'0°',10,Math.max(13,Math.min(phH-2,yPh(0)+13)));
   const pp=pointOn(disp,S.cursor);
-  if(phaseActive){
-    S.captures.forEach(cp=>{
-      if(!cp.show||!cp.phaseRaw.length)return;
-      const carr=phaseDisplayRaw(cp.phaseRaw);
-      drawPhaseSegments(pg,carr,yPh,minPh,maxPh,cp.color,2.5);
-    });
-    if(livePhase)drawPhaseSegments(pg,liveDisp,yPh,minPh,maxPh,'#3fd4ec',3.5);
-    pg.strokeStyle='#fff';pg.lineWidth=3;pg.beginPath();pg.moveTo(cx,0);pg.lineTo(cx,phH);pg.stroke();
-    if(pp){const Y=yPh(Math.max(minPh,Math.min(maxPh,pp.v)));pg.beginPath();pg.arc(cx,Y,8,0,Math.PI*2);pg.fillStyle='#fff';pg.fill();if(pt)$('cursorread').textContent=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB • Phase '+pp.v.toFixed(0)+'°'}
-  }else{
-    pg.strokeStyle='#fff';pg.lineWidth=3;pg.beginPath();pg.moveTo(cx,0);pg.lineTo(cx,phH);pg.stroke();
-    pg.fillStyle='#ffffff';pg.font='900 15px Arial';pg.textAlign='center';pg.fillText('NO REFERENCE — HIDUPKAN REFERENCE',pw/2,phH/2+28);pg.textAlign='left';
-  }
-  drawIR();
-  $('ctFreq').textContent=fmtF(S.cursor);$('ctDb').textContent=pt?pt.v.toFixed(1)+' dB':'— dB';$('ctPhase').textContent='Phase '+(pp?pp.v.toFixed(0)+'°':'—°');
+  if(phaseActive){S.captures.forEach(cp=>{if(!cp.show||!cp.phaseRaw.length)return;const carr=phaseDisplayRaw(cp.phaseRaw);drawPhaseSegments(pg,carr,yPh,minPh,maxPh,cp.color,3)});if(livePhase)drawPhaseSegments(pg,liveDisp,yPh,minPh,maxPh,'#3fd4ec',4);pg.strokeStyle='#fff';pg.lineWidth=3;pg.beginPath();pg.moveTo(cx,0);pg.lineTo(cx,phH);pg.stroke();if(pp){const Y=yPh(Math.max(minPh,Math.min(maxPh,pp.v)));pg.beginPath();pg.arc(cx,Y,8,0,Math.PI*2);pg.fillStyle='#fff';pg.fill();if(pt)$('cursorread').textContent=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB • Phase '+pp.v.toFixed(0)+'°'}}else{pg.strokeStyle='#fff';pg.lineWidth=3;pg.beginPath();pg.moveTo(cx,0);pg.lineTo(cx,phH);pg.stroke();pg.fillStyle='#ffffff';pg.font='900 15px Arial';pg.textAlign='center';pg.fillText('NO REFERENCE — HIDUPKAN REFERENCE',pw/2,phH/2+14);pg.textAlign='left'}
+  drawIR();syncSlider();$('ctFreq').textContent=fmtF(S.cursor);$('ctDb').textContent=pt?pt.v.toFixed(1)+' dB':'— dB';$('ctPhase').textContent='Phase '+(pp?pp.v.toFixed(0)+'°':'—°');
 }
-function computeTFAligned(){
-  const N=S.fft;
-  const td=new Float32Array(N);
-  S.an.getFloatTimeDomainData(td);
-  const re=Float32Array.from(td),im=new Float32Array(N);
-  fftCalc(re,im);
+function syncSlider(){if(S.sliderDrag)return;const sl=$('cursorslider');if(sl)sl.value=Math.round(xfreq(S.cursor,mag.width)/mag.width*1000)}
+function corrAt(corr,idx){const N=corr.length;const i=((Math.round(idx)%N)+N)%N;return corr[i]}
+function computeTF(){
+  const N=S.fft;const td=new Float32Array(N);S.an.getFloatTimeDomainData(td);
+  const re=Float32Array.from(td),im=new Float32Array(N);fftCalc(re,im);
   const corrRe=new Float32Array(N),corrIm=new Float32Array(N);
-  for(let k=0;k<N;k++){
-    const a=re[k],b=im[k],c=S.refRe[k],d=S.refIm[k];
-    corrRe[k]=a*c+b*d;corrIm[k]=b*c-a*d;
-  }
+  for(let k=0;k<N;k++){const a=re[k],b=im[k],c=S.refRe[k],d=S.refIm[k];corrRe[k]=a*c+b*d;corrIm[k]=b*c-a*d}
   ifftCalc(corrRe,corrIm);
-  let bestLag=0,bestVal=0,bestAbs=-1e18;
-  for(let lag=0;lag<N;lag++){
-    const v=corrRe[lag],av=Math.abs(v);
-    if(av>bestAbs){bestAbs=av;bestLag=lag;bestVal=v}
+  // AUTO PHASE: tumpuk korelasi, cari puncak cuma 0-2400 spl
+  let bestLag=0,bestVal=0,bestAbs=-1e18,fracLag=0;
+  if(S.autoPhase){
+    if(!S.corrAcc||S.corrAcc.length!==N){S.corrAcc=new Float64Array(N);S.corrAccN=0}
+    for(let i=0;i<N;i++)S.corrAcc[i]+=corrRe[i];S.corrAccN++;
+    const sm=S.corrAcc,maxLag=2400;
+    for(let lag=0;lag<=maxLag;lag++){const v=sm[lag],av=Math.abs(v);if(av>bestAbs){bestAbs=av;bestLag=lag;bestVal=v}}
+    let frac=0;if(bestLag>0&&bestLag<maxLag){const y0=sm[bestLag-1],y1=sm[bestLag],y2=sm[bestLag+1];const den=y0-2*y1+y2;if(Math.abs(den)>1e-18)frac=0.5*(y0-y2)/den;if(!isFinite(frac)||Math.abs(frac)>1)frac=0}
+    fracLag=bestLag+frac;
+    if(S.corrAccN>=15){
+      // cek ulang tiap 3 detik: reset tumpukan, ambil median vote
+      S.lagVotes.push(fracLag);
+      S.corrAcc=new Float64Array(N);S.corrAccN=0;
+      if(S.lagVotes.length>=3){lockFromVotes();S.lagVotes=[]}
+    }
+  }else{
+    if(!S.corrSmooth||S.corrSmooth.length!==N)S.corrSmooth=new Float64Array(N);
+    for(let i=0;i<N;i++)S.corrSmooth[i]+=0.25*(corrRe[i]-S.corrSmooth[i]);
+    const sm=S.corrSmooth;for(let lag=0;lag<=2400;lag++){const v=sm[lag],av=Math.abs(v);if(av>bestAbs){bestAbs=av;bestLag=lag;bestVal=v}}
+    let frac=0;if(bestLag>0&&bestLag<2400){const y0=sm[bestLag-1],y1=sm[bestLag],y2=sm[bestLag+1];const den=y0-2*y1+y2;if(Math.abs(den)>1e-18)frac=0.5*(y0-y2)/den;if(!isFinite(frac)||Math.abs(frac)>1)frac=0}
+    fracLag=bestLag+frac;
   }
-  const sign=bestVal<0?-1:1;
-  S.corrSign=sign;S.corrStrength=bestAbs;S.irLag=bestLag;
-  S.ir=[];
-  for(let i=-120;i<=120;i++){const idx=((bestLag+i)%N+N)%N;S.ir.push(corrRe[idx]/(bestAbs||1))}
-  S.signHist.push(sign);
-  if(S.signHist.length>40)S.signHist.shift();
-  const freqs=[],magP=[],ph=[];
-  const aAvg=1/CFG.avg;
-  if(!S.acc){S.acc={re:new Float64Array(N/2),im:new Float64Array(N/2)};S.accN=0}
+  const sign=bestVal<0?-1:1;S.corrSign=sign;S.irLag=bestLag;S.fracLag=fracLag;
+  const useLag=S.autoPhase?(S.lockedLag!=null?S.lockedLag:fracLag):0;
+  // IR untuk display: pakai korelasi yg lagi jalan, di sekitar useLag
+  const dispCorr=S.autoPhase?(S.corrAcc||corrRe):corrRe;
+  const dispAbs=bestAbs||1;S.ir=[];
+  for(let i=-120;i<=120;i++){const pos=useLag+i;const i0=Math.floor(pos),t=pos-i0;const v0=corrAt(dispCorr,i0),v1=corrAt(dispCorr,i0+1);S.ir.push((v0*(1-t)+v1*t)/dispAbs)}
+  // kalau belum kekunci dan autoPhase, IR tetep nunjukin puncak di tengah pakai fracLag
+  if(S.autoPhase&&S.lockedLag==null){S.ir=[];for(let i=-120;i<=120;i++){const pos=fracLag+i;const i0=Math.floor(pos),t=pos-i0;S.ir.push((corrAt(corrRe,i0)*(1-t)+corrAt(corrRe,i0+1)*t)/(Math.max(1e-18,Math.abs(corrRe[bestLag])||1)))}}
+  S.signHist.push(sign);if(S.signHist.length>40)S.signHist.shift();
+  const freqs=[],magDb=[],ph=[];const aAvg=1/CFG.avg;
+  if(!S.acc){S.acc={cr:new Float64Array(N/2),ci:new Float64Array(N/2),rp:new Float64Array(N/2)};S.accN=0}
   for(let k=1;k<N/2;k++){
     const f=k*S.ctx.sampleRate/N;if(f<MINF||f>MAXF)continue;
     const den=S.refRe[k]*S.refRe[k]+S.refIm[k]*S.refIm[k];
-    if(den<1e-12){freqs.push({f});magP.push(1e-9);ph.push(0);continue}
-    const ang=2*Math.PI*k*bestLag/N,ca=Math.cos(ang),sa=Math.sin(ang);
+    if(den<1e-12){freqs.push({f});magDb.push(-100);ph.push(0);continue}
+    const ang=2*Math.PI*k*useLag/N,ca=Math.cos(ang),sa=Math.sin(ang);
     const mr=re[k]*ca-im[k]*sa,mi=re[k]*sa+im[k]*ca;
-    let tr=(mr*S.refRe[k]+mi*S.refIm[k])/den,ti=(mi*S.refRe[k]-mr*S.refIm[k])/den;
-    if(S.accN===0){S.acc.re[k]=tr;S.acc.im[k]=ti}
-    else{S.acc.re[k]+=aAvg*(tr-S.acc.re[k]);S.acc.im[k]+=aAvg*(ti-S.acc.im[k])}
-    freqs.push({f});
-    magP.push(S.acc.re[k]*S.acc.re[k]+S.acc.im[k]*S.acc.im[k]);
-    let deg=Math.atan2(S.acc.im[k],S.acc.re[k])*180/Math.PI;deg=((deg+180)%360+360)%360-180;ph.push(deg);
+    const cr=(mr*S.refRe[k]+mi*S.refIm[k]),ci=(mi*S.refRe[k]-mr*S.refIm[k]);
+    if(S.accN===0){S.acc.cr[k]=cr;S.acc.ci[k]=ci;S.acc.rp[k]=den}
+    else{S.acc.cr[k]+=aAvg*(cr-S.acc.cr[k]);S.acc.ci[k]+=aAvg*(ci-S.acc.ci[k]);S.acc.rp[k]+=aAvg*(den-S.acc.rp[k])}
+    const hr=S.acc.cr[k]/Math.max(1e-18,S.acc.rp[k]),hi=S.acc.ci[k]/Math.max(1e-18,S.acc.rp[k]);
+    freqs.push({f});let mv=p2db(hr*hr+hi*hi);if(mv<-100)mv=-100;magDb.push(mv);
+    let deg=Math.atan2(hi,hr)*180/Math.PI;deg=((deg+180)%360+360)%360-180;ph.push(deg);
   }
   S.accN++;
-  return{freqs,magP,ph};
+  return{freqs,magDb,ph};
 }
-function normalizeInstant(freqs,powerArr){
-  const mid=powerArr.filter((_,i)=>freqs[i].f>=500&&freqs[i].f<=2000);
-  const avgMid=mid.reduce((s,v)=>s+v,0)/Math.max(1,mid.length);
-  return powerArr.map(v=>v/Math.max(1e-12,avgMid));
+function normalizeFixed(freqs,magDb){
+  const vals=[];for(let i=0;i<freqs.length;i++){if(freqs[i].f>=500&&freqs[i].f<=2000&&magDb[i]>-90)vals.push(magDb[i])}
+  const target=vals.length?median(vals):0;
+  if(S.magOff==null)S.magOff=target;else S.magOff+=0.02*(target-S.magOff);
+  return magDb.map(v=>Math.max(-70,Math.min(70,v-S.magOff)));
 }
 let polTick=0;
 function draw(){
@@ -716,25 +472,14 @@ function draw(){
   S.frameN++;
   const td=new Float32Array(S.an.fftSize);S.an.getFloatTimeDomainData(td);
   let peak=0;for(let i=0;i<td.length;i++){const a=Math.abs(td[i]);if(a>peak)peak=a}
-  const peakDb=peak<=0.00001?-120:20*Math.log10(peak);
-  updatePeakPanel(peakDb);
+  updatePeakPanel(peak<=0.00001?-120:20*Math.log10(peak));
   let freqs,pArr,phArr;
-  if(S.pink&&S.refRe&&S.refType!=='sweep'){
-    const tf=computeTFAligned();freqs=tf.freqs;phArr=tf.ph;
-    pArr=normalizeInstant(freqs,tf.magP);
-  }else{
-    const n=S.an.frequencyBinCount,raw=new Float32Array(n);S.an.getFloatFrequencyData(raw);
-    freqs=[];const rawP=[];phArr=null;
-    for(let i=1;i<n;i++){const f=i*S.ctx.sampleRate/S.fft;if(f<MINF||f>MAXF)continue;freqs.push({f});rawP.push(db2p(raw[i]))}
-    pArr=normalizeInstant(freqs,rawP);
-  }
-  const den=densify(freqs,pArr,phArr);
-  S.live=den.mag;
-  S.phaseRaw=phArr?den.phase:[];S.phase=S.phaseRaw.slice();
+  if(S.pink&&S.refRe&&S.refType!=='sweep'){const tf=computeTF();freqs=tf.freqs;phArr=tf.ph;pArr=normalizeFixed(freqs,tf.magDb)}
+  else{const n=S.an.frequencyBinCount,raw=new Float32Array(n);S.an.getFloatFrequencyData(raw);freqs=[];const rawDb=[];phArr=null;for(let i=1;i<n;i++){const f=i*S.ctx.sampleRate/S.fft;if(f<MINF||f>MAXF)continue;freqs.push({f});rawDb.push(raw[i])}pArr=normalizeFixed(freqs,rawDb)}
+  const den=densify(freqs,pArr,phArr);S.live=den.mag;S.phaseRaw=phArr?den.phase:[];S.phase=S.phaseRaw.slice();
+  if(S.autoPhase&&S.lockedLag!=null&&S.accN>30)refineFromPhase();
   if(S.pink&&(++polTick%3===0))updatePolarityLive();
-  if(S.pink&&S.phaseRaw.length&&Date.now()-S.lastAutoDelay>3000){S.lastAutoDelay=Date.now();findDelay(true)}
-  drawAll();
-  S.raf=requestAnimationFrame(draw);
+  drawAll();S.raf=requestAnimationFrame(draw);
 }
 $('start').onclick=async()=>{
   autoLandscape();
@@ -743,41 +488,23 @@ $('start').onclick=async()=>{
     await ensureCtx();
     S.src=S.ctx.createMediaStreamSource(S.stream);
     S.an=S.ctx.createAnalyser();S.fft=CFG.fft;S.an.fftSize=S.fft;S.an.smoothingTimeConstant=0;S.an.minDecibels=-120;S.an.maxDecibels=0;
-    S.src.connect(S.an);
-    resetAcc();S.running=true;S.frameN=0;S.signHist=[];S.lastAutoDelay=0;
+    S.src.connect(S.an);resetAcc();S.running=true;S.frameN=0;S.signHist=[];S.lastAuto=Date.now();
     $('start').disabled=true;$('stop').disabled=false;$('status').textContent='LIVE';$('liveind').textContent='● LIVE';
-    $('fftstat').textContent=CFG.fft+' • AUTO';updateRangeLabels();
-    draw();
-    startNoise('pink');
+    $('fftstat').textContent=CFG.fft+' • AUTO';updateRangeLabels();draw();startNoise('pink');
   }catch(e){toast('Mic ga bisa dibuka: '+e.message);$('status').textContent='MIC GAGAL'}
 };
-$('stop').onclick=()=>{
-  S.running=false;cancelAnimationFrame(S.raf);
-  if(S.stream)S.stream.getTracks().forEach(t=>t.stop());
-  S.stream=null;S.an=null;$('start').disabled=false;$('stop').disabled=true;
-  $('status').textContent='STANDBY';$('liveind').textContent='● STANDBY';
-  updatePeakPanel(null);
-  if(S.pink)stopPink();else{killLive();drawAll()}
-};
-function moveFromX(x,el){
-  const r=el.getBoundingClientRect();
-  const px=Math.max(0,Math.min(mag.width,(x-r.left)/r.width*mag.width));
-  S.cursor=freqAtX(px,mag.width);updatePolarityLive();drawAll();
-}
+$('stop').onclick=()=>{S.running=false;cancelAnimationFrame(S.raf);if(S.stream)S.stream.getTracks().forEach(t=>t.stop());S.stream=null;S.an=null;$('start').disabled=false;$('stop').disabled=true;$('status').textContent='STANDBY';$('liveind').textContent='● STANDBY';updatePeakPanel(null);if(S.pink)stopPink();else{killLive();drawAll()}};
+function moveFromX(x,el){const r=el.getBoundingClientRect();const px=Math.max(0,Math.min(mag.width,(x-r.left)/r.width*mag.width));S.cursor=freqAtX(px,mag.width);updatePolarityLive();drawAll()}
 let drag=false;
-[mag,fsc,phc,irc].forEach(el=>{
-  el.addEventListener('pointerdown',e=>{drag=true;try{el.setPointerCapture(e.pointerId)}catch(err){}moveFromX(e.clientX,el)});
-  el.addEventListener('pointermove',e=>{if(drag)moveFromX(e.clientX,el)});
-  el.addEventListener('pointerup',()=>drag=false);
-  el.addEventListener('pointercancel',()=>drag=false);
-});
+[mag,fsc,phc,irc].forEach(el=>{el.addEventListener('pointerdown',e=>{drag=true;try{el.setPointerCapture(e.pointerId)}catch(err){}moveFromX(e.clientX,el)});el.addEventListener('pointermove',e=>{if(drag)moveFromX(e.clientX,el)});el.addEventListener('pointerup',()=>drag=false);el.addEventListener('pointercancel',()=>drag=false)});
+$('cursorslider').addEventListener('pointerdown',()=>{S.sliderDrag=true});
+$('cursorslider').addEventListener('pointerup',()=>{S.sliderDrag=false});
 $('cursorslider').addEventListener('input',e=>{S.cursor=freqAtX(+e.target.value/1000*mag.width,mag.width);updatePolarityLive();drawAll()});
 $('curleft').onclick=()=>{S.cursor=Math.max(20,S.cursor-50);updatePolarityLive();drawAll()};
 $('curright').onclick=()=>{S.cursor=Math.min(20000,S.cursor+50);updatePolarityLive();drawAll()};
+setAutoPhase(true);
 updateRangeLabels();
 drawAll();
 </script>
 </body>
 </html>
-
-Pakek yang ini aja tinggal bikin lebih akurat phase nya sama mangnitud nya
