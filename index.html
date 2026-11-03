@@ -108,13 +108,13 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 <div id="toast"></div>
 <div id="infoModal">
   <div class="infoBox">
-    <h3>ⓘ CARA PAKAI — 0 dB DI TENGAH, FIND DELAY LANGSUNG NGUBAH</h3>
+    <h3>ⓘ CARA PAKAI — LEVEL ABSOLUT, CAPTURE HABIS FIND DELAY</h3>
     <ol>
-      <li>START, PINK. Phase gergaji dulu, itu normal sebelum FIND DELAY.</li>
-      <li>Pencet FIND DELAY 1x. Phase langsung datar, kurva langsung berubah.</li>
-      <li>0 dB di tengah, bawah -45 dB, kurva nempel bawah.</li>
-      <li>Geser cursor, lihat Phase + Polarity di daerah driver itu.</li>
-      <li>Balik + / - di DLMS, Phase harus ganti.</li>
+      <li>START, PINK, diem 5 detik.</li>
+      <li>Pencet FIND DELAY 1x, Phase langsung datar.</li>
+      <li>Baru CAPTURE Sub. Mute Sub, nyalain Mid doang, jangan STOP, langsung CAPTURE Mid.</li>
+      <li>Mid keras = kurva hijau di atas kuning di 500 Hz - 5 kHz.</li>
+      <li>Range biarin 90 dB (+45 / -45), 0 dB di tengah.</li>
     </ol>
     <button id="infoClose" style="width:100%;padding:7px;margin-top:6px">✕ TUTUP</button>
   </div>
@@ -138,7 +138,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         <button id="clearcap" class="danger mini">🗑</button>
         <button id="infobtn" class="mini">ⓘ INFO</button>
       </div>
-      <div style="color:#e2e8f0;font-size:10px;margin-top:5px;flex:0 0 auto;font-weight:800">Pencet nama / ✏️ buat ganti nama, misal box pahratel.</div>
+      <div style="color:#e2e8f0;font-size:10px;margin-top:5px;flex:0 0 auto;font-weight:800">Pencet nama / ✏️ buat ganti nama, misal box pahratel. Capture habis FIND DELAY, jangan sebelum.</div>
     </div>
   </aside>
   <main>
@@ -157,7 +157,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <canvas id="ir" width="1200" height="90"></canvas>
       <div class="title"><b>PHASE</b><span id="phasesub">Reference OFF — HIDUPKAN REFERENCE</span></div>
       <canvas id="phase" width="1200" height="190"></canvas>
-      <div class="title"><b>MAGNITUDE</b><span id="magRangeLbl">20 Hz — 20 kHz • Range 90 dB (+45 / -45) • 0 dB TENGAH</span></div>
+      <div class="title"><b>MAGNITUDE</b><span id="magRangeLbl">20 Hz — 20 kHz • Range 90 dB (+45 / -45) • 0 dB TENGAH • LEVEL ABSOLUT</span></div>
       <div class="ctl">
         <button id="zoomOut">− ZOOM MAG</button>
         <button id="zoomIn">+ ZOOM MAG</button>
@@ -230,7 +230,7 @@ const MAJORSET=new Set(MAJORS);
 const FREQS=[20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000];
 const CAPCOLORS=['#fb923c','#facc15','#f472b6','#a78bfa','#34d399','#f87171','#93c5fd','#fdba74','#e879f9','#4ade80','#fbbf24','#fb7185'];
 const REFLBL={pink:'PINK NOISE',white:'WHITE NOISE',brown:'BROWN NOISE',sweep:'SWEEP 20 Hz-20 kHz'};
-const RANGES=[45,60,90,120];
+const RANGES=[60,90,120];
 const S={ctx:null,stream:null,src:null,an:null,refAn:null,noise:null,noiseGain:null,pink:false,refType:'pink',running:false,fft:16384,raf:0,
   cursor:1000,live:[],phase:[],phaseRaw:[],acc:null,accN:0,captures:[],capN:0,unwrap:false,delayMs:null,
   polarity:null,phaseAvg:null,phSmooth:24,delayLo:200,delayHi:2000,foundDelay:null,polBand:null,
@@ -254,7 +254,7 @@ function updatePeakPanel(peakDb){
 }
 updatePeakPanel(null);
 let toastTimer=0;
-function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2800)}
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3400)}
 let lastAutoTry=0;
 async function autoLandscape(){
   const now=Date.now();
@@ -273,14 +273,13 @@ function xfreq(f,w){f=Math.max(MINF,Math.min(MAXF,f));let s=0;for(const[a,b,p]of
 function freqAtX(x,w){const r=Math.max(0,Math.min(1,x/w));let s=0;for(const[a,b,p]of SEGS){if(r<=s+p||a===15000)return a*Math.exp(((r-s)/p)*Math.log(b/a));s+=p}return MAXF}
 function fmtF(f){return f>=1000?(f/1000).toFixed(2).replace(/0+$/,'').replace(/\.$/,'')+' kHz':Math.round(f)+' Hz'}
 function fmtLab(f){return f>=1000?(f/1000).toString().replace(/\.0$/,'')+'k':(''+f)}
-/* 0 dB DI TENGAH: y = (range/2 - v)/range, range 90 = +45 atas, -45 bawah */
 function yMag(v,range,h){return Math.max(0,Math.min(h,(range/2-v)/range*h))}
 function db2p(v){return Math.pow(10,Math.max(-120,v)/10)}
 function p2db(p){return 10*Math.log10(Math.max(1e-12,p))}
 function updateRangeLabels(){
   const r=CFG.range,top=Math.round(r/2),bot=-top;
   $('rangeLbl').textContent='Range: '+r+' dB • +'+top+' / '+bot+' • 0 TENGAH';
-  $('magRangeLbl').textContent='20 Hz — 20 kHz • Range '+r+' dB (+'+top+' / '+bot+') • 0 dB TENGAH';
+  $('magRangeLbl').textContent='20 Hz — 20 kHz • Range '+r+' dB (+'+top+' / '+bot+') • 0 dB TENGAH • LEVEL ABSOLUT';
   const win=Math.round(S.fft/(S.ctx?S.ctx.sampleRate:48000)*1000);
   $('irinfo').textContent='Time Window: '+win+' ms • FFT '+S.fft+' • Delay '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':'0 ms MANUAL')+' • MANUAL';
 }
@@ -362,12 +361,15 @@ $('capturebtn').onclick=()=>{
   S.capN++;
   const now=new Date(),hh=String(now.getHours()).padStart(2,'0'),mm=String(now.getMinutes()).padStart(2,'0'),ss=String(now.getSeconds()).padStart(2,'0');
   const pol=detectPolarity(S.phaseRaw);
+  const beforeDelay=S.foundDelay==null;
   S.captures.push({id:Date.now()+Math.random(),name:'Capture '+S.capN,color:CAPCOLORS[(S.capN-1)%CAPCOLORS.length],show:true,
     time:hh+':'+mm+':'+ss,mode:S.pink?'TF':'RTA',ref:(REFLBL[S.refType]||'TF'),polarity:pol.state,phaseAvg:pol.avg,weak:pol.weak,polBand:pol.band,delayMs:S.foundDelay,
     mag:S.live.map(o=>({f:o.f,v:o.v,x:o.x})),
     phase:S.phaseRaw.map(o=>({f:o.f,v:o.v,x:o.x})),
     phaseRaw:S.phaseRaw.map(o=>({f:o.f,v:o.v,x:o.x}))});
-  renderCaptures();drawAll();toast('Capture '+S.capN+' tersimpan — '+pol.state+' @ '+pol.band);
+  renderCaptures();drawAll();
+  if(beforeDelay)toast('Capture '+S.capN+' tersimpan, TAPI BELUM FIND DELAY — Phase bakal gergaji. Pencet FIND DELAY dulu baru capture ulang.');
+  else toast('Capture '+S.capN+' tersimpan — '+pol.state+' @ '+pol.band);
 };
 $('clearcap').onclick=()=>{
   if(!S.captures.length){toast('Belum ada capture.');return}
@@ -394,7 +396,6 @@ function smoothPhaseCircular(arr,perOct){
   }
   return out;
 }
-/* FIND DELAY BENERAN NGUBAH KURVA: set manualLag, reset rata-rata, frame berikutnya langsung diputer delay itu. Tidak auto, cuma pas dipencet. */
 function findDelayManual(){
   if(!S.pink||!S.running){toast('START + PINK dulu, tunggu 5 detik.');return}
   if(!S.frameLagHist.length){toast('Tunggu IR nya muncul dulu 5 detik.');return}
@@ -407,7 +408,7 @@ function findDelayManual(){
   S.acc=null;S.accN=0;
   $('finddelayres').textContent='Delay: '+d.toFixed(3)+' ms — KURVA LANGSUNG BERUBAH';
   updateRangeLabels();updatePolarityLive();drawAll();
-  toast('Delay '+d.toFixed(3)+' ms — Phase langsung datar, kurva berubah sekarang');
+  toast('Delay '+d.toFixed(3)+' ms — Phase langsung datar, baru CAPTURE sekarang');
 }
 $('finddelaybtn').onclick=findDelayManual;
 $('unwrapbtn').onclick=()=>{
@@ -650,7 +651,6 @@ function drawAll(){
   drawIR();
   $('ctFreq').textContent=fmtF(S.cursor);$('ctDb').textContent=pt?pt.v.toFixed(1)+' dB':'— dB';$('ctPhase').textContent='Phase '+(pp?pp.v.toFixed(0)+'°':'—°');
 }
-/* Mic + reference diambil bareng (2 analyser). H mentah dipakai buat IR, H yang diputer manualLag dipakai buat kurva. Sebelum FIND DELAY, manualLag=0, Phase gergaji. Habis FIND DELAY, manualLag=lag, Phase datar. */
 function computeTFAligned(){
   const N=S.fft;
   const td=new Float32Array(N);
@@ -701,6 +701,10 @@ function computeTFAligned(){
   S.accN++;
   return{freqs,magP,ph};
 }
+/* LEVEL ABSOLUT TF: |H| langsung, dikurangi 30 dB tetap. Keras = tinggi, pelan = rendah. Bukan dibagi median sendiri. RTA tetep pake median. */
+function tfDisplayPower(powerArr){
+  return powerArr.map(v=>v*0.001);
+}
 function normalizeInstant(freqs,powerArr){
   const vals=[];
   for(let i=0;i<freqs.length;i++)if(freqs[i].f>=500&&freqs[i].f<=2000)vals.push(powerArr[i]);
@@ -720,7 +724,7 @@ function draw(){
   let freqs,pArr,phArr;
   if(S.pink&&S.refType!=='sweep'){
     const tf=computeTFAligned();freqs=tf.freqs;phArr=tf.ph;
-    pArr=normalizeInstant(freqs,tf.magP);
+    pArr=tfDisplayPower(tf.magP);
   }else{
     const n=S.an.frequencyBinCount,raw=new Float32Array(n);S.an.getFloatFrequencyData(raw);
     freqs=[];const rawP=[];phArr=null;
