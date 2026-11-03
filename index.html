@@ -3,22 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>SMART LIVE v13 — TOMBOL KANAN</title>
+<title>SMART LIVE v13 — TOMBOL KANAN + AUTO EQ</title>
 <style>
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;background:#0a0c10;color:#e8eaf0;font:700 11px system-ui,Arial;overflow:hidden}
-button,select{font:700 11px system-ui,Arial;cursor:pointer;font-weight:900}
+button,select,input{font:700 11px system-ui,Arial;cursor:pointer;font-weight:900}
 .topbar{height:36px;background:#10141a;border-bottom:2px solid #3fd4ec;display:flex;align-items:center;gap:10px;padding:0 10px;position:sticky;top:0;z-index:20;white-space:nowrap;min-width:860px}
 .logo{font-weight:900;font-size:14px}.logo b{color:#3fd4ec}.logo span{color:#cbd5e1;font-weight:900;font-size:8px;display:block;letter-spacing:2px}
 .topbtns{margin-left:auto;display:flex;gap:5px;align-items:center}
-.topbtns span{font-weight:900}
 button{background:#222b37;color:#fff;border:1px solid #4a5566;border-radius:5px;padding:4px 8px;white-space:nowrap}
 button.go{background:#087e91;border-color:#13b5c9}
 button.on{background:#c2410c!important;border-color:#fb923c!important;color:#fff}
 button.cap{background:#7c3aed;border-color:#a78bfa;font-weight:900}
 button.danger{background:#7f1d1d;border-color:#ef4444}
 button.find{background:#7c3aed;border-color:#a78bfa;font-weight:900;padding:7px 8px;width:100%}
+button.autoeq{background:#713f12;border-color:#f59e0b;font-weight:900;padding:7px 8px;width:100%}
 select{background:#222b37;color:#fff;border:1px solid #4a5566;border-radius:5px;padding:2px 3px;width:100%;font-weight:900;height:22px;font-size:10px;white-space:nowrap}
 .layout{display:grid;grid-template-columns:200px minmax(520px,1fr) 190px;gap:6px;padding:5px 6px;max-width:1600px;margin:auto;min-width:860px;align-items:stretch;height:calc(100dvh - 36px - 26px)}
 .leftCol{display:flex;flex-direction:column;min-height:0;height:100%}
@@ -32,7 +32,6 @@ main .panel{flex:1;height:100%;overflow:hidden;display:flex;flex-direction:colum
 #caplist::-webkit-scrollbar{width:9px}
 #caplist::-webkit-scrollbar-track{background:#1f2937;border-radius:5px;border:1px solid #2b323e}
 #caplist::-webkit-scrollbar-thumb{background:#3fd4ec;border-radius:5px;border:1px solid #0a0c10}
-#caplist::-webkit-scrollbar-thumb:active{background:#fff}
 h3{margin:0 0 3px;font-size:10px;letter-spacing:0;color:#fff;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-resize;touch-action:none;min-height:0}
 #mag{flex:1 1 0}
@@ -94,13 +93,23 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 .rightCol{display:flex;flex-direction:column;min-height:0;height:100%;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;min-width:0}
 .rightCol .panel{flex:0 0 auto;margin-top:6px}
 .rightCol .panel:first-child{margin-top:0}
+.eqRow{display:flex;gap:4px;align-items:center;margin:4px 0;white-space:nowrap}
+.eqRow label{flex:0 0 52px;color:#e2e8f0;font-size:10px}
+.eqRow input[type=number]{flex:1;background:#090d12;color:#fff;border:1px solid #4a5566;border-radius:5px;padding:4px 5px;width:100%;min-width:0}
+.eqRow select{flex:1}
+.eqRes{background:#090d12;border:1px solid #f59e0b;border-radius:6px;padding:5px;margin-top:5px;line-height:1.5;display:none}
+.eqRes.show{display:block}
+.eqRes table{width:100%;border-collapse:collapse;font-size:10px}
+.eqRes th,.eqRes td{border-bottom:1px solid #2b323e;padding:2px 3px;text-align:right;color:#fff}
+.eqRes th:first-child,.eqRes td:first-child{text-align:left}
+.eqRes th{color:#facc15}
+.eqBtns{display:flex;gap:4px;margin-top:5px}
+.eqBtns button{flex:1;padding:6px 3px}
 #infoModal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:center;justify-content:center;padding:16px}
 #infoModal.show{display:flex}
 .infoBox{background:#14181f;border:1px solid #3fd4ec;border-radius:10px;max-width:520px;width:100%;max-height:88vh;overflow:auto;padding:14px;font-weight:700}
 .infoBox h3{font-size:13px;color:#fff;letter-spacing:0;white-space:normal}
 .infoBox ol{margin:8px 0 0;padding-left:18px;color:#fff;font-size:12px;line-height:1.9;font-weight:800}
-.infoBox b{color:#fff}
-.infoBox p{color:#e2e8f0;font-weight:800}
 :fullscreen body{background:#0a0c10}
 </style>
 </head>
@@ -108,19 +117,19 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 <div id="toast"></div>
 <div id="infoModal">
   <div class="infoBox">
-    <h3>ⓘ CARA PAKAI — SEMUA OTOMATIS</h3>
+    <h3>ⓘ CARA PAKAI — AUTO EQ, MANUAL 1X</h3>
     <ol>
-      <li>Mute driver lain, ukur 1 driver doang.</li>
-      <li>Geser cursor ke tengah daerah driver itu: mid 500 Hz, tweeter 5 kHz.</li>
-      <li>Lihat angka Phase di cursor atas, dan Polarity di bawah.</li>
-      <li>Balik + / - di DLMS, angka Phase harus ganti di cursor itu.</li>
-      <li>FFT, AVG, Range, Smoothing udah otomatis. Delay manual, pencet FIND DELAY kalau mau.</li>
+      <li>PINK, FIND DELAY manual 1x, CAPTURE. Kayak di video gereja.</li>
+      <li>Pilih Harman, Start 200 - End 948, centang + Range 2 (200 - 1k).</li>
+      <li>Tolerance 3 dB, geser Offset kalau targetnya ketinggian / kerendahan.</li>
+      <li>Pencet OPTIMIZE EQ 1x. Copy 7 filter CUT nya ke DLMS/EQ.</li>
+      <li>Delay live tetep 0, gak ada yang jalan otomatis.</li>
     </ol>
     <button id="infoClose" style="width:100%;padding:7px;margin-top:6px">✕ TUTUP</button>
   </div>
 </div>
 <div class="topbar">
-  <div class="logo"><b>SMART</b> LIVE v13 <span>MEASUREMENT • LIKE SMAART • TOMBOL KANAN</span></div>
+  <div class="logo"><b>SMART</b> LIVE v13 <span>MEASUREMENT • LIKE SMAART • TOMBOL KANAN • AUTO EQ MANUAL</span></div>
   <div class="topbtns">
     <span style="color:#34d399;font-size:10px;font-weight:900">↻ AUTO LANDSCAPE</span>
     <button id="start" class="go">▶ START</button>
@@ -138,7 +147,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         <button id="clearcap" class="danger mini">🗑</button>
         <button id="infobtn" class="mini">ⓘ INFO</button>
       </div>
-      <div style="color:#e2e8f0;font-size:10px;margin-top:5px;flex:0 0 auto;font-weight:800">Pencet nama / ✏️ buat ganti nama, misal box pahratel.</div>
+      <div style="color:#e2e8f0;font-size:10px;margin-top:5px;flex:0 0 auto;font-weight:800">Pencet nama / ✏️ buat ganti nama, misal box pahratel. Auto EQ butuh 1 capture.</div>
     </div>
   </aside>
   <main>
@@ -162,6 +171,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         <button id="zoomOut">− ZOOM MAG</button>
         <button id="zoomIn">+ ZOOM MAG</button>
         <span class="findres" id="rangeLbl">Range: 60 dB • AUTO</span>
+        <span class="findres" id="previewLbl" style="color:#facc15"></span>
       </div>
       <canvas id="mag" width="1200" height="300"></canvas>
       <canvas id="freqscale" width="1200" height="56"></canvas>
@@ -176,10 +186,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
   <aside class="rightCol">
     <div class="panel">
       <h3>📊 dBFS PEAK — KANAN</h3>
-      <div class="peakBig">
-        <div class="big" id="peakBig">— dBFS</div>
-        <small>PEAK SEKARANG • INPUT MIC</small>
-      </div>
+      <div class="peakBig"><div class="big" id="peakBig">— dBFS</div><small>PEAK SEKARANG • INPUT MIC</small></div>
       <div class="peakMeter"><div class="peakMeterFill" id="peakFill"></div></div>
       <div id="weakwarn" style="display:none;color:#f87171;font-size:10px;font-weight:900;margin-top:5px;text-align:center;line-height:1.4">⚠ SINYAL LEMAH — VOLUME MENTOK + MIC 30 CM</div>
       <div class="autoTag" style="margin-top:6px;text-align:center">FFT 16k • AVG 64 • 1/24 OKT • AUTO</div>
@@ -193,6 +200,27 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <span class="findres" id="finddelayres">Delay manual — 0 ms, pencet FIND DELAY kalau mau</span>
     </div>
     <div class="panel">
+      <h3>🎛 AUTO EQ — KAYAK DI VIDEO GEREJA • MANUAL 1X</h3>
+      <div class="eqRow"><label>Trace</label><select id="eqTrace"></select></div>
+      <div class="eqRow"><label>Target</label><select id="eqTarget"><option value="harman">Harman (kayak video)</option><option value="flat">Flat</option></select></div>
+      <div class="eqRow"><label>Start Hz</label><input type="number" id="eqStart" value="200" min="20" max="10000"><label style="flex:0 0 auto">End</label><input type="number" id="eqEnd" value="948" min="30" max="20000"></div>
+      <label style="display:flex;gap:5px;align-items:center;color:#e2e8f0;font-size:10px;margin:4px 0"><input type="checkbox" id="eqRange2" checked style="width:14px;height:14px"> + Range 2: 200 Hz - 1 kHz (kayak video)</label>
+      <div class="eqRow"><label>Tolerance</label><input type="number" id="eqTol" value="3" min="1" max="6" step="0.5"><label style="flex:0 0 auto">dB</label></div>
+      <div class="eqRow"><label>Offset</label><input type="range" id="eqOffset" min="-10" max="10" value="0" step="0.5" style="flex:1"><b id="eqOffsetTxt" style="flex:0 0 36px;text-align:right">0 dB</b></div>
+      <div class="eqRow"><label>Max Filter</label><input type="number" id="eqMaxF" value="7" min="1" max="10"><label style="flex:0 0 auto">CUT saja</label></div>
+      <button id="optimizebtn" class="autoeq">🎛 OPTIMIZE EQ — HITUNG 1X</button>
+      <div class="eqRes" id="eqRes">
+        <div>PASS: <b id="eqPass">—</b> • RMS: <b id="eqRms">—</b></div>
+        <table><thead><tr><th>#</th><th>Freq</th><th>Gain</th><th>Q</th></tr></thead><tbody id="eqTable"></tbody></table>
+        <div style="color:#e2e8f0;font-size:10px">Semua CUT, gak ada boost. Copy, masukin ke DLMS/EQ. Garis oranye putus-putus = prediksi habis EQ, pita kuning = tolerance.</div>
+      </div>
+      <div class="eqBtns">
+        <button id="eqCopy" disabled>📋 COPY</button>
+        <button id="eqReset">↩ RESET</button>
+      </div>
+      <div style="color:#e2e8f0;font-size:10px;margin-top:5px;line-height:1.5">Gak jalan sendiri. Cuma ngitung pas mas pencet, dari capture yang udah disimpen.</div>
+    </div>
+    <div class="panel">
       <h3>REFERENCE • 4 SUARA</h3>
       <div class="miniRef">
         <button id="pinkbtn">🩷 PINK</button>
@@ -201,9 +229,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
         <button id="sweepbtn">🌊 SWEEP</button>
         <button id="noiseoff" style="flex:1 1 100%">■ OFF</button>
       </div>
-      <label class="miniVol">VOLUME <b id="voltxt" style="color:#fff">100%</b>
-        <input type="range" id="noisevol" min="0" max="100" value="100">
-      </label>
+      <label class="miniVol">VOLUME <b id="voltxt" style="color:#fff">100%</b><input type="range" id="noisevol" min="0" max="100" value="100"></label>
     </div>
   </aside>
 </div>
@@ -235,40 +261,27 @@ const S={ctx:null,stream:null,src:null,an:null,noise:null,noiseGain:null,pink:fa
   cursor:1000,live:[],phase:[],phaseRaw:[],acc:null,accN:0,captures:[],capN:0,unwrap:false,delayMs:null,
   polarity:null,phaseAvg:null,phSmooth:24,delayLo:200,delayHi:2000,foundDelay:null,polBand:null,
   appliedDelay:0,frameN:0,delayLocked:false,refRe:null,refIm:null,refBuf:null,delayHist:[],signHist:[],corrSign:1,corrStrength:0,ir:[],irLag:0,
-  manualLag:0,corrAcc:null,corrAccN:0,magOff:null};
+  manualLag:0,corrAcc:null,corrAccN:0,magOff:null,
+  eqFilters:null,eqPreview:null,eqTargetLine:null,eqRanges:null,eqTol:3,eqTraceId:null,eqBase:0};
 function median(a){if(!a.length)return 0;const s=a.slice().sort((x,y)=>x-y);return s[Math.floor(s.length/2)]}
 $('infobtn').onclick=()=>{$('infoModal').classList.add('show')};
 $('infoClose').onclick=()=>{$('infoModal').classList.remove('show')};
 $('infoModal').addEventListener('click',e=>{if(e.target.id==='infoModal')$('infoModal').classList.remove('show')});
 function updatePeakPanel(peakDb){
-  const big=$('peakBig'),fill=$('peakFill');
-  if(!big||!fill)return;
-  const w=$('weakwarn');
-  if(w)w.style.display=(peakDb!=null&&peakDb<-30&&S.running)?'block':'none';
+  const big=$('peakBig'),fill=$('peakFill');if(!big||!fill)return;
+  const w=$('weakwarn');if(w)w.style.display=(peakDb!=null&&peakDb<-30&&S.running)?'block':'none';
   if(peakDb==null){big.textContent='— dBFS';big.className='big';fill.style.width='0%';fill.style.background='#22ff88';return}
-  big.textContent=peakDb.toFixed(1)+' dBFS';
-  big.className='big'+(peakDb>=-1?' hot':peakDb>=-6?' warn':'');
-  const pct=Math.max(0,Math.min(100,(peakDb+60)/60*100));
-  fill.style.width=pct+'%';
+  big.textContent=peakDb.toFixed(1)+' dBFS';big.className='big'+(peakDb>=-1?' hot':peakDb>=-6?' warn':'');
+  fill.style.width=Math.max(0,Math.min(100,(peakDb+60)/60*100))+'%';
   fill.style.background=peakDb>=-1?'#ef4444':peakDb>=-6?'#facc15':'#22ff88';
 }
 updatePeakPanel(null);
 let toastTimer=0;
-function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2800)}
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3200)}
 let lastAutoTry=0;
-async function autoLandscape(){
-  const now=Date.now();
-  if(document.fullscreenElement)return;
-  if(now-lastAutoTry<2000)return;
-  lastAutoTry=now;
-  try{const el=document.documentElement;if(el.requestFullscreen)await el.requestFullscreen();else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen()}catch(e){}
-  try{if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock('landscape')}catch(e){}
-  setTimeout(drawAll,300);
-}
-document.addEventListener('pointerdown',autoLandscape);
-document.addEventListener('touchstart',autoLandscape,{passive:true});
-document.addEventListener('fullscreenchange',()=>setTimeout(drawAll,300));
-window.addEventListener('orientationchange',()=>setTimeout(drawAll,300));
+async function autoLandscape(){const now=Date.now();if(document.fullscreenElement)return;if(now-lastAutoTry<2000)return;lastAutoTry=now;try{const el=document.documentElement;if(el.requestFullscreen)await el.requestFullscreen();else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen()}catch(e){}try{if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock('landscape')}catch(e){}setTimeout(drawAll,300)}
+document.addEventListener('pointerdown',autoLandscape);document.addEventListener('touchstart',autoLandscape,{passive:true});
+document.addEventListener('fullscreenchange',()=>setTimeout(drawAll,300));window.addEventListener('orientationchange',()=>setTimeout(drawAll,300));
 function xfreq(f,w){f=Math.max(MINF,Math.min(MAXF,f));let s=0;for(const[a,b,p]of SEGS){if(f<=b||a===15000)return(s+Math.log(f/a)/Math.log(b/a)*p)*w;s+=p}return w}
 function freqAtX(x,w){const r=Math.max(0,Math.min(1,x/w));let s=0;for(const[a,b,p]of SEGS){if(r<=s+p||a===15000)return a*Math.exp(((r-s)/p)*Math.log(b/a));s+=p}return MAXF}
 function fmtF(f){return f>=1000?(f/1000).toFixed(2).replace(/0+$/,'').replace(/\.$/,'')+' kHz':Math.round(f)+' Hz'}
@@ -276,70 +289,31 @@ function fmtLab(f){return f>=1000?(f/1000).toString().replace(/\.0$/,'')+'k':(''
 function yMag(v,range,h){return Math.max(0,Math.min(h,(range/2-v)/range*h))}
 function db2p(v){return Math.pow(10,Math.max(-120,v)/10)}
 function p2db(p){return 10*Math.log10(Math.max(1e-12,p))}
-function updateRangeLabels(){
-  const r=CFG.range;
-  const top=Math.round(r*0.2),bot=top-r;
-  $('rangeLbl').textContent='Range: '+r+' dB • AUTO';
-  $('magRangeLbl').textContent='20 Hz — 20 kHz • Range '+r+' dB ('+(top>0?'+'+top:top)+' / '+bot+') • AUTO';
-  const win=Math.round(S.fft/(S.ctx?S.ctx.sampleRate:48000)*1000);
-  $('irinfo').textContent='Time Window: '+win+' ms • FFT '+S.fft+' • Delay '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':'0 ms MANUAL')+' • MANUAL';
-}
+function updateRangeLabels(){const r=CFG.range;const top=Math.round(r*0.2),bot=top-r;$('rangeLbl').textContent='Range: '+r+' dB • AUTO';$('magRangeLbl').textContent='20 Hz — 20 kHz • Range '+r+' dB ('+(top>0?'+'+top:top)+' / '+bot+') • AUTO';const win=Math.round(S.fft/(S.ctx?S.ctx.sampleRate:48000)*1000);$('irinfo').textContent='Time Window: '+win+' ms • FFT '+S.fft+' • Delay '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':'0 ms MANUAL')+' • MANUAL'}
 function detectPolarityBand(raw,center){
   if(!raw.length)return{state:null,avg:null,weak:true,band:null};
-  const lo=center/1.5,hi=center*1.5;
-  let sx=0,sy=0,cn=0;
-  for(let i=0;i<raw.length;i++){
-    if(raw[i].f<lo||raw[i].f>hi)continue;
-    cn++;const r=raw[i].v*Math.PI/180;
-    sx+=Math.cos(r);sy+=Math.sin(r);
-  }
+  const lo=center/1.5,hi=center*1.5;let sx=0,sy=0,cn=0;
+  for(let i=0;i<raw.length;i++){if(raw[i].f<lo||raw[i].f>hi)continue;cn++;const r=raw[i].v*Math.PI/180;sx+=Math.cos(r);sy+=Math.sin(r)}
   if(cn<3)return{state:null,avg:null,weak:true,band:fmtF(center)};
-  const avg=Math.atan2(sy,sx)*180/Math.PI;
-  const strength=Math.hypot(sx,sy)/cn;
+  const avg=Math.atan2(sy,sx)*180/Math.PI;const strength=Math.hypot(sx,sy)/cn;
   let state=Math.abs(avg)>90?'TERBALIK':'NORMAL';
-  if(S.signHist.length>=10){
-    const neg=S.signHist.filter(v=>v<0).length/S.signHist.length;
-    if(neg>=0.7&&Math.abs(avg)>60)state='TERBALIK';
-    if(neg<=0.3&&Math.abs(avg)<120&&strength>0.5)state='NORMAL';
-  }
+  if(S.signHist.length>=10){const neg=S.signHist.filter(v=>v<0).length/S.signHist.length;if(neg>=0.7&&Math.abs(avg)>60)state='TERBALIK';if(neg<=0.3&&Math.abs(avg)<120&&strength>0.5)state='NORMAL'}
   return{state,avg,weak:strength<0.5,band:fmtF(center)};
 }
 function detectPolarity(raw){return detectPolarityBand(raw,S.cursor||1000)}
-function setPolarityUI(state,avg,weak,band){
-  S.polarity=state;S.phaseAvg=avg;S.polBand=band;
-  const el2=$('polstat');
-  if(!state){el2.textContent='—';return}
-  el2.textContent=(state==='TERBALIK'?'TERBALIK ⚠':'NORMAL ✓')+(weak?' ?':'')+(band?' @ '+band:'');
-}
+function setPolarityUI(state,avg,weak,band){S.polarity=state;S.phaseAvg=avg;S.polBand=band;const el2=$('polstat');if(!state){el2.textContent='—';return}el2.textContent=(state==='TERBALIK'?'TERBALIK ⚠':'NORMAL ✓')+(weak?' ?':'')+(band?' @ '+band:'')}
 function lastVisibleCapture(){for(let i=S.captures.length-1;i>=0;i--){if(S.captures[i].show)return S.captures[i]}return null}
-function refreshPolarityAfterOff(){
-  if(S.pink&&S.running)return;
-  const cp=lastVisibleCapture();
-  if(cp&&cp.polarity)setPolarityUI(cp.polarity,cp.phaseAvg,cp.weak,cp.polBand);
-  else setPolarityUI(null,null,false,null);
-}
-function startRename(cp,nameEl){
-  if(nameEl.querySelector('input'))return;
-  const oldName=cp.name;
-  const input=document.createElement('input');
-  input.className='renameInput';input.type='text';input.value=oldName;input.maxLength=40;
-  nameEl.textContent='';nameEl.appendChild(input);input.focus();input.select();
-  let done=false;
-  const save=(cancel)=>{
-    if(done)return;done=true;
-    const v=input.value.trim();
-    if(!cancel&&v&&v!==oldName){cp.name=v;toast('Capture diganti jadi: '+v)}
-    else if(!cancel&&!v){toast('Nama kosong, balik ke nama lama.')}
-    renderCaptures();
-  };
-  input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();save(false)}else if(e.key==='Escape'){save(true)}e.stopPropagation()});
-  input.addEventListener('blur',()=>save(false));
-  input.addEventListener('click',e=>e.stopPropagation());
-  input.addEventListener('pointerdown',e=>e.stopPropagation());
+function refreshPolarityAfterOff(){if(S.pink&&S.running)return;const cp=lastVisibleCapture();if(cp&&cp.polarity)setPolarityUI(cp.polarity,cp.phaseAvg,cp.weak,cp.polBand);else setPolarityUI(null,null,false,null)}
+function startRename(cp,nameEl){if(nameEl.querySelector('input'))return;const oldName=cp.name;const input=document.createElement('input');input.className='renameInput';input.type='text';input.value=oldName;input.maxLength=40;nameEl.textContent='';nameEl.appendChild(input);input.focus();input.select();let done=false;const save=(cancel)=>{if(done)return;done=true;const v=input.value.trim();if(!cancel&&v&&v!==oldName){cp.name=v;toast('Capture diganti jadi: '+v)}else if(!cancel&&!v){toast('Nama kosong, balik ke nama lama.')}renderCaptures()};input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();save(false)}else if(e.key==='Escape'){save(true)}e.stopPropagation()});input.addEventListener('blur',()=>save(false));input.addEventListener('click',e=>e.stopPropagation());input.addEventListener('pointerdown',e=>e.stopPropagation())}
+function refreshEqSelect(){
+  const eq=$('eqTrace');const eqv=eq.value;eq.innerHTML='';
+  if(!S.captures.length){eq.innerHTML='<option value="">— butuh 1 capture —</option>';return}
+  S.captures.forEach(cp=>{const o=document.createElement('option');o.value=cp.id;o.textContent=cp.name;eq.appendChild(o)});
+  if(eqv&&S.captures.some(c=>String(c.id)===eqv))eq.value=eqv;else eq.value=S.captures[S.captures.length-1].id;
 }
 function renderCaptures(){
   const el=$('caplist');
-  if(!S.captures.length){el.innerHTML='<div class="capempty">Belum ada capture.<br>Pencet CAPTURE pas kurva nya lagi bagus.</div>';refreshPolarityAfterOff();return}
+  if(!S.captures.length){el.innerHTML='<div class="capempty">Belum ada capture.<br>Pencet CAPTURE pas kurva nya lagi bagus.</div>';refreshPolarityAfterOff();refreshEqSelect();return}
   el.innerHTML='';
   S.captures.forEach((cp,idx)=>{
     const row=document.createElement('div');row.className='capitem';
@@ -348,13 +322,12 @@ function renderCaptures(){
     const meta=cp.time+' • '+(cp.ref||'TF')+' • '+polTxt+' • '+dlTxt;
     row.innerHTML='<span class="dot" style="background:'+cp.color+'"></span><label><input type="checkbox" '+(cp.show?'checked':'')+' style="accent-color:'+cp.color+'"></label><div class="nm"><b title="Pencet buat ganti nama">'+cp.name+'</b><span title="'+meta+'">'+meta+'</span></div><button class="renameBtn">✏️</button><button>✕</button>';
     row.querySelector('input').onchange=e=>{cp.show=e.target.checked;refreshPolarityAfterOff();drawAll()};
-    const nameEl=row.querySelector('.nm b');
-    nameEl.onclick=e=>{e.stopPropagation();startRename(cp,nameEl)};
+    const nameEl=row.querySelector('.nm b');nameEl.onclick=e=>{e.stopPropagation();startRename(cp,nameEl)};
     row.querySelector('.renameBtn').onclick=e=>{e.stopPropagation();startRename(cp,nameEl)};
-    row.querySelectorAll('button')[1].onclick=()=>{S.captures.splice(idx,1);renderCaptures();refreshPolarityAfterOff();drawAll();toast('Capture dihapus')};
+    row.querySelectorAll('button')[1].onclick=()=>{S.captures.splice(idx,1);if(S.eqTraceId&&!S.captures.some(c=>String(c.id)===String(S.eqTraceId)))resetEq();renderCaptures();refreshPolarityAfterOff();drawAll();toast('Capture dihapus')};
     el.appendChild(row);
   });
-  refreshPolarityAfterOff();
+  refreshPolarityAfterOff();refreshEqSelect();
 }
 $('capturebtn').onclick=()=>{
   autoLandscape();
@@ -367,13 +340,103 @@ $('capturebtn').onclick=()=>{
     mag:S.live.map(o=>({f:o.f,v:o.v,x:o.x})),
     phase:S.phaseRaw.map(o=>({f:o.f,v:o.v,x:o.x})),
     phaseRaw:S.phaseRaw.map(o=>({f:o.f,v:o.v,x:o.x}))});
-  renderCaptures();drawAll();toast('Capture '+S.capN+' tersimpan — '+pol.state+' @ '+pol.band);
+  renderCaptures();drawAll();toast('Capture '+S.capN+' tersimpan — '+pol.state+' @ '+pol.band+'. Udah bisa OPTIMIZE EQ.');
 };
-$('clearcap').onclick=()=>{
-  if(!S.captures.length){toast('Belum ada capture.');return}
-  const n=S.captures.length;S.captures=[];renderCaptures();refreshPolarityAfterOff();drawAll();toast(n+' capture dihapus');
-};
+$('clearcap').onclick=()=>{if(!S.captures.length){toast('Belum ada capture.');return}const n=S.captures.length;S.captures=[];resetEq();renderCaptures();refreshPolarityAfterOff();drawAll();toast(n+' capture dihapus')};
 renderCaptures();
+function interpAt(arr,f){
+  if(!arr.length)return null;
+  if(f<=arr[0].f)return arr[0];
+  if(f>=arr[arr.length-1].f)return arr[arr.length-1];
+  let lo=0,hi=arr.length-1;
+  while(hi-lo>1){const m=(lo+hi)>>1;if(arr[m].f<=f)lo=m;else hi=m}
+  const a=arr[lo],b=arr[hi],t=b.f===a.f?0:(f-a.f)/(b.f-a.f);
+  return{f,v:a.v+(b.v-a.v)*t,x:a.x+(b.x-a.x)*t};
+}
+/* ---------- AUTO EQ: MANUAL 1X, DARI 1 CAPTURE, CUT SAJA ---------- */
+function targetAt(f,base,type,offset){
+  if(type==='flat')return base+offset;
+  const t=-0.5*Math.log2(Math.max(20,f)/200);
+  const bass=f<200?1.2*Math.log2(200/Math.max(20,f))*0.5:0;
+  return base+offset+t+bass;
+}
+function inEqRanges(f,ranges){return ranges.some(r=>f>=r[0]&&f<=r[1])}
+function eqStats(cap,ranges,type,offset,tol,filters){
+  let n=0,pass=0,se=0;const pts=[];
+  for(let k=0;k<200;k++){
+    const f=20*Math.pow(1000,k/199);
+    if(!inEqRanges(f,ranges))continue;
+    const m=interpAt(cap.mag,f);if(!m)continue;
+    let v=m.v;
+    for(const fl of filters){const x=Math.log2(f/fl.freq);v+=fl.gain*Math.pow(2,-Math.pow(x*fl.q*0.55,2))}
+    pts.push({f,v});
+    const tg=targetAt(f,S.eqBase,type,offset);
+    const e=v-tg;se+=e*e;if(Math.abs(e)<=tol)pass++;n++;
+  }
+  return{pass:n?Math.round(pass/n*100):0,rms:n?Math.sqrt(se/n):99,pts};
+}
+function runAutoEQ(){
+  if(!S.captures.length){toast('Butuh 1 capture dulu. PINK, FIND DELAY, CAPTURE kayak di video.');return}
+  const cap=S.captures.find(c=>String(c.id)===$('eqTrace').value)||S.captures[S.captures.length-1];
+  if(!cap||!cap.mag.length){toast('Capture itu kosong.');return}
+  let lo=parseFloat($('eqStart').value),hi=parseFloat($('eqEnd').value);
+  if(!isFinite(lo)||!isFinite(hi)||lo<20||hi<=lo||hi>20000){toast('Start / End nya salah. Misal 200 - 948 kayak di video.');return}
+  const ranges=[[lo,hi]];
+  if($('eqRange2').checked)ranges.push([200,1000]);
+  const type=$('eqTarget').value,tol=parseFloat($('eqTol').value)||3,offset=parseFloat($('eqOffset').value)||0;
+  const maxF=Math.max(1,Math.min(10,parseInt($('eqMaxF').value)||7));
+  const vals=[];for(let k=0;k<cap.mag.length;k++){const o=cap.mag[k];if(inEqRanges(o.f,ranges))vals.push(o.v)}
+  if(vals.length<5){toast('Di range itu kurvanya gak ada. Cek Start/End nya.');return}
+  S.eqBase=median(vals);
+  const before=eqStats(cap,ranges,type,offset,tol,[]);
+  const filters=[];let cur=[];
+  for(let it=0;it<maxF;it++){
+    const st=eqStats(cap,ranges,type,offset,tol,cur);
+    let bestPk=null;
+    for(const p of st.pts){
+      const tg=targetAt(p.f,S.eqBase,type,offset);
+      const excess=p.v-(tg+tol*0.5);
+      if(excess>0.6&&(!bestPk||excess>bestPk.excess))bestPk={f:p.f,excess};
+    }
+    if(!bestPk)break;
+    let left=bestPk.f,right=bestPk.f;
+    for(const p of st.pts){if(p.f<bestPk.f&&p.v>targetAt(p.f,S.eqBase,type,offset)+tol*0.5)left=p.f;if(p.f>bestPk.f&&p.v>targetAt(p.f,S.eqBase,type,offset)+tol*0.5&&right===bestPk.f)right=p.f}
+    let width=0.25;if(right>left)width=Math.max(0.12,Math.min(1.2,Math.log2(right/left)));
+    const q=Math.max(4,Math.min(12,Math.round((1.1/width)*10)/10));
+    const gain=-Math.min(6,Math.max(1,Math.round(bestPk.excess*10)/10));
+    if(filters.some(f=>Math.abs(Math.log2(f.freq/bestPk.f))<0.12))break;
+    const fl={freq:Math.round(bestPk.f),gain,q};
+    filters.push(fl);cur.push(fl);
+  }
+  if(!filters.length){toast('Di range itu udah masuk tolerance semua, gak perlu EQ. PASS '+before.pass+'%.');return}
+  const after=eqStats(cap,ranges,type,offset,tol,filters);
+  S.eqFilters=filters;S.eqTraceId=cap.id;S.eqRanges=ranges;S.eqTol=tol;S.eqType=type;S.eqOffset=offset;
+  const line=[];for(let k=0;k<401;k++){const f=freqAtX(k/400*mag.width,mag.width);line.push({f,v:targetAt(f,S.eqBase,type,offset),x:xfreq(f,mag.width)})}
+  S.eqTargetLine=line;S.eqPreview=[];
+  for(let k=0;k<401;k++){
+    const f=freqAtX(k/400*mag.width,mag.width);const m=interpAt(cap.mag,f);if(!m)continue;
+    let v=m.v;for(const fl of filters){const x=Math.log2(f/fl.freq);v+=fl.gain*Math.pow(2,-Math.pow(x*fl.q*0.55,2))}
+    S.eqPreview.push({f,v,x:xfreq(f,mag.width)});
+  }
+  $('eqRes').classList.add('show');
+  $('eqPass').textContent=before.pass+'% → '+after.pass+'%';
+  $('eqRms').textContent=before.rms.toFixed(2)+' → '+after.rms.toFixed(2)+' dB';
+  $('eqTable').innerHTML=filters.map((f,i)=>'<tr><td>'+(i+1)+'</td><td>'+f.freq+' Hz</td><td>'+f.gain.toFixed(2)+' dB</td><td>'+f.q.toFixed(2)+'</td></tr>').join('');
+  $('eqCopy').disabled=false;
+  $('previewLbl').textContent='— ORANYE PUTUS = PREDIKSI HABIS EQ • KUNING = TARGET ±'+tol+' dB';
+  drawAll();
+  toast('AUTO EQ ketemu '+filters.length+' filter CUT. PASS '+before.pass+'% → '+after.pass+'%. Pencet COPY, masukin ke DLMS.');
+}
+function resetEq(){S.eqFilters=null;S.eqPreview=null;S.eqTargetLine=null;S.eqRanges=null;S.eqTraceId=null;$('eqRes').classList.remove('show');$('eqCopy').disabled=true;$('previewLbl').textContent='';drawAll()}
+$('optimizebtn').onclick=runAutoEQ;
+$('eqReset').onclick=()=>{resetEq();toast('Auto EQ di-reset.')};
+$('eqOffset').oninput=e=>{$('eqOffsetTxt').textContent=parseFloat(e.target.value).toFixed(1)+' dB'};
+$('eqCopy').onclick=async()=>{
+  if(!S.eqFilters)return;
+  const txt=S.eqFilters.map((f,i)=>(i+1)+'. '+f.freq+' Hz  Gain '+f.gain.toFixed(2)+' dB  Q '+f.q.toFixed(2)).join('\n');
+  const full='AUTO EQ ('+($('eqTarget').value==='harman'?'Harman':'Flat')+')\n'+txt;
+  try{await navigator.clipboard.writeText(full);toast('Udah di-COPY. Tempel ke DLMS/EQ.')}catch(e){toast(full)}
+};
 function unwrapPhase(arr){
   if(!arr.length)return arr;
   const out=[{f:arr[0].f,v:arr[0].v,x:arr[0].x}];let off=0,prev=arr[0].v;
@@ -403,7 +466,6 @@ function calcDelayIn(raw,lo,hi){
   const den=n*sxx-sx*sx;if(!den)return null;
   return -(n*sxy-sx*sy)/den/360*1000;
 }
-/* MANUAL SAJA: cuma jalan pas tombol dipencet, tidak pernah dipanggil otomatis */
 function findDelayManual(){
   if(!S.pink||!S.running||!S.phaseRaw.length){toast('START + PINK dulu, tunggu 5 detik.');return}
   const d=calcDelayIn(S.phaseRaw,S.delayLo,S.delayHi);
@@ -607,11 +669,26 @@ function drawIR(){
 function drawAll(){
   const w=mag.width,h=mag.height,range=CFG.range;
   gridMag(mg,w,h,range);
+  if(S.eqTargetLine&&S.eqRanges){
+    for(const r of S.eqRanges){
+      const x1=xfreq(r[0],w),x2=xfreq(r[1],w);
+      mg.fillStyle='rgba(250,204,21,0.10)';mg.fillRect(x1,0,x2-x1,h);
+    }
+    mg.beginPath();mg.strokeStyle='#facc15';mg.lineWidth=2;mg.setLineDash([4,4]);
+    S.eqTargetLine.forEach((o,i)=>{if(!inEqRanges(o.f,S.eqRanges))return;const Y=yMag(o.v,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke();
+    mg.beginPath();mg.strokeStyle='rgba(250,204,21,0.5)';mg.lineWidth=1;
+    S.eqTargetLine.forEach((o,i)=>{if(!inEqRanges(o.f,S.eqRanges))return;const Y=yMag(o.v+S.eqTol,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke();
+    mg.beginPath();S.eqTargetLine.forEach((o,i)=>{if(!inEqRanges(o.f,S.eqRanges))return;const Y=yMag(o.v-S.eqTol,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke();mg.setLineDash([]);
+  }
   S.captures.forEach(cp=>{
     if(!cp.show||!cp.mag.length)return;
     mg.beginPath();mg.strokeStyle=cp.color;mg.lineWidth=3;mg.setLineDash([]);
     cp.mag.forEach((o,i)=>{const Y=yMag(o.v,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke();
   });
+  if(S.eqPreview&&S.eqPreview.length){
+    mg.beginPath();mg.strokeStyle='#fb923c';mg.lineWidth=3;mg.setLineDash([8,5]);
+    S.eqPreview.forEach((o,i)=>{const Y=yMag(o.v,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke();mg.setLineDash([]);
+  }
   if(S.live.length){mg.beginPath();mg.strokeStyle='#3fd4ec';mg.lineWidth=3;S.live.forEach((o,i)=>{const Y=yMag(o.v,range,h);if(i===0)mg.moveTo(o.x,Y);else mg.lineTo(o.x,Y)});mg.stroke()}
   drawZeroLine(mg,w,h,range);
   const cx=Math.max(6,Math.min(w-6,xfreq(S.cursor,w)));
@@ -667,17 +744,12 @@ function computeTFAligned(){
     corrRe[k]=a*c+b*d;corrIm[k]=b*c-a*d;
   }
   ifftCalc(corrRe,corrIm);
-  if(!S.corrAcc||S.corrAcc.length!==N){S.corrAcc=new Float64Array(N);S.corrAccN=0}
-  for(let i=0;i<N;i++)S.corrAcc[i]+=corrRe[i];
-  S.corrAccN++;
-  if(S.corrAccN>=12){S.corrAcc=new Float64Array(N);S.corrAccN=0}
   const maxLag=2400;
   let bestLag=0,bestVal=0,bestAbs=-1e18;
   for(let lag=0;lag<=maxLag;lag++){
-    const v=S.corrAcc[lag],av=Math.abs(v);
+    const v=corrRe[lag],av=Math.abs(v);
     if(av>bestAbs){bestAbs=av;bestLag=lag;bestVal=v}
   }
-  if(S.corrAccN===0){for(let lag=0;lag<=maxLag;lag++){const v=corrRe[lag],av=Math.abs(v);if(av>bestAbs){bestAbs=av;bestLag=lag;bestVal=v}}}
   const sign=bestVal<0?-1:1;
   S.corrSign=sign;S.corrStrength=bestAbs;S.irLag=bestLag;
   S.ir=[];
