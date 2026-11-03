@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>SMART LIVE v13 — ETC + LiveIR • RATA-RATA DISEJAJARKAN</title>
+<title>SMART LIVE v13 — CURSOR FIX</title>
 <style>
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -44,8 +44,11 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:ew-r
 .title span{color:#cbd5e1;font-weight:900;overflow:hidden;text-overflow:ellipsis}
 .ctl{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:3px;align-items:stretch;flex:0 0 auto}
 .ctl button{padding:4px 8px;font-size:11px}
-.cursor{display:flex;gap:6px;align-items:center;margin-top:4px;background:#090d12;border:1px solid #2b323e;border-radius:6px;padding:3px 5px;flex:0 0 auto;font-weight:900}
-.cursor input{flex:1;accent-color:#fff}
+.quickfreq{display:flex;gap:4px;flex:0 0 auto}
+.quickfreq button{padding:5px 9px;font-size:11px;border-color:#3fd4ec;color:#3fd4ec}
+.quickfreq button.on{background:#3fd4ec;color:#000}
+.cursor{display:flex;gap:6px;align-items:center;margin-top:4px;background:#090d12;border:1px solid #2b323e;border-radius:6px;padding:6px 5px;flex:0 0 auto;font-weight:900}
+.cursor input{flex:1;accent-color:#fff;height:26px;touch-action:pan-x}
 .cursor b{color:#fff;font-weight:900}
 .statusbar{height:26px;background:#10141a;border-top:1px solid #2b323e;padding:4px 10px;display:flex;gap:14px;flex-wrap:wrap;color:#fff;font-size:11px;position:sticky;bottom:0;min-width:860px;align-items:center;overflow:hidden;white-space:nowrap;font-weight:900}
 .statusbar b{color:#7ee0ad}
@@ -108,11 +111,12 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 <div id="toast"></div>
 <div id="infoModal">
   <div class="infoBox">
-    <h3>ⓘ CARA PAKAI — IR RATA-RATA DISEJAJARKAN</h3>
+    <h3>ⓘ CARA PAKAI — CURSOR</h3>
     <ol>
-      <li>Volume balik ke 12%, jangan 70%. Peak -12 sampai -6.</li>
-      <li>START, PINK, diem 5 detik, jangan gerak. IR nya baru bersih habis 2-3 detik, soalnya rata-rata 8 frame.</li>
-      <li>FIND DELAY, baru CAPTURE.</li>
+      <li><b>Tap kurva Magnitude</b> di frekuensi yang mau diliat, garis putih langsung pindah.</li>
+      <li>Atau pencet <b>500 Hz / 1 kHz / 4 kHz</b>, langsung loncat.</li>
+      <li>Atau geser slider bawah, atau tombol ◀ ▶.</li>
+      <li>Volume balik ke 12%, diem 5 detik, FIND DELAY, baru CAPTURE.</li>
     </ol>
     <button id="infoClose" style="width:100%;padding:7px;margin-top:6px">✕ TUTUP</button>
   </div>
@@ -151,21 +155,26 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
           <span class="ph" id="ctPhase">Phase —°</span>
         </div>
       </div>
-      <div class="title"><b>ETC ▼</b><span id="irinfo">Energy Time Curve • 0 - 330 ms • -100 - 0 dB • IR rata-rata 8, disejajarkan</span></div>
+      <div class="title"><b>ETC ▼</b><span id="irinfo">Energy Time Curve • 0 - 330 ms • -100 - 0 dB • IR AVG 8 sejajar</span></div>
       <canvas id="ir" width="1200" height="240"></canvas>
-      <div class="title"><b>LiveIR ▼</b><span id="phasesub">Live Impulse Response • 0 - 330 ms • AVG 8 disejajarkan • Bass &lt;50 Hz dibuang • Puncak ke atas = NORMAL</span></div>
+      <div class="title"><b>LiveIR ▼</b><span id="phasesub">Live Impulse Response • 0 - 330 ms • AVG 8 disejajarkan • Bass &lt;50 Hz dibuang</span></div>
       <canvas id="phase" width="1200" height="190"></canvas>
       <div class="title"><b>MAGNITUDE</b><span id="magRangeLbl">20 Hz — 20 kHz • Range 90 dB (+45 / -45) • 0 dB TENGAH • LEVEL OTOMATIS</span></div>
       <div class="ctl">
         <button id="zoomOut">− ZOOM MAG</button>
         <button id="zoomIn">+ ZOOM MAG</button>
         <span class="findres" id="rangeLbl">Range: 90 dB • +45 / -45 • 0 TENGAH</span>
+        <div class="quickfreq">
+          <button data-f="500">500 Hz</button>
+          <button data-f="1000">1 kHz</button>
+          <button data-f="4000">4 kHz</button>
+        </div>
       </div>
       <canvas id="mag" width="1200" height="300"></canvas>
       <canvas id="freqscale" width="1200" height="56"></canvas>
       <div class="cursor">
         <button id="curleft">◀</button>
-        <input type="range" id="cursorslider" min="0" max="1000" value="980">
+        <input type="range" id="cursorslider" min="0" max="1000" value="220">
         <button id="curright">▶</button>
         <b id="cursorread" style="white-space:nowrap">—</b>
       </div>
@@ -239,6 +248,16 @@ const S={ctx:null,stream:null,src:null,an:null,noise:null,noiseGain:null,pink:fa
 function median(a){if(!a.length)return 0;const s=a.slice().sort((x,y)=>x-y);return s[Math.floor(s.length/2)]}
 function fmtOff(v){return (v>0?'+':'')+v+' dB'}
 function updateLevelUI(){const st=$('levelstat');if(st)st.textContent=fmtOff(S.levelOff)+' • AUTO • '+(S.levelLocked?'DIKUNCI 0 dB':'NYARI 0 dB')}
+/* === CURSOR: 1 fungsi doang, semua cara masuk sini, slider ikut sync === */
+function setCursor(f,fromSlider){
+  S.cursor=Math.max(MINF,Math.min(MAXF,f));
+  const sl=$('cursorslider');
+  if(sl&&!fromSlider){
+    const x=xfreq(S.cursor,mag.width);
+    sl.value=Math.round(x/mag.width*1000);
+  }
+  updatePolarityLive();drawAll();
+}
 function autoLevelFromTF(freqs,magP){
   if(S.levelLocked||!S.running||!S.pink)return;
   const vals=[];
@@ -282,10 +301,9 @@ async function autoLandscape(){
   try{if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock('landscape')}catch(e){}
   setTimeout(drawAll,300);
 }
-document.addEventListener('pointerdown',autoLandscape);
-document.addEventListener('touchstart',autoLandscape,{passive:true});
-document.addEventListener('fullscreenchange',()=>setTimeout(drawAll,300));
+/* FIX: fullscreen HANYA pas START. Gak ada lagi document pointerdown / touchstart. */
 window.addEventListener('orientationchange',()=>setTimeout(drawAll,300));
+document.addEventListener('fullscreenchange',()=>setTimeout(drawAll,300));
 function xfreq(f,w){f=Math.max(MINF,Math.min(MAXF,f));let s=0;for(const[a,b,p]of SEGS){if(f<=b||a===15000)return(s+Math.log(f/a)/Math.log(b/a)*p)*w;s+=p}return w}
 function freqAtX(x,w){const r=Math.max(0,Math.min(1,x/w));let s=0;for(const[a,b,p]of SEGS){if(r<=s+p||a===15000)return a*Math.exp(((r-s)/p)*Math.log(b/a));s+=p}return MAXF}
 function fmtF(f){return f>=1000?(f/1000).toFixed(2).replace(/0+$/,'').replace(/\.$/,'')+' kHz':Math.round(f)+' Hz'}
@@ -372,7 +390,6 @@ function renderCaptures(){
   refreshPolarityAfterOff();
 }
 $('capturebtn').onclick=()=>{
-  autoLandscape();
   if(!S.live.length){toast('Belum ada kurva. START dulu.');return}
   lockLevel();
   S.capN++;
@@ -510,10 +527,10 @@ function stopPink(){
   $('refstat').textContent='OFF';$('phasesub').textContent='Live Impulse Response • 0 - 330 ms • AVG 8 disejajarkan • Bass <50 Hz dibuang';
   setRefButtons();killLive();drawAll();
 }
-$('pinkbtn').onclick=()=>{autoLandscape();if(!S.running){toast('START dulu.');return}startNoise('pink')};
-$('whitebtn').onclick=()=>{autoLandscape();if(!S.running){toast('START dulu.');return}startNoise('white')};
-$('brownbtn').onclick=()=>{autoLandscape();if(!S.running){toast('START dulu.');return}startNoise('brown')};
-$('sweepbtn').onclick=()=>{autoLandscape();if(!S.running){toast('START dulu.');return}startNoise('sweep')};
+$('pinkbtn').onclick=()=>{if(!S.running){toast('START dulu.');return}startNoise('pink')};
+$('whitebtn').onclick=()=>{if(!S.running){toast('START dulu.');return}startNoise('white')};
+$('brownbtn').onclick=()=>{if(!S.running){toast('START dulu.');return}startNoise('brown')};
+$('sweepbtn').onclick=()=>{if(!S.running){toast('START dulu.');return}startNoise('sweep')};
 $('noiseoff').onclick=stopPink;
 $('noisevol').oninput=e=>{$('voltxt').textContent=e.target.value+'%';if(S.noiseGain&&S.ctx)S.noiseGain.gain.setTargetAtTime((e.target.value/100)*0.9,S.ctx.currentTime,.02)};
 function drawZeroLine(c,w,h,range){
@@ -612,7 +629,10 @@ function drawLiveIR(){
   S.liveIRData.forEach((v,i)=>{const x=i/(S.liveIRData.length-1)*W,y=H/2-v*(H/2-14);if(i===0)pg.moveTo(x,y);else pg.lineTo(x,y)});pg.stroke();
   const px=(S.peakLag/(S.ctx?S.ctx.sampleRate:48000)*1000)/MAXMS*W;
   pg.strokeStyle='#fff';pg.lineWidth=2;pg.beginPath();pg.moveTo(px,0);pg.lineTo(px,H);pg.stroke();
-  pg.fillStyle='#fff';pg.font='900 11px Arial';pg.fillText('Puncak = delay • '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':(S.peakLag/(S.ctx?S.ctx.sampleRate:48000)*1000).toFixed(2)+' ms'),8,13);
+  /* FIX: tulisan pindah kanan atas, gak nutupin angka kiri lagi */
+  pg.fillStyle='#fff';pg.font='900 11px Arial';pg.textAlign='right';
+  pg.fillText('Puncak = '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':(S.peakLag/(S.ctx?S.ctx.sampleRate:48000)*1000).toFixed(2)+' ms'),W-8,13);
+  pg.textAlign='left';
 }
 function drawAll(){
   const w=mag.width,h=mag.height,range=CFG.range;
@@ -642,6 +662,10 @@ function drawAll(){
   }
   if(pt&&pp)$('cursorread').textContent=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB • Phase '+pp.v.toFixed(0)+'°';
   $('ctFreq').textContent=fmtF(S.cursor);$('ctDb').textContent=pt?pt.v.toFixed(1)+' dB':'— dB';$('ctPhase').textContent='Phase '+(pp?pp.v.toFixed(0)+'°':'—°');
+  /* sync tombol cepat */
+  document.querySelectorAll('.quickfreq button').forEach(b=>{
+    b.classList.toggle('on',Math.abs(+b.dataset.f-S.cursor)<80);
+  });
 }
 function computeTFAligned(){
   const N=S.fft;
@@ -674,7 +698,6 @@ function computeTFAligned(){
   const sr=S.ctx.sampleRate,n330=Math.floor(sr*MAXMS/1000);
   let mean=0;for(let i=0;i<n330;i++)mean+=irRe[i];mean/=n330;
   for(let i=0;i<n330;i++)irRe[i]-=mean;
-  /* Cari puncak frame ini */
   const maxLag=2400;
   let bestLag=0,bestVal=0,bestAbs=-1e18;
   for(let lag=0;lag<=maxLag;lag++){
@@ -684,12 +707,9 @@ function computeTFAligned(){
   S.lastFrameLag=bestLag;S.irLag=bestLag;S.corrSign=bestVal<0?-1:1;S.corrStrength=bestAbs;
   S.frameLagHist.push(bestLag);if(S.frameLagHist.length>30)S.frameLagHist.shift();
   S.signHist.push(S.corrSign);if(S.signHist.length>40)S.signHist.shift();
-  /* === RATA-RATA DISEJAJARKAN: geser frame ini supaya puncaknya di refLag, baru diaduk 1/8 === */
   if(!S.irAlignAvg){S.irAlignAvg=new Float64Array(N);S.irAlignN=0;S.refLag=bestLag}
-  /* Kalau puncak loncat jauh >200 sample dari ref, itu frame ngawur, buang, jangan diaduk */
   const jump=Math.abs(bestLag-S.refLag);
   if(S.irAlignN>4&&jump>200){
-    /* jangan update rata-rata, pake rata-rata lama */
   }else{
     if(S.irAlignN===0)S.refLag=bestLag;
     else if(jump>0&&jump<=200){S.refLag=Math.round(S.refLag*0.8+bestLag*0.2)}
@@ -701,11 +721,9 @@ function computeTFAligned(){
     }
     S.irAlignN++;
   }
-  /* Balikin lagi ke posisi asli: geser rata-rata sejajar itu ke refLag */
   const aligned=new Float64Array(N);
   for(let i=0;i<N;i++){aligned[i]=S.irAlignAvg[((i-S.refLag)%N+N)%N]}
   S.peakLag=S.refLag;
-  /* ETC + LiveIR dari yang udah rata-rata + sejajar, bukan dari 1 frame */
   const etc=new Float32Array(n330);let run=0;
   const win=Math.max(1,Math.floor(sr*0.0005));
   for(let i=0;i<n330;i++){
@@ -798,21 +816,34 @@ $('stop').onclick=()=>{
   updatePeakPanel(null);
   if(S.pink)stopPink();else{killLive();drawAll()}
 };
-function moveFromX(x,el){
+/* FIX CURSOR: tap / klik di Magnitude langsung pindah, tanpa pointer capture yang rewel */
+function moveFromEvent(e,el){
   const r=el.getBoundingClientRect();
-  const px=Math.max(0,Math.min(mag.width,(x-r.left)/r.width*mag.width));
-  S.cursor=freqAtX(px,mag.width);updatePolarityLive();drawAll();
+  const cx=(e.clientX!=null?e.clientX:(e.touches&&e.touches[0]?e.touches[0].clientX:0));
+  const px=Math.max(0,Math.min(mag.width,(cx-r.left)/r.width*mag.width));
+  setCursor(freqAtX(px,mag.width));
 }
-let drag=false;
-[mag,fsc,phc,irc].forEach(el=>{
-  el.addEventListener('pointerdown',e=>{drag=true;try{el.setPointerCapture(e.pointerId)}catch(err){}moveFromX(e.clientX,el)});
-  el.addEventListener('pointermove',e=>{if(drag)moveFromX(e.clientX,el)});
-  el.addEventListener('pointerup',()=>drag=false);
-  el.addEventListener('pointercancel',()=>drag=false);
+mag.addEventListener('click',e=>moveFromEvent(e,mag));
+fsc.addEventListener('click',e=>moveFromEvent(e,fsc));
+/* drag di Magnitude tetep bisa, tapi tanpa setPointerCapture */
+let magDrag=false;
+mag.addEventListener('pointerdown',e=>{magDrag=true;moveFromEvent(e,mag)});
+mag.addEventListener('pointermove',e=>{if(magDrag)moveFromEvent(e,mag)});
+window.addEventListener('pointerup',()=>magDrag=false);
+mag.addEventListener('pointercancel',()=>magDrag=false);
+$('cursorslider').addEventListener('input',e=>{
+  e.stopPropagation();
+  setCursor(freqAtX(+e.target.value/1000*mag.width,mag.width),true);
 });
-$('cursorslider').addEventListener('input',e=>{S.cursor=freqAtX(+e.target.value/1000*mag.width,mag.width);updatePolarityLive();drawAll()});
-$('curleft').onclick=()=>{S.cursor=Math.max(20,S.cursor-50);updatePolarityLive();drawAll()};
-$('curright').onclick=()=>{S.cursor=Math.min(20000,S.cursor+50);updatePolarityLive();drawAll()};
+$('cursorslider').addEventListener('change',e=>{
+  setCursor(freqAtX(+e.target.value/1000*mag.width,mag.width),true);
+});
+$('curleft').onclick=()=>{setCursor(S.cursor*0.9)};
+$('curright').onclick=()=>{setCursor(S.cursor*1.1)};
+document.querySelectorAll('.quickfreq button').forEach(b=>{
+  b.onclick=()=>setCursor(+b.dataset.f);
+});
+setCursor(1000);
 updateRangeLabels();
 drawAll();
 </script>
