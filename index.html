@@ -19,7 +19,6 @@ button.on{background:#c2410c!important;border-color:#fb923c!important;color:#fff
 button.cap{background:#7c3aed;border-color:#a78bfa;font-weight:900}
 button.danger{background:#7f1d1d;border-color:#ef4444}
 button.find{background:#7c3aed;border-color:#a78bfa;font-weight:900;padding:7px 8px;width:100%}
-button.autoon{background:#14532d!important;border-color:#22ff88!important;color:#fff}
 select{background:#222b37;color:#fff;border:1px solid #4a5566;border-radius:5px;padding:2px 3px;width:100%;font-weight:900;height:22px;font-size:10px;white-space:nowrap}
 .layout{display:grid;grid-template-columns:200px minmax(520px,1fr) 190px;gap:6px;padding:5px 6px;max-width:1600px;margin:auto;min-width:860px;align-items:stretch;height:calc(100dvh - 36px - 26px)}
 .leftCol{display:flex;flex-direction:column;min-height:0;height:100%}
@@ -92,10 +91,6 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 .miniVol{display:block;margin-top:6px;color:#fff;font-size:10px;font-weight:900;white-space:nowrap}
 .miniVol input{margin-top:2px;height:14px}
 .miniVol b{color:#fff}
-.levelRow{display:flex;gap:4px;align-items:center;margin-top:6px}
-.levelRow button{flex:0 0 auto;padding:6px 10px;font-size:14px}
-.levelRow input{flex:1}
-.levelVal{text-align:center;color:#3fd4ec;font-size:14px;font-weight:900;margin-top:3px;white-space:nowrap}
 .rightCol{display:flex;flex-direction:column;min-height:0;height:100%;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;min-width:0}
 .rightCol .panel{flex:0 0 auto;margin-top:6px}
 .rightCol .panel:first-child{margin-top:0}
@@ -113,12 +108,12 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 <div id="toast"></div>
 <div id="infoModal">
   <div class="infoBox">
-    <h3>ⓘ CARA PAKAI — LEVEL ABSOLUT, CAPTURE HABIS FIND DELAY</h3>
+    <h3>ⓘ CARA PAKAI — LEVEL OTOMATIS SAMPE 0 dB</h3>
     <ol>
-      <li>START, PINK, diem 5 detik. AUTO MIC nyari level sendiri sampe kurva nempel di -10 / 0 dB.</li>
+      <li>START, PINK, diem 5 detik. Mic HP nyari sendiri sampe kurva nempel di garis 0 dB.</li>
       <li>Pencet FIND DELAY 1x, Phase langsung datar.</li>
-      <li>Baru CAPTURE Sub. Pas CAPTURE pertama, level langsung DIKUNCI, jangan diubah lagi.</li>
-      <li>Mute Sub, nyalain Mid doang, jangan STOP, langsung CAPTURE Mid. Jangan ubah LEVEL di tengah-tengah.</li>
+      <li>Baru CAPTURE Sub. Pas CAPTURE pertama, level langsung DIKUNCI sendiri, jangan diubah lagi.</li>
+      <li>Mute Sub, nyalain Mid doang, jangan STOP, langsung CAPTURE Mid.</li>
       <li>Mid keras = kurva hijau di atas kuning di 500 Hz - 5 kHz.</li>
       <li>Range biarin 90 dB (+45 / -45), 0 dB di tengah.</li>
     </ol>
@@ -163,7 +158,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <canvas id="ir" width="1200" height="90"></canvas>
       <div class="title"><b>PHASE</b><span id="phasesub">Reference OFF — HIDUPKAN REFERENCE</span></div>
       <canvas id="phase" width="1200" height="190"></canvas>
-      <div class="title"><b>MAGNITUDE</b><span id="magRangeLbl">20 Hz — 20 kHz • Range 90 dB (+45 / -45) • 0 dB TENGAH • LEVEL ABSOLUT</span></div>
+      <div class="title"><b>MAGNITUDE</b><span id="magRangeLbl">20 Hz — 20 kHz • Range 90 dB (+45 / -45) • 0 dB TENGAH • LEVEL OTOMATIS</span></div>
       <div class="ctl">
         <button id="zoomOut">− ZOOM MAG</button>
         <button id="zoomIn">+ ZOOM MAG</button>
@@ -199,20 +194,6 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <span class="findres" id="finddelayres">Delay manual — 0 ms, pencet FIND DELAY, kurva langsung berubah</span>
     </div>
     <div class="panel">
-      <h3>🎚 LEVEL MIC HP — OTOMATIS</h3>
-      <div class="levelVal" id="leveltxt">+0 dB • AUTO</div>
-      <div class="levelRow">
-        <button id="levelminus">−</button>
-        <input type="range" id="levelslider" min="-60" max="60" step="3" value="0">
-        <button id="levelplus">+</button>
-      </div>
-      <div style="color:#e2e8f0;font-size:10px;margin-top:5px;line-height:1.5;font-weight:800">AUTO nyari sendiri 5 detik pertama sampe kurva nempel -10 / 0 dB. Pas CAPTURE pertama, level DIKUNCI otomatis biar Sub vs Mid adil. Geser slider = AUTO mati.</div>
-      <div class="sideBtns" style="margin-top:6px">
-        <button id="autobtn" class="autoon">🤖 AUTO MIC: ON</button>
-        <button id="levelreset">↺ RESET + NYARI LAGI</button>
-      </div>
-    </div>
-    <div class="panel">
       <h3>REFERENCE • 4 SUARA</h3>
       <div class="miniRef">
         <button id="pinkbtn">🩷 PINK</button>
@@ -233,7 +214,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
   <span>Reference: <b id="refstat">OFF</b></span>
   <span>FFT: <b id="fftstat">16384 • AUTO</b></span>
   <span>Polarity: <b id="polstat">—</b></span>
-  <span>Level: <b id="levelstat">+0 dB • AUTO</b></span>
+  <span>Level: <b id="levelstat">AUTO • 0 dB</b></span>
   <span style="margin-left:auto">SMART LIVE v13 • dBFS rel, bukan SPL terkalibrasi</span>
 </div>
 <script>
@@ -256,48 +237,32 @@ const S={ctx:null,stream:null,src:null,an:null,refAn:null,noise:null,noiseGain:n
   cursor:1000,live:[],phase:[],phaseRaw:[],acc:null,accN:0,captures:[],capN:0,unwrap:false,delayMs:null,
   polarity:null,phaseAvg:null,phSmooth:24,delayLo:200,delayHi:2000,foundDelay:null,polBand:null,
   appliedDelay:0,frameN:0,delayLocked:false,refRe:null,refIm:null,refBuf:null,delayHist:[],signHist:[],corrSign:1,corrStrength:0,ir:[],irLag:0,
-  manualLag:0,corrAcc:null,corrAccN:0,magOff:null,frameLagHist:[],lastFrameLag:0,levelOff:0,autoLevel:true,levelLocked:false,autoTick:0};
+  manualLag:0,corrAcc:null,corrAccN:0,magOff:null,frameLagHist:[],lastFrameLag:0,levelOff:0,levelLocked:false,autoTick:0};
 function median(a){if(!a.length)return 0;const s=a.slice().sort((x,y)=>x-y);return s[Math.floor(s.length/2)]}
 function fmtOff(v){return (v>0?'+':'')+v+' dB'}
 function updateLevelUI(){
-  const sl=$('levelslider');if(sl)sl.value=S.levelOff;
-  const tag=S.autoLevel?(S.levelLocked?' • DIKUNCI':' • AUTO'):' • MANUAL';
-  const t=$('leveltxt');if(t)t.textContent=fmtOff(S.levelOff)+tag;
-  const st=$('levelstat');if(st)st.textContent=fmtOff(S.levelOff)+tag;
-  const ab=$('autobtn');if(ab){ab.textContent=S.autoLevel?'🤖 AUTO MIC: ON':'🤖 AUTO MIC: OFF';ab.classList.toggle('autoon',S.autoLevel)}
+  const st=$('levelstat');
+  if(st)st.textContent=fmtOff(S.levelOff)+' • AUTO • '+(S.levelLocked?'DIKUNCI 0 dB':'NYARI 0 dB');
 }
-function setLevelOff(v,quiet,fromAuto){
-  S.levelOff=Math.max(-60,Math.min(60,Math.round(v/3)*3));
-  updateLevelUI();
-  if(!quiet&&!fromAuto)toast('Level Mic HP: '+fmtOff(S.levelOff));
-  drawAll();
-}
-/* AUTO MIC: tiap frame TF di 300-3000 Hz dicari median nya, digeser pelan-pelan sampe median nya -10 dB. Pelan biar gak loncat. Begitu CAPTURE pertama, S.levelLocked=true, auto berhenti, patokan nya tetep buat semua driver. */
+/* OTOMATIS SAMPE 0 dB: median TF di 300-3000 Hz digeser pelan-pelan sampe tampilannya 0 dB. Rumus tampil: medDb -30 + levelOff = 0, jadi target levelOff = 30 - medDb. Pas CAPTURE pertama dikunci, biar Sub vs Mid adil. Gak ada slider, gak ada tombol manual. */
 function autoLevelFromTF(freqs,magP){
-  if(!S.autoLevel||S.levelLocked||!S.running||!S.pink)return;
+  if(S.levelLocked||!S.running||!S.pink)return;
   const vals=[];
   for(let i=0;i<freqs.length;i++)if(freqs[i].f>=300&&freqs[i].f<=3000&&magP[i]>1e-12)vals.push(magP[i]);
   if(!vals.length)return;
   vals.sort((a,b)=>a-b);
   const med=vals[Math.floor(vals.length/2)];
   const medDb=10*Math.log10(Math.max(1e-12,med));
-  const target=18-medDb;
-  const clamped=Math.max(-60,Math.min(60,target));
-  S.levelOff+=0.08*(clamped-S.levelOff);
+  const target=Math.max(-60,Math.min(60,30-medDb));
+  S.levelOff+=0.15*(target-S.levelOff);
   S.levelOff=Math.max(-60,Math.min(60,Math.round(S.levelOff/3)*3));
   if(++S.autoTick%10===0)updateLevelUI();
 }
 function lockLevel(){
   if(S.levelLocked)return;
   S.levelLocked=true;updateLevelUI();
-  toast('Level DIKUNCI di '+fmtOff(S.levelOff)+' — jangan diubah lagi pas ganti driver');
+  toast('Level DIKUNCI di '+fmtOff(S.levelOff)+' • 0 dB — Sub vs Mid sekarang adil');
 }
-$('levelslider').addEventListener('input',e=>{if(S.autoLevel){S.autoLevel=false;toast('AUTO mati, sekarang MANUAL. Pencet AUTO MIC buat nyalain lagi.')}setLevelOff(+e.target.value,true)});
-$('levelslider').addEventListener('change',e=>{toast('Level Mic HP: '+fmtOff(S.levelOff)+' • MANUAL')});
-$('levelminus').onclick=()=>{if(S.autoLevel){S.autoLevel=false;toast('AUTO mati, sekarang MANUAL.')}setLevelOff(S.levelOff-3)};
-$('levelplus').onclick=()=>{if(S.autoLevel){S.autoLevel=false;toast('AUTO mati, sekarang MANUAL.')}setLevelOff(S.levelOff+3)};
-$('levelreset').onclick=()=>{S.levelLocked=false;S.autoLevel=true;S.levelOff=0;updateLevelUI();toast('AUTO nyala lagi — diem 5 detik, dia nyari sendiri')};
-$('autobtn').onclick=()=>{S.autoLevel=!S.autoLevel;if(S.autoLevel)S.levelLocked=false;updateLevelUI();toast(S.autoLevel?'AUTO MIC nyala — diem 5 detik':'AUTO MIC mati — geser manual')};
 updateLevelUI();
 $('infobtn').onclick=()=>{$('infoModal').classList.add('show')};
 $('infoClose').onclick=()=>{$('infoModal').classList.remove('show')};
@@ -341,7 +306,7 @@ function p2db(p){return 10*Math.log10(Math.max(1e-12,p))}
 function updateRangeLabels(){
   const r=CFG.range,top=Math.round(r/2),bot=-top;
   $('rangeLbl').textContent='Range: '+r+' dB • +'+top+' / '+bot+' • 0 TENGAH';
-  $('magRangeLbl').textContent='20 Hz — 20 kHz • Range '+r+' dB (+'+top+' / '+bot+') • 0 dB TENGAH • LEVEL ABSOLUT • '+fmtOff(S.levelOff);
+  $('magRangeLbl').textContent='20 Hz — 20 kHz • Range '+r+' dB (+'+top+' / '+bot+') • 0 dB TENGAH • LEVEL OTOMATIS • '+fmtOff(S.levelOff);
   const win=Math.round(S.fft/(S.ctx?S.ctx.sampleRate:48000)*1000);
   $('irinfo').textContent='Time Window: '+win+' ms • FFT '+S.fft+' • Delay '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':'0 ms MANUAL')+' • MANUAL';
 }
@@ -436,7 +401,7 @@ $('capturebtn').onclick=()=>{
 };
 $('clearcap').onclick=()=>{
   if(!S.captures.length){toast('Belum ada capture.');return}
-  const n=S.captures.length;S.captures=[];S.levelLocked=false;updateLevelUI();renderCaptures();refreshPolarityAfterOff();drawAll();toast(n+' capture dihapus • AUTO nyala lagi');
+  const n=S.captures.length;S.captures=[];S.levelLocked=false;updateLevelUI();renderCaptures();refreshPolarityAfterOff();drawAll();toast(n+' capture dihapus • AUTO nyari 0 dB lagi');
 };
 renderCaptures();
 function unwrapPhase(arr){
@@ -764,7 +729,7 @@ function computeTFAligned(){
   S.accN++;
   return{freqs,magP,ph};
 }
-/* LEVEL ABSOLUT + OFFSET MIC HP: -30 dB dasar + S.levelOff yang digeser user / AUTO. Cuma ngubah tinggi kurva, Phase/Delay gak ikut. */
+/* LEVEL OTOMATIS: -30 dB dasar + S.levelOff dari autoLevelFromTF. Cuma ngubah tinggi kurva, Phase/Delay gak ikut. */
 function tfDisplayPower(powerArr){
   const k=Math.pow(10,(-30+S.levelOff)/10);
   return powerArr.map(v=>v*k);
