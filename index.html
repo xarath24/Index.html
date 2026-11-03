@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>SMART LIVE v30 — FIX PUNCAK IR</title>
+<title>SMART LIVE v31 — FIX RATA-RATA</title>
 <style>
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -108,7 +108,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 <div id="toast"></div>
 <div id="infoModal">
   <div class="infoBox">
-    <h3>ⓘ CARA PAKAI — v30</h3>
+    <h3>ⓘ CARA PAKAI — v31</h3>
     <ol>
       <li>Mute driver lain, ukur 1 driver doang.</li>
       <li>START, PINK yang nyala.</li>
@@ -119,7 +119,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
   </div>
 </div>
 <div class="topbar">
-  <div class="logo"><b>SMART</b> LIVE v30 <span>MEASUREMENT • LIKE SMAART • TOMBOL KANAN • OTOMATIS • 120dB</span></div>
+  <div class="logo"><b>SMART</b> LIVE v31 <span>MEASUREMENT • LIKE SMAART • TOMBOL KANAN • OTOMATIS • 120dB</span></div>
   <div class="topbtns">
     <span style="color:#34d399;font-size:10px;font-weight:900">↻ AUTO LANDSCAPE</span>
     <button id="start" class="go">▶ START</button>
@@ -208,7 +208,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
   <span>Reference: <b id="refstat">OFF</b></span>
   <span>FFT: <b id="fftstat">16384 • AUTO</b></span>
   <span>Polarity: <b id="polstat">—</b></span>
-  <span style="margin-left:auto">SMART LIVE v30 • dBFS rel, bukan SPL terkalibrasi</span>
+  <span style="margin-left:auto">SMART LIVE v31 • dBFS rel, bukan SPL terkalibrasi</span>
 </div>
 <script>
 const _dummy=document.createElement('div');
@@ -674,19 +674,10 @@ function drawAll(){
   syncSlider();
   $('ctFreq').textContent=fmtF(S.cursor);$('ctDb').textContent=pt?pt.v.toFixed(1)+' dB':'— dB';$('ctPhase').textContent='Phase '+(pp?pp.v.toFixed(0)+'°':'—°');
 }
-function corrValAtLag(arr,lag){
-  const N=arr.length;
-  const idx=((N-Math.round(lag))%N+N)%N;
-  return arr[idx];
-}
-function corrInterpAtLag(arr,pos){
-  const N=arr.length;
-  const f=N-pos;
-  const i0=Math.floor(f);
-  const t=f-i0;
-  const a=arr[((i0%N)+N)%N];
-  const b=arr[(((i0-1)%N)+N)%N];
-  return a*(1-t)+b*t;
+function corrAt(corr,idx){
+  const N=corr.length;
+  const i=((Math.round(idx)%N)+N)%N;
+  return corr[i];
 }
 function computeTFAligned(){
   const N=S.fft;
@@ -706,12 +697,12 @@ function computeTFAligned(){
   const maxLag=Math.min(2400,Math.floor(N/2));
   let bestLag=0,bestVal=0,bestAbs=-1e18;
   for(let lag=0;lag<=maxLag;lag++){
-    const v=corrValAtLag(sm,lag),av=Math.abs(v);
+    const v=sm[lag],av=Math.abs(v);
     if(av>bestAbs){bestAbs=av;bestLag=lag;bestVal=v}
   }
   let frac=0;
-  if(bestLag>0&&bestLag<maxLag){
-    const y0=corrValAtLag(sm,bestLag-1),y1=corrValAtLag(sm,bestLag),y2=corrValAtLag(sm,bestLag+1);
+  if(bestLag>0&&bestLag<N-1){
+    const y0=sm[bestLag-1],y1=sm[bestLag],y2=sm[bestLag+1];
     const den=y0-2*y1+y2;
     if(Math.abs(den)>1e-18)frac=0.5*(y0-y2)/den;
     if(!isFinite(frac)||Math.abs(frac)>1)frac=0;
@@ -726,13 +717,21 @@ function computeTFAligned(){
   const useLag=S.lockedLag!=null?S.lockedLag:fracLag;
   S.ir=[];
   for(let i=-120;i<=120;i++){
-    S.ir.push(corrInterpAtLag(sm,useLag+i)/(bestAbs||1));
+    const pos=useLag+i;
+    const i0=Math.floor(pos),t=pos-i0;
+    const v0=corrAt(sm,i0),v1=corrAt(sm,i0+1);
+    S.ir.push((v0*(1-t)+v1*t)/(bestAbs||1));
   }
   S.signHist.push(sign);
   if(S.signHist.length>40)S.signHist.shift();
   const freqs=[],magDb=[],ph=[];
   const aAvg=1/CFG.avg;
-  if(!S.acc){S.acc={cr:new Float64Array(N/2),ci:new Float64Array(N/2),rp:new Float64Array(N/2)};S.accN=0}
+  const useAvg=!S.locking;
+  if(useAvg){
+    if(!S.acc){S.acc={cr:new Float64Array(N/2),ci:new Float64Array(N/2),rp:new Float64Array(N/2)};S.accN=0}
+  }else{
+    S.acc=null;S.accN=0;
+  }
   for(let k=1;k<N/2;k++){
     const f=k*S.ctx.sampleRate/N;if(f<MINF||f>MAXF)continue;
     const den=S.refRe[k]*S.refRe[k]+S.refIm[k]*S.refIm[k];
@@ -741,17 +740,22 @@ function computeTFAligned(){
     const mr=re[k]*ca-im[k]*sa,mi=re[k]*sa+im[k]*ca;
     const cr=(mr*S.refRe[k]+mi*S.refIm[k]);
     const ci=(mi*S.refRe[k]-mr*S.refIm[k]);
-    if(S.accN===0){S.acc.cr[k]=cr;S.acc.ci[k]=ci;S.acc.rp[k]=den}
-    else{S.acc.cr[k]+=aAvg*(cr-S.acc.cr[k]);S.acc.ci[k]+=aAvg*(ci-S.acc.ci[k]);S.acc.rp[k]+=aAvg*(den-S.acc.rp[k])}
-    const hr=S.acc.cr[k]/Math.max(1e-18,S.acc.rp[k]);
-    const hi=S.acc.ci[k]/Math.max(1e-18,S.acc.rp[k]);
+    let hr,hi;
+    if(!useAvg){
+      hr=cr/Math.max(1e-18,den);hi=ci/Math.max(1e-18,den);
+    }else{
+      if(S.accN===0){S.acc.cr[k]=cr;S.acc.ci[k]=ci;S.acc.rp[k]=den}
+      else{S.acc.cr[k]+=aAvg*(cr-S.acc.cr[k]);S.acc.ci[k]+=aAvg*(ci-S.acc.ci[k]);S.acc.rp[k]+=aAvg*(den-S.acc.rp[k])}
+      hr=S.acc.cr[k]/Math.max(1e-18,S.acc.rp[k]);
+      hi=S.acc.ci[k]/Math.max(1e-18,S.acc.rp[k]);
+    }
     freqs.push({f});
     let mv=p2db(hr*hr+hi*hi);
     if(mv<-100)mv=-100;
     magDb.push(mv);
     let deg=Math.atan2(hi,hr)*180/Math.PI;deg=((deg+180)%360+360)%360-180;ph.push(deg);
   }
-  S.accN++;
+  if(useAvg)S.accN++;
   return{freqs,magDb,ph};
 }
 function normalizeFixed(freqs,magDb){
