@@ -231,7 +231,7 @@ const FREQS=[20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20
 const CAPCOLORS=['#fb923c','#facc15','#f472b6','#a78bfa','#34d399','#f87171','#93c5fd','#fdba74','#e879f9','#4ade80','#fbbf24','#fb7185'];
 const REFLBL={pink:'PINK NOISE',white:'WHITE NOISE',brown:'BROWN NOISE',sweep:'SWEEP 20 Hz-20 kHz'};
 const RANGES=[45,60,90,120];
-const S={ctx:null,stream:null,src:null,an:null,noise:null,noiseGain:null,pink:false,refType:'pink',running:false,fft:16384,raf:0,
+const S={ctx:null,stream:null,src:null,an:null,refAn:null,noise:null,noiseGain:null,pink:false,refType:'pink',running:false,fft:16384,raf:0,
   cursor:1000,live:[],phase:[],phaseRaw:[],acc:null,accN:0,captures:[],capN:0,unwrap:false,delayMs:null,
   polarity:null,phaseAvg:null,phSmooth:24,delayLo:200,delayHi:2000,foundDelay:null,polBand:null,
   appliedDelay:0,frameN:0,delayLocked:false,refRe:null,refIm:null,refBuf:null,delayHist:[],signHist:[],corrSign:1,corrStrength:0,ir:[],irLag:0,
@@ -394,15 +394,6 @@ function smoothPhaseCircular(arr,perOct){
   }
   return out;
 }
-function calcDelayIn(raw,lo,hi){
-  if(!raw.length)return null;
-  const pts=[];for(let i=0;i<raw.length;i++){if(raw[i].f>=lo&&raw[i].f<=hi)pts.push(raw[i])}
-  if(pts.length<5)return null;
-  const unw=unwrapPhase(pts);let sx=0,sy=0,sxx=0,sxy=0;const n=unw.length;
-  unw.forEach(p=>{sx+=p.f;sy+=p.v;sxx+=p.f*p.f;sxy+=p.f*p.v});
-  const den=n*sxx-sx*sx;if(!den)return null;
-  return -(n*sxy-sx*sy)/den/360*1000;
-}
 /* MANUAL SAJA: cuma baca angka dari IR yang udah tajem, tidak mengubah kurva, tidak pernah dipanggil otomatis */
 function findDelayManual(){
   if(!S.pink||!S.running){toast('START + PINK dulu, tunggu 5 detik.');return}
@@ -503,7 +494,9 @@ async function startNoise(type){
     S.noise=c.createBufferSource();S.noise.buffer=S.refBuf;S.noise.loop=true;
   }
   S.noiseGain=c.createGain();S.noiseGain.gain.value=($('noisevol').value/100)*0.9;
-  S.noise.connect(S.noiseGain);S.noiseGain.connect(c.destination);S.noise.start();
+  S.noise.connect(S.noiseGain);S.noiseGain.connect(c.destination);
+  if(S.refAn){try{S.noiseGain.connect(S.refAn)}catch(e){}}
+  S.noise.start();
   S.pink=true;$('refstat').textContent=REFLBL[type];$('phasesub').textContent=REFLBL[type]+' ON • Phase -180/+180 • AUTO';
   setRefButtons();resetAcc();S.appliedDelay=0;S.delayLocked=false;S.delayHist=[];S.signHist=[];S.corrSign=1;
   $('finddelayres').textContent='Delay manual — 0 ms, pencet FIND DELAY kalau mau';
@@ -655,19 +648,26 @@ function drawAll(){
   drawIR();
   $('ctFreq').textContent=fmtF(S.cursor);$('ctDb').textContent=pt?pt.v.toFixed(1)+' dB':'— dB';$('ctPhase').textContent='Phase '+(pp?pp.v.toFixed(0)+'°':'—°');
 }
-/* FIX UTAMA: H = Mic/Reference dulu, IFFT(H) = IR tajem, puncak IR dipakai buat meluruskan frame sebelum dirata-rata. Bukan korelasi mentah pink. */
+/* FIX UTAMA: mic dan reference diambil bareng di detik yang sama lewat 2 analyser, baru dibagi. Bukan dibagi file lama. */
 function computeTFAligned(){
   const N=S.fft;
   const td=new Float32Array(N);
   S.an.getFloatTimeDomainData(td);
   const re=Float32Array.from(td),im=new Float32Array(N);
   fftCalc(re,im);
+  let rRe=S.refRe,rIm=S.refIm;
+  if(S.refAn){
+    const tr=new Float32Array(N);
+    S.refAn.getFloatTimeDomainData(tr);
+    rRe=Float32Array.from(tr);rIm=new Float32Array(N);
+    fftCalc(rRe,rIm);
+  }
   const hre=new Float32Array(N),him=new Float32Array(N);
   for(let k=0;k<N;k++){
-    const den=S.refRe[k]*S.refRe[k]+S.refIm[k]*S.refIm[k];
+    const den=rRe[k]*rRe[k]+rIm[k]*rIm[k];
     if(den<1e-12){hre[k]=0;him[k]=0;continue}
-    hre[k]=(re[k]*S.refRe[k]+im[k]*S.refIm[k])/den;
-    him[k]=(im[k]*S.refRe[k]-re[k]*S.refIm[k])/den;
+    hre[k]=(re[k]*rRe[k]+im[k]*rIm[k])/den;
+    him[k]=(im[k]*rRe[k]-re[k]*rIm[k])/den;
   }
   const irRe=Float32Array.from(hre),irIm=Float32Array.from(him);
   ifftCalc(irRe,irIm);
@@ -721,7 +721,7 @@ function draw(){
   const peakDb=peak<=0.00001?-120:20*Math.log10(peak);
   updatePeakPanel(peakDb);
   let freqs,pArr,phArr;
-  if(S.pink&&S.refRe&&S.refType!=='sweep'){
+  if(S.pink&&S.refType!=='sweep'){
     const tf=computeTFAligned();freqs=tf.freqs;phArr=tf.ph;
     pArr=normalizeInstant(freqs,tf.magP);
   }else{
@@ -744,6 +744,7 @@ $('start').onclick=async()=>{
     await ensureCtx();
     S.src=S.ctx.createMediaStreamSource(S.stream);
     S.an=S.ctx.createAnalyser();S.fft=CFG.fft;S.an.fftSize=S.fft;S.an.smoothingTimeConstant=0;S.an.minDecibels=-120;S.an.maxDecibels=0;
+    S.refAn=S.ctx.createAnalyser();S.refAn.fftSize=S.fft;S.refAn.smoothingTimeConstant=0;S.refAn.minDecibels=-120;S.refAn.maxDecibels=0;
     S.src.connect(S.an);
     resetAcc();S.running=true;S.frameN=0;S.signHist=[];
     $('start').disabled=true;$('stop').disabled=false;$('status').textContent='LIVE';$('liveind').textContent='● LIVE';
@@ -755,7 +756,7 @@ $('start').onclick=async()=>{
 $('stop').onclick=()=>{
   S.running=false;cancelAnimationFrame(S.raf);
   if(S.stream)S.stream.getTracks().forEach(t=>t.stop());
-  S.stream=null;S.an=null;$('start').disabled=false;$('stop').disabled=true;
+  S.stream=null;S.an=null;S.refAn=null;$('start').disabled=false;$('stop').disabled=true;
   $('status').textContent='STANDBY';$('liveind').textContent='● STANDBY';
   updatePeakPanel(null);
   if(S.pink)stopPink();else{killLive();drawAll()}
