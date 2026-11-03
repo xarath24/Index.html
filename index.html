@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>SMART LIVE v13 — ETC + LiveIR • FIX RATA-RATA IR</title>
+<title>SMART LIVE v13 — ETC + LiveIR • FIX BASS 10Hz</title>
 <style>
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -108,11 +108,12 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 <div id="toast"></div>
 <div id="infoModal">
   <div class="infoBox">
-    <h3>ⓘ CARA PAKAI — ETC + LiveIR FIX</h3>
+    <h3>ⓘ CARA PAKAI — ETC + LiveIR FIX BASS</h3>
     <ol>
-      <li>START, PINK, diem 5 detik. Jangan gerak, jangan pegang HP.</li>
-      <li>ETC harus garis kuning turun dari 0 dB. LiveIR harus 1 puncak tajam doang, goyang dikit itu normal.</li>
-      <li>Pencet FIND DELAY 1x, baru CAPTURE Sub / Mid.</li>
+      <li>HP mundur 1 meter dari box, jangan 30 cm. Peak harus -12 sampai -6, jangan -2.4.</li>
+      <li>START, PINK, diem, jangan pegang HP, jangan jalan di depan box.</li>
+      <li>LiveIR harus 1 puncak tajam, sine 10 Hz nya udah dibuang.</li>
+      <li>FIND DELAY, baru CAPTURE.</li>
     </ol>
     <button id="infoClose" style="width:100%;padding:7px;margin-top:6px">✕ TUTUP</button>
   </div>
@@ -151,9 +152,9 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
           <span class="ph" id="ctPhase">Phase —°</span>
         </div>
       </div>
-      <div class="title"><b>ETC ▼</b><span id="irinfo">Energy Time Curve • 0 - 330 ms • -100 - 0 dB • Peak otomatis 0 dB</span></div>
+      <div class="title"><b>ETC ▼</b><span id="irinfo">Energy Time Curve • 0 - 330 ms • -100 - 0 dB • IR 50 Hz - 16 kHz</span></div>
       <canvas id="ir" width="1200" height="240"></canvas>
-      <div class="title"><b>LiveIR ▼</b><span id="phasesub">Live Impulse Response • 0 - 330 ms • 1 FRAME DOANG, GAK DIRATA-RATA • Puncak ke atas = NORMAL</span></div>
+      <div class="title"><b>LiveIR ▼</b><span id="phasesub">Live Impulse Response • 0 - 330 ms • 1 FRAME • Bass &lt;50 Hz dibuang • Puncak ke atas = NORMAL</span></div>
       <canvas id="phase" width="1200" height="190"></canvas>
       <div class="title"><b>MAGNITUDE</b><span id="magRangeLbl">20 Hz — 20 kHz • Range 90 dB (+45 / -45) • 0 dB TENGAH • LEVEL OTOMATIS</span></div>
       <div class="ctl">
@@ -180,7 +181,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       </div>
       <div class="peakMeter"><div class="peakMeterFill" id="peakFill"></div></div>
       <div id="weakwarn" style="display:none;color:#f87171;font-size:10px;font-weight:900;margin-top:5px;text-align:center;line-height:1.4">⚠ SINYAL LEMAH — VOLUME MENTOK + MIC 30 CM</div>
-      <div class="autoTag" style="margin-top:6px;text-align:center">FFT 16k • AVG 64 • 1/24 OKT • AUTO • REF SIMPANAN • IR 1 FRAME</div>
+      <div class="autoTag" style="margin-top:6px;text-align:center">FFT 16k • AVG 64 • 1/24 OKT • AUTO • IR BANDLIMIT</div>
     </div>
     <div class="panel">
       <h3>🔍 DELAY / PHASE — KANAN</h3>
@@ -297,7 +298,7 @@ function updateRangeLabels(){
   const r=CFG.range,top=Math.round(r/2),bot=-top;
   $('rangeLbl').textContent='Range: '+r+' dB • +'+top+' / '+bot+' • 0 TENGAH';
   $('magRangeLbl').textContent='20 Hz — 20 kHz • Range '+r+' dB (+'+top+' / '+bot+') • 0 dB TENGAH • LEVEL OTOMATIS • '+fmtOff(S.levelOff);
-  $('irinfo').textContent='Energy Time Curve • 0 - 330 ms • -100 - 0 dB • Peak otomatis 0 dB • Delay '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':'0 ms MANUAL');
+  $('irinfo').textContent='Energy Time Curve • 0 - 330 ms • -100 - 0 dB • IR 50 Hz - 16 kHz • Delay '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':'0 ms MANUAL');
 }
 function detectPolarityBand(raw,center){
   if(!raw.length)return{state:null,avg:null,weak:true,band:null};
@@ -517,7 +518,7 @@ async function startNoise(type){
   S.noiseGain=c.createGain();S.noiseGain.gain.value=($('noisevol').value/100)*0.9;
   S.noise.connect(S.noiseGain);S.noiseGain.connect(c.destination);
   S.noise.start();
-  S.pink=true;$('refstat').textContent=REFLBL[type];$('phasesub').textContent='Live Impulse Response • 0 - 330 ms • 1 FRAME DOANG • Puncak ke atas = NORMAL';
+  S.pink=true;$('refstat').textContent=REFLBL[type];$('phasesub').textContent='Live Impulse Response • 0 - 330 ms • 1 FRAME • Bass <50 Hz dibuang • Puncak ke atas = NORMAL';
   setRefButtons();resetAcc();S.appliedDelay=0;S.delayLocked=false;S.delayHist=[];S.signHist=[];S.corrSign=1;
   $('finddelayres').textContent='Delay manual — 0 ms, pencet FIND DELAY, kurva langsung berubah';
   updateRangeLabels();updatePolarityLive();
@@ -527,7 +528,7 @@ function stopPink(){
   if(S.noise){try{S.noise.stop()}catch(e){}try{S.noise.disconnect()}catch(e){}S.noise=null}
   if(S.noiseGain){try{S.noiseGain.disconnect()}catch(e){}S.noiseGain=null}
   S.pink=false;
-  $('refstat').textContent='OFF';$('phasesub').textContent='Live Impulse Response • 0 - 330 ms • 1 FRAME DOANG • Puncak ke atas = NORMAL';
+  $('refstat').textContent='OFF';$('phasesub').textContent='Live Impulse Response • 0 - 330 ms • 1 FRAME • Bass <50 Hz dibuang • Puncak ke atas = NORMAL';
   setRefButtons();killLive();drawAll();
 }
 $('pinkbtn').onclick=()=>{autoLandscape();if(!S.running){toast('START dulu.');return}startNoise('pink')};
@@ -670,6 +671,7 @@ function computeTFAligned(){
   const re=Float32Array.from(td),im=new Float32Array(N);
   fftCalc(re,im);
   const rRe=S.refRe,rIm=S.refIm;
+  /* TF buat Magnitude: pembagian biasa, ini yang udah bener di foto */
   const hre=new Float32Array(N),him=new Float32Array(N);
   for(let k=0;k<N;k++){
     const den=rRe[k]*rRe[k]+rIm[k]*rIm[k];
@@ -677,10 +679,22 @@ function computeTFAligned(){
     hre[k]=(re[k]*rRe[k]+im[k]*rIm[k])/den;
     him[k]=(im[k]*rRe[k]-re[k]*rIm[k])/den;
   }
-  const irRe=Float32Array.from(hre),irIm=Float32Array.from(him);
+  /* IR: salinan TF, tapi DIREm + DIPOTONG 50 Hz - 16 kHz. Ini doang bedanya. */
+  /* maxDen buat rem Wiener: frekuensi lemah gak boleh meledak */
+  let maxDen=1e-18;
+  for(let k=0;k<N;k++){const d=rRe[k]*rRe[k]+rIm[k]*rIm[k];if(d>maxDen)maxDen=d}
+  const eps=maxDen*0.02;
+  const ire=new Float32Array(N),iim=new Float32Array(N);
+  const sr0=S.ctx.sampleRate;
+  for(let k=0;k<N;k++){
+    let f=k*sr0/N; if(f>sr0/2)f=sr0-f;
+    if(f<50||f>16000){ire[k]=0;iim[k]=0;continue}
+    const den=rRe[k]*rRe[k]+rIm[k]*rIm[k]+eps;
+    ire[k]=(re[k]*rRe[k]+im[k]*rIm[k])/den;
+    iim[k]=(im[k]*rRe[k]-re[k]*rIm[k])/den;
+  }
+  const irRe=Float32Array.from(ire),irIm=Float32Array.from(iim);
   ifftCalc(irRe,irIm);
-  /* FIX: IR PAKE 1 FRAME INI DOANG. GAK ADA irAvg, GAK ADA rata-rata 8 frame. */
-  /* Cuma buang rata-ratanya (DC) biar garisnya nempel di tengah, itu doang. */
   const sr=S.ctx.sampleRate,n330=Math.floor(sr*MAXMS/1000);
   let mean=0;for(let i=0;i<n330;i++)mean+=irRe[i];mean/=n330;
   const clean=irRe;
@@ -694,7 +708,6 @@ function computeTFAligned(){
   S.lastFrameLag=bestLag;S.irLag=bestLag;S.peakLag=bestLag;S.corrSign=bestVal<0?-1:1;S.corrStrength=bestAbs;
   S.frameLagHist.push(bestLag);if(S.frameLagHist.length>30)S.frameLagHist.shift();
   S.signHist.push(S.corrSign);if(S.signHist.length>40)S.signHist.shift();
-  /* ETC dari frame ini doang, energi dihalusin 0.5 ms doang */
   const etc=new Float32Array(n330);let run=0;
   const win=Math.max(1,Math.floor(sr*0.0005));
   for(let i=0;i<n330;i++){
