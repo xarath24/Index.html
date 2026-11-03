@@ -154,7 +154,7 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
           <span class="tm" id="ctTime">— ms</span>
         </div>
       </div>
-      <div class="title"><b>ETC ▼</b><span id="irinfo">Energy Time Curve • 0 - 120 ms • -100 - 0 dB • Garis putih = puncak beneran</span></div>
+      <div class="title"><b>ETC ▼</b><span id="irinfo">Energy Time Curve • 0 - 120 ms • -100 - 0 dB</span></div>
       <canvas id="ir" width="1200" height="240"></canvas>
       <div class="title"><b>LiveIR ▼</b><span id="phasesub">Live Impulse Response • 0 - 120 ms • AVG 8, TANPA digeser • Puncak ke atas = NORMAL</span></div>
       <canvas id="phase" width="1200" height="190"></canvas>
@@ -301,7 +301,7 @@ function p2db(p){return 10*Math.log10(Math.max(1e-12,p))}
 function updateRangeLabels(){
   const r=CFG.range,top=Math.round(r/2),bot=-top;
   $('magRangeLbl').textContent='20 Hz — 20 kHz • Range '+r+' dB (+'+top+' / '+bot+') • 0 dB TENGAH • LEVEL OTOMATIS • '+fmtOff(S.levelOff);
-  $('irinfo').textContent='Energy Time Curve • 0 - 120 ms • -100 - 0 dB • Garis putih = puncak beneran • Delay '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':'0 ms MANUAL');
+  $('irinfo').textContent='Energy Time Curve • 0 - 120 ms • -100 - 0 dB • Delay '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':'0 ms MANUAL');
 }
 function detectPolarityBand(raw,center){
   if(!raw.length)return{state:null,avg:null,weak:true,band:null};
@@ -603,8 +603,6 @@ function drawETC(){
   });
   ig.beginPath();ig.strokeStyle='#facc15';ig.lineWidth=2;
   S.etcData.forEach((v,i)=>{const x=i/(S.etcData.length-1)*W,y=Math.max(0,Math.min(H,(0-v)/100*H));if(i===0)ig.moveTo(x,y);else ig.lineTo(x,y)});ig.stroke();
-  const px=S.peakMs/IRMS*W;
-  ig.strokeStyle='#fff';ig.lineWidth=2;ig.beginPath();ig.moveTo(px,0);ig.lineTo(px,H);ig.stroke();
   const cxp=crossV(ig,W,H);
   const idx=Math.max(0,Math.min(S.etcData.length-1,Math.round(cxp/W*(S.etcData.length-1))));
   const v=S.etcData[idx],y=Math.max(0,Math.min(H,(0-v)/100*H));
@@ -625,11 +623,6 @@ function drawLiveIR(){
   });
   pg.beginPath();pg.strokeStyle='#3fd4ec';pg.lineWidth=1.5;
   S.liveIRData.forEach((v,i)=>{const x=i/(S.liveIRData.length-1)*W,y=H/2-v*(H/2-14);if(i===0)pg.moveTo(x,y);else pg.lineTo(x,y)});pg.stroke();
-  const px=S.peakMs/IRMS*W;
-  pg.strokeStyle='#fff';pg.lineWidth=2;pg.beginPath();pg.moveTo(px,0);pg.lineTo(px,H);pg.stroke();
-  pg.fillStyle='#fff';pg.font='900 11px Arial';pg.textAlign='right';
-  pg.fillText('Puncak = '+S.peakMs.toFixed(1)+' ms',W-8,13);
-  pg.textAlign='left';
   const cxp=crossV(pg,W,H);
   const idx=Math.max(0,Math.min(S.liveIRData.length-1,Math.round(cxp/W*(S.liveIRData.length-1))));
   const v=S.liveIRData[idx],y=H/2-v*(H/2-14);
@@ -687,7 +680,6 @@ function computeTFAligned(){
   }
   let maxDen=1e-18;
   for(let k=0;k<N;k++){const d=rRe[k]*rRe[k]+rIm[k]*rIm[k];if(d>maxDen)maxDen=d}
-  /* Wiener ringan, cuma buang <30 Hz, biar gak berdering */
   const eps=maxDen*0.002;
   const ire=new Float32Array(N),iim=new Float32Array(N);
   const sr0=S.ctx.sampleRate;
@@ -710,12 +702,10 @@ function computeTFAligned(){
   S.lastFrameLag=bestLag;S.irLag=bestLag;S.corrSign=bestVal<0?-1:1;S.corrStrength=bestAbs;
   S.frameLagHist.push(bestLag);if(S.frameLagHist.length>30)S.frameLagHist.shift();
   S.signHist.push(S.corrSign);if(S.signHist.length>40)S.signHist.shift();
-  /* RATA-RATA TANPA DIGESER — ini intinya, jangan di-shift */
   if(!S.irAvg){S.irAvg=new Float64Array(N);S.irAvgN=0}
   const a=1/8;
   for(let i=0;i<N;i++)S.irAvg[i]+=a*(irRe[i]-S.irAvg[i]);
   S.irAvgN++;
-  /* Puncak dicari dari hasil rata-rata, di waktu benerannya */
   const nIr=maxLag;
   let pk=0,pkAbs=-1e18;
   for(let i=0;i<nIr;i++){const av=Math.abs(S.irAvg[i]);if(av>pkAbs){pkAbs=av;pk=i}}
