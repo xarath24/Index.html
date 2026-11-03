@@ -44,9 +44,6 @@ canvas{display:block;width:100%;background:#05070a;border-radius:4px;cursor:cros
 .title span{color:#cbd5e1;font-weight:900;overflow:hidden;text-overflow:ellipsis}
 .ctl{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:3px;align-items:stretch;flex:0 0 auto}
 .ctl button{padding:4px 8px;font-size:11px}
-.quickfreq{display:flex;gap:4px;flex:0 0 auto}
-.quickfreq button{padding:5px 9px;font-size:11px;border-color:#3fd4ec;color:#3fd4ec}
-.quickfreq button.on{background:#3fd4ec;color:#000}
 .cursor{display:flex;gap:6px;align-items:center;margin-top:4px;background:#090d12;border:1px solid #2b323e;border-radius:6px;padding:6px 5px;flex:0 0 auto;font-weight:900}
 .cursor input{flex:1;accent-color:#fff;height:26px;touch-action:pan-x}
 .cursor b{color:#fff;font-weight:900}
@@ -162,16 +159,6 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <div class="title"><b>LiveIR ▼</b><span id="phasesub">Live Impulse Response • 0 - 330 ms • AVG 8 disejajarkan • Bass &lt;50 Hz dibuang • Puncak ke atas = NORMAL</span></div>
       <canvas id="phase" width="1200" height="190"></canvas>
       <div class="title"><b>MAGNITUDE</b><span id="magRangeLbl">20 Hz — 20 kHz • Range 90 dB (+45 / -45) • 0 dB TENGAH • LEVEL OTOMATIS</span></div>
-      <div class="ctl">
-        <button id="zoomOut">− ZOOM MAG</button>
-        <button id="zoomIn">+ ZOOM MAG</button>
-        <span class="findres" id="rangeLbl">Range: 90 dB • +45 / -45 • 0 TENGAH</span>
-        <div class="quickfreq">
-          <button data-f="500">500 Hz</button>
-          <button data-f="1000">1 kHz</button>
-          <button data-f="4000">4 kHz</button>
-        </div>
-      </div>
       <canvas id="mag" width="1200" height="300"></canvas>
       <canvas id="freqscale" width="1200" height="56"></canvas>
       <div class="cursor">
@@ -250,7 +237,6 @@ const S={ctx:null,stream:null,src:null,an:null,noise:null,noiseGain:null,pink:fa
 function median(a){if(!a.length)return 0;const s=a.slice().sort((x,y)=>x-y);return s[Math.floor(s.length/2)]}
 function fmtOff(v){return (v>0?'+':'')+v+' dB'}
 function updateLevelUI(){const st=$('levelstat');if(st)st.textContent=fmtOff(S.levelOff)+' • AUTO • '+(S.levelLocked?'DIKUNCI 0 dB':'NYARI 0 dB')}
-/* === CURSOR SALIB: 1 posisi X buat 3 grafik. freq <-> ms itu X yang sama === */
 function crossPx(W){return Math.max(0,Math.min(W,xfreq(S.cursor,W)))}
 function crossMs(){return crossPx(mag.width)/mag.width*MAXMS}
 function setCursor(f,fromSlider){
@@ -303,7 +289,6 @@ async function autoLandscape(){
   try{if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock('landscape')}catch(e){}
   setTimeout(drawAll,300);
 }
-/* Fullscreen cuma pas START, biar gak motong drag cursor */
 document.addEventListener('fullscreenchange',()=>setTimeout(drawAll,300));
 window.addEventListener('orientationchange',()=>setTimeout(drawAll,300));
 function xfreq(f,w){f=Math.max(MINF,Math.min(MAXF,f));let s=0;for(const[a,b,p]of SEGS){if(f<=b||a===15000)return(s+Math.log(f/a)/Math.log(b/a)*p)*w;s+=p}return w}
@@ -315,7 +300,6 @@ function db2p(v){return Math.pow(10,Math.max(-120,v)/10)}
 function p2db(p){return 10*Math.log10(Math.max(1e-12,p))}
 function updateRangeLabels(){
   const r=CFG.range,top=Math.round(r/2),bot=-top;
-  $('rangeLbl').textContent='Range: '+r+' dB • +'+top+' / '+bot+' • 0 TENGAH';
   $('magRangeLbl').textContent='20 Hz — 20 kHz • Range '+r+' dB (+'+top+' / '+bot+') • 0 dB TENGAH • LEVEL OTOMATIS • '+fmtOff(S.levelOff);
   $('irinfo').textContent='Energy Time Curve • 0 - 330 ms • -100 - 0 dB • IR AVG 8 sejajar • Delay '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':'0 ms MANUAL');
 }
@@ -433,8 +417,6 @@ $('unwrapbtn').onclick=()=>{
   $('unwrapbtn').textContent=S.unwrap?'↩ UNWRAP ON':'↩ WRAP -180/+180';
   drawAll();
 };
-$('zoomIn').onclick=()=>{const i=RANGES.indexOf(CFG.range);if(i>0){CFG.range=RANGES[i-1];updateRangeLabels();drawAll()}};
-$('zoomOut').onclick=()=>{const i=RANGES.indexOf(CFG.range);if(i<RANGES.length-1){CFG.range=RANGES[i+1];updateRangeLabels();drawAll()}};
 function updatePolarityLive(){
   if(!S.pink||!S.running){refreshPolarityAfterOff();return}
   if(!S.phaseRaw.length&&!S.signHist.length){setPolarityUI(null,null,false,null);return}
@@ -599,7 +581,6 @@ function gridIR(c,w,h,ymin,ymax){
   for(let t=0;t<=MAXMS;t+=15){const x=t/MAXMS*w;c.fillText(t,Math.max(12,Math.min(w-12,x)),h-4)}
   c.fillText('Time (ms)',w/2,12);c.textAlign='left';
 }
-/* Salib ijo: garis tegak + garis datar di nilai itu, di tiap grafik */
 function crossV(c,W,H){
   const px=crossPx(W);
   c.strokeStyle='#22ff88';c.lineWidth=3;c.beginPath();c.moveTo(px,0);c.lineTo(px,H);c.stroke();
@@ -624,7 +605,6 @@ function drawETC(){
   S.etcData.forEach((v,i)=>{const x=i/(S.etcData.length-1)*W,y=Math.max(0,Math.min(H,(0-v)/100*H));if(i===0)ig.moveTo(x,y);else ig.lineTo(x,y)});ig.stroke();
   const px=(S.peakLag/(S.ctx?S.ctx.sampleRate:48000)*1000)/MAXMS*W;
   ig.strokeStyle='#fff';ig.lineWidth=2;ig.beginPath();ig.moveTo(px,0);ig.lineTo(px,H);ig.stroke();
-  /* SALIB */
   const cxp=crossV(ig,W,H);
   const idx=Math.max(0,Math.min(S.etcData.length-1,Math.round(cxp/W*(S.etcData.length-1))));
   const v=S.etcData[idx],y=Math.max(0,Math.min(H,(0-v)/100*H));
@@ -650,7 +630,6 @@ function drawLiveIR(){
   pg.fillStyle='#fff';pg.font='900 11px Arial';pg.textAlign='right';
   pg.fillText('Puncak = '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':(S.peakLag/(S.ctx?S.ctx.sampleRate:48000)*1000).toFixed(2)+' ms'),W-8,13);
   pg.textAlign='left';
-  /* SALIB */
   const cxp=crossV(pg,W,H);
   const idx=Math.max(0,Math.min(S.liveIRData.length-1,Math.round(cxp/W*(S.liveIRData.length-1))));
   const v=S.liveIRData[idx],y=H/2-v*(H/2-14);
@@ -671,7 +650,6 @@ function drawAll(){
   drawZeroLine(mg,w,h,range);
   let pt=pointOn(S.live,S.cursor);
   if(!pt){const cp=lastVisibleCapture();if(cp&&cp.mag.length)pt=pointOn(cp.mag,S.cursor)}
-  /* SALIB Magnitude: tegak ijo + datar ijo di nilai cursor */
   const cx=crossPx(w);
   mg.strokeStyle='#22ff88';mg.lineWidth=3;mg.beginPath();mg.moveTo(cx,0);mg.lineTo(cx,h);mg.stroke();
   if(pt){
@@ -692,7 +670,6 @@ function drawAll(){
   }
   if(pt&&pp)$('cursorread').textContent=fmtF(S.cursor)+' • '+pt.v.toFixed(1)+' dB • Phase '+pp.v.toFixed(0)+'° • '+crossMs().toFixed(1)+' ms';
   $('ctFreq').textContent=fmtF(S.cursor);$('ctDb').textContent=pt?pt.v.toFixed(1)+' dB':'— dB';$('ctPhase').textContent='Phase '+(pp?pp.v.toFixed(0)+'°':'—°');$('ctTime').textContent=crossMs().toFixed(1)+' ms';
-  document.querySelectorAll('.quickfreq button').forEach(b=>{b.classList.toggle('on',Math.abs(+b.dataset.f-S.cursor)<80)});
 }
 function computeTFAligned(){
   const N=S.fft;
@@ -843,7 +820,6 @@ $('stop').onclick=()=>{
   updatePeakPanel(null);
   if(S.pink)stopPink();else{killLive();drawAll()}
 };
-/* Cursor salib: tap / geser di grafik mana aja, semua ikut */
 function moveFromEvent(e,el){
   const r=el.getBoundingClientRect();
   const cx=(e.clientX!=null?e.clientX:(e.touches&&e.touches[0]?e.touches[0].clientX:0));
@@ -862,7 +838,6 @@ $('cursorslider').addEventListener('input',e=>{e.stopPropagation();setCursor(fre
 $('cursorslider').addEventListener('change',e=>{setCursor(freqAtX(+e.target.value/1000*mag.width,mag.width),true)});
 $('curleft').onclick=()=>{setCursor(S.cursor*0.9)};
 $('curright').onclick=()=>{setCursor(S.cursor*1.1)};
-document.querySelectorAll('.quickfreq button').forEach(b=>{b.onclick=()=>setCursor(+b.dataset.f)});
 setCursor(556);
 updateRangeLabels();
 drawAll();
