@@ -108,13 +108,14 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
 <div id="toast"></div>
 <div id="infoModal">
   <div class="infoBox">
-    <h3>ⓘ CARA PAKAI — SEMUA OTOMATIS</h3>
+    <h3>ⓘ CARA PAKAI — PATOKAN BAWAH -60 dB</h3>
     <ol>
       <li>Mute driver lain, ukur 1 driver doang.</li>
+      <li>Kurva nempel di bawah -60 dB, puncaknya naik ke atas. Itu normal.</li>
       <li>Geser cursor ke tengah daerah driver itu: mid 500 Hz, tweeter 5 kHz.</li>
       <li>Lihat angka Phase di cursor atas, dan Polarity di bawah.</li>
       <li>Balik + / - di DLMS, angka Phase harus ganti di cursor itu.</li>
-      <li>FFT, AVG, Range, Smoothing udah otomatis. Delay manual, pencet FIND DELAY kalau mau.</li>
+      <li>Delay manual, pencet FIND DELAY kalau mau.</li>
     </ol>
     <button id="infoClose" style="width:100%;padding:7px;margin-top:6px">✕ TUTUP</button>
   </div>
@@ -157,11 +158,11 @@ input[type=range]{width:100%;accent-color:#3fd4ec}
       <canvas id="ir" width="1200" height="90"></canvas>
       <div class="title"><b>PHASE</b><span id="phasesub">Reference OFF — HIDUPKAN REFERENCE</span></div>
       <canvas id="phase" width="1200" height="190"></canvas>
-      <div class="title"><b>MAGNITUDE</b><span id="magRangeLbl">20 Hz — 20 kHz • Range 60 dB (+12 / -48) • AUTO</span></div>
+      <div class="title"><b>MAGNITUDE</b><span id="magRangeLbl">20 Hz — 20 kHz • Range 60 dB (0 / -60) • BAWAH -60</span></div>
       <div class="ctl">
         <button id="zoomOut">− ZOOM MAG</button>
         <button id="zoomIn">+ ZOOM MAG</button>
-        <span class="findres" id="rangeLbl">Range: 60 dB • AUTO</span>
+        <span class="findres" id="rangeLbl">Range: 60 dB • 0 / -60</span>
       </div>
       <canvas id="mag" width="1200" height="300"></canvas>
       <canvas id="freqscale" width="1200" height="56"></canvas>
@@ -224,6 +225,7 @@ const fsc=$('freqscale'),fg=fsc.getContext('2d');
 const irc=$('ir'),ig=irc.getContext('2d');
 const MINF=20,MAXF=20000;
 const CFG={fft:16384,avg:64,detail:24,phSmooth:24,range:60};
+const MAG_OFF=-45;
 const SEGS=[[20,1000,.33],[1000,3000,.17],[3000,7000,.21],[7000,10000,.10],[10000,15000,.10],[15000,20000,.09]];
 const MAJORS=[20,50,100,200,500,1000,1500,2000,3000,4000,5000,7000,10000,15000,20000];
 const MAJORSET=new Set(MAJORS);
@@ -273,14 +275,14 @@ function xfreq(f,w){f=Math.max(MINF,Math.min(MAXF,f));let s=0;for(const[a,b,p]of
 function freqAtX(x,w){const r=Math.max(0,Math.min(1,x/w));let s=0;for(const[a,b,p]of SEGS){if(r<=s+p||a===15000)return a*Math.exp(((r-s)/p)*Math.log(b/a));s+=p}return MAXF}
 function fmtF(f){return f>=1000?(f/1000).toFixed(2).replace(/0+$/,'').replace(/\.$/,'')+' kHz':Math.round(f)+' Hz'}
 function fmtLab(f){return f>=1000?(f/1000).toString().replace(/\.0$/,'')+'k':(''+f)}
-function yMag(v,range,h){return Math.max(0,Math.min(h,(range/2-v)/range*h))}
+/* PATOKAN BAWAH: 0 dB di atas, -range di bawah. v=-45 nempel bawah, bukan di tengah. */
+function yMag(v,range,h){return Math.max(0,Math.min(h,(-v)/range*h))}
 function db2p(v){return Math.pow(10,Math.max(-120,v)/10)}
 function p2db(p){return 10*Math.log10(Math.max(1e-12,p))}
 function updateRangeLabels(){
   const r=CFG.range;
-  const top=Math.round(r*0.2),bot=top-r;
-  $('rangeLbl').textContent='Range: '+r+' dB • AUTO';
-  $('magRangeLbl').textContent='20 Hz — 20 kHz • Range '+r+' dB ('+(top>0?'+'+top:top)+' / '+bot+') • AUTO';
+  $('rangeLbl').textContent='Range: '+r+' dB • 0 / -'+r;
+  $('magRangeLbl').textContent='20 Hz — 20 kHz • Range '+r+' dB (0 / -'+r+') • BAWAH -'+r;
   const win=Math.round(S.fft/(S.ctx?S.ctx.sampleRate:48000)*1000);
   $('irinfo').textContent='Time Window: '+win+' ms • FFT '+S.fft+' • Delay '+(S.foundDelay!=null?S.foundDelay.toFixed(3)+' ms':'0 ms MANUAL')+' • MANUAL';
 }
@@ -394,7 +396,6 @@ function smoothPhaseCircular(arr,perOct){
   }
   return out;
 }
-/* MANUAL SAJA: cuma baca angka dari IR yang udah tajem, tidak mengubah kurva, tidak pernah dipanggil otomatis */
 function findDelayManual(){
   if(!S.pink||!S.running){toast('START + PINK dulu, tunggu 5 detik.');return}
   if(!S.frameLagHist.length){toast('Tunggu IR nya muncul dulu 5 detik.');return}
@@ -517,7 +518,8 @@ $('sweepbtn').onclick=()=>{autoLandscape();if(!S.running){toast('START dulu.');r
 $('noiseoff').onclick=stopPink;
 $('noisevol').oninput=e=>{$('voltxt').textContent=e.target.value+'%';if(S.noiseGain&&S.ctx)S.noiseGain.gain.setTargetAtTime((e.target.value/100)*0.9,S.ctx.currentTime,.02)};
 function drawZeroLine(c,w,h,range){
-  const y=yMag(0,range,h);c.strokeStyle='#22ff88';c.lineWidth=4;c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();c.fillStyle='#22ff88';c.font='900 16px Arial';c.textAlign='left';c.fillText('0 dB',6,y-7);
+  c.strokeStyle='#22ff88';c.lineWidth=4;c.beginPath();c.moveTo(0,1);c.lineTo(w,1);c.stroke();c.fillStyle='#22ff88';c.font='900 16px Arial';c.textAlign='left';c.fillText('0 dB',6,18);
+  const yb=yMag(-range,range,h);c.strokeStyle='#f87171';c.lineWidth=2;c.beginPath();c.moveTo(0,h-1);c.lineTo(w,h-1);c.stroke();c.fillStyle='#f87171';c.font='900 14px Arial';c.fillText('-'+range+' dB',6,h-6);
 }
 function drawScale(){
   const c=fg,W=fsc.width,H=fsc.height;
@@ -528,8 +530,8 @@ function drawScale(){
 function gridMag(c,w,h,range){
   c.clearRect(0,0,w,h);c.fillStyle='#05070a';c.fillRect(0,0,w,h);
   FREQS.forEach(f=>{const x=xfreq(f,w);c.strokeStyle=MAJORSET.has(f)?'#3a4452':'#232a35';c.lineWidth=1;c.beginPath();c.moveTo(x,0);c.lineTo(x,h);c.stroke()});
-  const half=range/2;c.textAlign='left';
-  for(let d=-half;d<=half;d+=10){if(d===0)continue;const y=yMag(d,range,h);c.strokeStyle='#232a35';c.lineWidth=1;c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();c.fillStyle='#ffffff';c.font='900 14px Arial';c.fillText((d>0?'+'+d:''+d)+' dB',4,Math.max(13,Math.min(h-2,y+11)))}
+  c.textAlign='left';
+  for(let d=0;d>=-range;d-=10){const y=yMag(d,range,h);c.strokeStyle='#232a35';c.lineWidth=1;c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();c.fillStyle='#ffffff';c.font='900 14px Arial';c.fillText(d+' dB',4,Math.max(13,Math.min(h-2,y+11)))}
 }
 function densify(freqs,pArr,phArr){
   const W=mag.width,N=301,out=[],ph=[];
@@ -648,7 +650,6 @@ function drawAll(){
   drawIR();
   $('ctFreq').textContent=fmtF(S.cursor);$('ctDb').textContent=pt?pt.v.toFixed(1)+' dB':'— dB';$('ctPhase').textContent='Phase '+(pp?pp.v.toFixed(0)+'°':'—°');
 }
-/* FIX UTAMA: mic dan reference diambil bareng di detik yang sama lewat 2 analyser, baru dibagi. Bukan dibagi file lama. */
 function computeTFAligned(){
   const N=S.fft;
   const td=new Float32Array(N);
@@ -705,12 +706,14 @@ function computeTFAligned(){
   S.accN++;
   return{freqs,magP,ph};
 }
+/* Turunin 45 dB: median yang tadinya 0 jadi -45, nempel bawah -60. */
 function normalizeInstant(freqs,powerArr){
   const vals=[];
   for(let i=0;i<freqs.length;i++)if(freqs[i].f>=500&&freqs[i].f<=2000)vals.push(powerArr[i]);
   vals.sort((a,b)=>a-b);
   const avgMid=vals.length?vals[Math.floor(vals.length/2)]:1;
-  return powerArr.map(v=>v/Math.max(1e-12,avgMid));
+  const ref=avgMid*Math.pow(10,45/10);
+  return powerArr.map(v=>v/Math.max(1e-12,ref));
 }
 let polTick=0;
 function draw(){
