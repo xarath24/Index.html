@@ -1,109 +1,200 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#101522">
-<title>Stockity Semi Robot — 5 Menit</title>
+<meta name="theme-color" content="#090d18">
+<title>Music Delay FX Studio</title>
 <style>
-:root{color-scheme:dark;--bg:#101522;--panel:#1a2233;--panel2:#222d42;--line:#344158;--txt:#eef3ff;--muted:#9eabc2;--green:#35c46a;--red:#f16b59;--yellow:#f2c45c;--blue:#55a8ff}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:14px system-ui,-apple-system,Segoe UI,sans-serif;padding:14px;max-width:760px;margin:auto}
-header{display:flex;justify-content:space-between;align-items:center;margin:4px 0 14px}h1{font-size:20px;margin:0}small,.muted{color:var(--muted)}.tag{background:#263b57;color:#b9dcff;border-radius:20px;padding:6px 10px;font-size:12px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin:12px 0}
-h2{font-size:15px;margin:0 0 12px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
-label{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}input,select{width:100%;background:#111a29;border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:12px;font-size:16px;min-width:0}
-button{border:0;border-radius:11px;padding:12px 14px;font-weight:700;font-size:14px;color:#07111d;background:var(--blue);cursor:pointer}
-button.secondary{background:var(--panel2);color:var(--txt);border:1px solid var(--line)}button.green{background:var(--green)}button.red{background:var(--red)}button.full{width:100%;margin-top:10px}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-.signal{border-radius:14px;padding:16px;text-align:center;background:var(--panel2);border:1px solid var(--line)}
-.signal strong{display:block;font-size:28px;letter-spacing:1px;margin:4px 0}.signal.buy{border-color:#278c50;background:#153427}.signal.sell{border-color:#a8443a;background:#3a211f}.signal.wait{border-color:#8a7135;background:#352e1d}
-.metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.metric{background:#111a29;border-radius:10px;padding:10px}.metric b{display:block;font-size:17px;margin-top:3px}
-.row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #2b3548}.row:last-child{border:0}
-ul{padding-left:18px;margin:8px 0;color:var(--muted);line-height:1.55}
-#history{max-height:230px;overflow:auto;font-size:12px}.pill{display:inline-block;border-radius:20px;padding:3px 8px;font-size:11px;background:#29354a}
-.warning{color:#f5d58a;background:#332d1c;border:1px solid #66552c;border-radius:12px;padding:11px;font-size:12px;line-height:1.5}
-@media(min-width:600px){.grid{grid-template-columns:repeat(4,1fr)}}
+:root{--bg:#090d18;--panel:#121a2b;--panel2:#0e1524;--line:#26334b;--cyan:#35e0d0;--blue:#6488ff;--muted:#8e9bb3;--white:#f4f7ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -15%,#1b3151 0%,var(--bg) 55%);color:var(--white);font:14px system-ui,Arial,sans-serif;min-height:100vh}
+.wrap{max-width:850px;margin:auto;padding:18px 14px 34px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.brand{display:flex;gap:11px;align-items:center}.logo{width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,var(--cyan),var(--blue));display:grid;place-items:center;color:#07121c;font-size:22px;font-weight:900;box-shadow:0 5px 25px #35e0d044}
+h1{font-size:17px;margin:0;letter-spacing:1.2px}.sub{color:var(--muted);font-size:11px;margin-top:3px;letter-spacing:1px}
+.pill{border:1px solid #23655f;color:var(--cyan);padding:7px 10px;border-radius:30px;font-size:10px;letter-spacing:1px}
+.hero{background:linear-gradient(130deg,#172941,#111a2b 65%);border:1px solid var(--line);border-radius:22px;padding:18px;margin-bottom:14px;overflow:hidden;position:relative}
+.hero:after{content:"";position:absolute;width:180px;height:180px;border-radius:50%;background:#35e0d010;right:-60px;top:-70px}
+.hero h2{font-size:20px;margin:0 0 5px}.hero p{margin:0;color:var(--muted);font-size:12px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:15px 0}
+.tab{border:1px solid var(--line);background:var(--panel2);color:var(--muted);padding:12px;border-radius:12px;font-weight:700}
+.tab.active{color:var(--cyan);border-color:#287b78;background:#102b31}
+.card{background:linear-gradient(150deg,#141e31,#101726);border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 0}
+.cardhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px}
+.cardhead h3{font-size:13px;letter-spacing:1px;margin:0}.hint{font-size:10px;color:var(--muted)}
+input[type=text],input[type=url]{width:100%;background:#090f1d;border:1px solid var(--line);border-radius:11px;padding:13px;color:white;outline:none;font-size:13px}
+input:focus{border-color:var(--cyan)}
+button{cursor:pointer;border:0;font:inherit}
+.btn{background:linear-gradient(120deg,var(--cyan),#6b9dff);color:#06121d;font-weight:800;padding:12px 15px;border-radius:11px}
+.btn.secondary{background:#202d45;color:#dce6ff;border:1px solid #34435f}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.btnrow .btn{flex:1}
+input[type=file]{display:none}.filelabel{display:block;text-align:center;padding:14px;border:1px dashed #48617f;border-radius:12px;color:#c9d8f5;background:#0b1322}
+#ytFrame{width:100%;aspect-ratio:16/9;border:0;border-radius:12px;background:#05080e;margin-top:12px}
+.notice{background:#302718;border:1px solid #725a2d;color:#f2d99c;padding:11px;border-radius:11px;font-size:11px;line-height:1.5;margin-top:10px}
+.player{display:flex;align-items:center;gap:13px}.disc{width:62px;height:62px;border-radius:50%;background:radial-gradient(circle,#0d1828 0 18%,#35e0d0 19% 22%,#182d4a 23% 55%,#35e0d0 56% 58%,#111a2b 59%);display:grid;place-items:center;animation:spin 8s linear infinite;animation-play-state:paused}
+.disc.playing{animation-play-state:running}@keyframes spin{to{transform:rotate(360deg)}}
+.track{min-width:0;flex:1}.track strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.track small{color:var(--muted)}
+.transport{display:flex;gap:10px;align-items:center;margin-top:14px}.round{width:44px;height:44px;border-radius:50%;background:#22334e;color:white;font-size:17px}.round.main{background:linear-gradient(135deg,var(--cyan),var(--blue));color:#06121c;font-size:20px}
+.progress{width:100%;accent-color:var(--cyan);margin-top:13px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.control{background:#0b1322;border:1px solid #26354e;border-radius:13px;padding:12px}
+.control label{display:flex;justify-content:space-between;color:#cbd6eb;font-size:11px;margin-bottom:10px}.val{color:var(--cyan);font-weight:800;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--cyan)}
+.presets{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.preset{padding:11px 8px;background:#0b1424;border:1px solid #2b3a55;color:#d9e5ff;border-radius:11px;font-size:11px;font-weight:700}
+.preset.active{border-color:var(--cyan);color:var(--cyan);background:#102a30}
+.meter{height:8px;background:#080e19;border-radius:10px;overflow:hidden;margin-top:10px}.meter span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--blue));transition:width .1s}
+.footer{text-align:center;color:#65748e;font-size:10px;padding:18px 5px}
+@media(min-width:650px){.grid{grid-template-columns:repeat(4,1fr)}.presets{grid-template-columns:repeat(4,1fr)}}
 </style>
 </head>
 <body>
-<header><div><h1>STOCKITY SEMI ROBOT</h1><small>Analisis manual • timeframe 5 menit</small></div><span class="tag">ANDROID</span></header>
+<div class="wrap">
+ <header class="top">
+  <div class="brand"><div class="logo">♫</div><div><h1>MUSIC DELAY FX</h1><div class="sub">STUDIO • AUDIO EFFECT PROCESSOR</div></div></div>
+  <div class="pill">● READY</div>
+ </header>
+ <section class="hero"><h2>Make your sound deeper.</h2><p>Echo • Delay • Ping Pong • Live controls</p></section>
+ <div class="tabs"><button class="tab active" id="localTab">♫ MUSIK HP</button><button class="tab" id="youtubeTab">▶ YOUTUBE</button></div>
 
-<div class="warning">Mode semi-otomatis: aplikasi ini tidak terhubung ke server Stockity dan tidak menekan tombol transaksi. Masukkan data candle secara manual. Sinyal adalah analisis indikator, bukan jaminan hasil atau persentase peluang menang.</div>
+ <section class="card" id="localPanel">
+  <div class="cardhead"><h3>LOCAL MUSIC PLAYER</h3><span class="hint">MP3 • WAV • M4A</span></div>
+  <label class="filelabel" for="audioFile">＋ PILIH FILE MUSIK DARI HP</label><input id="audioFile" type="file" accept="audio/*">
+  <div class="player" style="margin-top:16px"><div class="disc" id="disc">♫</div><div class="track"><strong id="trackName">Belum ada musik dipilih</strong><small id="trackState">Pilih file untuk mulai</small></div></div>
+  <div class="transport"><button class="round" id="stopBtn">■</button><button class="round main" id="playBtn">▶</button><div style="flex:1"><div class="hint" id="timeText">00:00 / 00:00</div><input class="progress" id="seek" type="range" min="0" max="1000" value="0"></div></div>
+  <div class="meter"><span id="level"></span></div>
+  <audio id="audio" crossorigin="anonymous"></audio>
+ </section>
 
-<section class="card">
-<h2>1. Masukkan data candle 5 menit</h2>
-<div class="grid">
-<div><label>Open</label><input id="o" type="number" step="any" placeholder="Harga open"></div>
-<div><label>High</label><input id="h" type="number" step="any" placeholder="Harga tertinggi"></div>
-<div><label>Low</label><input id="l" type="number" step="any" placeholder="Harga terendah"></div>
-<div><label>Close</label><input id="c" type="number" step="any" placeholder="Harga close"></div>
+ <section class="card" id="youtubePanel" hidden>
+  <div class="cardhead"><h3>YOUTUBE PLAYER</h3><span class="hint">EMBED PLAYER</span></div>
+  <input id="ytUrl" type="url" placeholder="Tempel link YouTube di sini">
+  <div class="btnrow"><button class="btn" id="loadYt">BUKA VIDEO</button><button class="btn secondary" id="clearYt">HAPUS</button></div>
+  <div id="ytHolder"></div>
+  <div class="notice">YouTube dapat diputar di sini. Efek Delay di bawah hanya memproses file musik lokal, bukan audio YouTube, karena pembatasan keamanan browser dan YouTube.</div>
+ </section>
+
+ <section class="card">
+  <div class="cardhead"><h3>DELAY PRESETS</h3><span class="hint">QUICK SOUND</span></div>
+  <div class="presets">
+   <button class="preset active" data-preset="clean">CLEAN</button>
+   <button class="preset" data-preset="slap">SLAPBACK</button>
+   <button class="preset" data-preset="vocal">VOCAL DELAY</button>
+   <button class="preset" data-preset="ping">PING PONG</button>
+   <button class="preset" data-preset="deep">DEEP ECHO</button>
+   <button class="preset" data-preset="wide">WIDE SPACE</button>
+   <button class="preset" data-preset="dub">DUB ECHO</button>
+   <button class="preset" data-preset="hall">LONG ECHO</button>
+  </div>
+ </section>
+
+ <section class="card">
+  <div class="cardhead"><h3>DELAY ENGINE</h3><span class="hint" id="engineState">ENGINE STANDBY</span></div>
+  <div class="grid">
+   <div class="control"><label>DELAY TIME <span class="val" id="timeVal">320 ms</span></label><input id="delayTime" type="range" min="20" max="1200" value="320"></div>
+   <div class="control"><label>FEEDBACK <span class="val" id="feedbackVal">35%</span></label><input id="feedback" type="range" min="0" max="85" value="35"></div>
+   <div class="control"><label>WET / EFFECT <span class="val" id="wetVal">30%</span></label><input id="wet" type="range" min="0" max="100" value="30"></div>
+   <div class="control"><label>DRY / ORIGINAL <span class="val" id="dryVal">100%</span></label><input id="dry" type="range" min="0" max="100" value="100"></div>
+   <div class="control"><label>LOW CUT <span class="val" id="lowVal">120 Hz</span></label><input id="low" type="range" min="20" max="500" value="120"></div>
+   <div class="control"><label>HIGH CUT <span class="val" id="highVal">8.0 kHz</span></label><input id="high" type="range" min="1000" max="18000" value="8000"></div>
+   <div class="control"><label>STEREO WIDTH <span class="val" id="widthVal">70%</span></label><input id="width" type="range" min="0" max="100" value="70"></div>
+   <div class="control"><label>OUTPUT LEVEL <span class="val" id="outVal">80%</span></label><input id="out" type="range" min="0" max="100" value="80"></div>
+  </div>
+  <div class="btnrow"><button class="btn secondary" id="bypass">BYPASS FX</button><button class="btn" id="reset">RESET SETTING</button></div>
+ </section>
+ <div class="footer">MUSIC DELAY FX STUDIO • Gunakan volume wajar untuk melindungi speaker dan pendengaran.</div>
 </div>
-<div class="actions"><button id="add">Tambah candle</button><button class="secondary" id="demo">Isi data demo</button></div>
-<div class="actions"><button class="secondary" id="undo">Hapus candle terakhir</button><button class="secondary" id="clear">Reset semua</button></div>
-<p class="muted" id="count">0 candle tersimpan. Masukkan minimal 26 candle.</p>
-</section>
-
-<section class="card">
-<h2>2. Hasil analisis</h2>
-<div id="signal" class="signal wait"><small>SINYAL SAAT INI</small><strong>WAIT</strong><span>Menunggu data candle</span></div>
-<div class="metrics" style="margin-top:10px">
-<div class="metric"><small>EMA 9</small><b id="ema9">—</b></div>
-<div class="metric"><small>EMA 21</small><b id="ema21">—</b></div>
-<div class="metric"><small>RSI 14</small><b id="rsi">—</b></div>
-<div class="metric"><small>MACD histogram</small><b id="macd">—</b></div>
-<div class="metric"><small>Support</small><b id="support">—</b></div>
-<div class="metric"><small>Resistance</small><b id="resistance">—</b></div>
-</div>
-<div style="margin-top:12px"><b>Konfirmasi indikator</b><div id="checks" class="muted" style="margin-top:6px">Belum ada analisis.</div></div>
-<p class="muted" id="reason">Sinyal akan dihitung setelah data mencukupi.</p>
-</section>
-
-<section class="card">
-<h2>3. Panduan eksekusi manual</h2>
-<div class="row"><span>Timeframe analisis</span><b>5 menit</b></div>
-<div class="row"><span>Durasi kontrak</span><b>Sesuaikan aturan instrumen</b></div>
-<div class="row"><span>Konfirmasi</span><b>Gunakan candle yang sudah tutup</b></div>
-<div class="row"><span>Manajemen risiko</span><b>Uji demo, nominal kecil</b></div>
-<ul><li>BUY hanya jika skor BUY minimal 4 dari 5 dan tidak ada konflik indikator besar.</li><li>SELL hanya jika skor SELL minimal 4 dari 5 dan tidak ada konflik indikator besar.</li><li>Jika skor belum cukup atau indikator berlawanan, pilih WAIT.</li><li>Jangan mengejar kerugian atau menaikkan nominal untuk membalas transaksi.</li></ul>
-</section>
-
-<section class="card">
-<h2>4. Riwayat sinyal</h2><div id="history" class="muted">Belum ada sinyal.</div>
-</section>
-<p class="muted" style="text-align:center;font-size:11px">Indikator teknikal dapat menghasilkan sinyal palsu, terutama saat pasar datar atau volatil. Uji di akun demo terlebih dahulu.</p>
-
 <script>
 const $=id=>document.getElementById(id);
-let candles=[], signalLog=[];
-const fmt=n=>Number.isFinite(n)?Number(n).toPrecision(7):"—";
-function ema(values,period){if(values.length<period)return NaN;let k=2/(period+1),v=values.slice(0,period).reduce((a,b)=>a+b,0)/period;for(let i=period;i<values.length;i++)v=values[i]*k+v*(1-k);return v}
-function rsi(values,p=14){if(values.length<=p)return NaN;let gain=0,loss=0;for(let i=values.length-p;i<values.length;i++){let d=values[i]-values[i-1];if(d>0)gain+=d;else loss-=d}let ag=gain/p,al=loss/p;if(al===0)return 100;return 100-(100/(1+ag/al))}
-function macdHist(values){if(values.length<26)return NaN;let fast=emaSeries(values,12),slow=emaSeries(values,26),line=fast.map((v,i)=>v-slow[i]).filter(Number.isFinite);if(line.length<9)return NaN;return line[line.length-1]-ema(line,9)}
-function emaSeries(a,p){let out=Array(a.length).fill(NaN);if(a.length<p)return out;let k=2/(p+1),v=a.slice(0,p).reduce((x,y)=>x+y,0)/p;out[p-1]=v;for(let i=p;i<a.length;i++){v=a[i]*k+v*(1-k);out[i]=v}return out}
-function analyze(){
- const n=candles.length;$("count").textContent=n+" candle tersimpan. "+(n<26?"Masukkan minimal 26 candle.":"Data cukup untuk analisis indikator.");
- if(n<26){$("signal").className="signal wait";$("signal").innerHTML="<small>SINYAL SAAT INI</small><strong>WAIT</strong><span>Butuh minimal 26 candle tertutup</span>";["ema9","ema21","rsi","macd","support","resistance"].forEach(id=>$(id).textContent="—");$("checks").textContent="Data belum cukup.";return}
- const closes=candles.map(x=>x.c),last=candles[n-1],e9=ema(closes,9),e21=ema(closes,21),rv=rsi(closes),mh=macdHist(closes);
- const recent=candles.slice(-20),sup=Math.min(...recent.map(x=>x.l)),res=Math.max(...recent.map(x=>x.h));
- const bullish=last.c>last.o,bearish=last.c<last.o;
- const buy=[e9>e21,mh>0,rv>50&&rv<70,bullish,last.c>sup+(res-sup)*.35];
- const sell=[e9<e21,mh<0,rv<50&&rv>30,bearish,last.c<res-(res-sup)*.35];
- let bs=buy.filter(Boolean).length,ss=sell.filter(Boolean).length,dir="WAIT",score=Math.max(bs,ss);
- if(bs>=4&&bs>ss)dir="BUY";else if(ss>=4&&ss>bs)dir="SELL";
- $("signal").className="signal "+(dir==="BUY"?"buy":dir==="SELL"?"sell":"wait");
- $("signal").innerHTML="<small>SINYAL SAAT INI</small><strong>"+dir+"</strong><span>Skor konfirmasi "+score+"/5 • bukan probabilitas menang</span>";
- $("ema9").textContent=fmt(e9);$("ema21").textContent=fmt(e21);$("rsi").textContent=fmt(rv);$("macd").textContent=fmt(mh);$("support").textContent=fmt(sup);$("resistance").textContent=fmt(res);
- const names=["EMA 9 vs EMA 21","MACD momentum","RSI dalam zona konfirmasi","Candle terakhir","Posisi harga dalam rentang 20 candle"];
- $("checks").innerHTML=names.map((x,i)=>{let b=buy[i],s=sell[i];return '<div class="row"><span>'+x+'</span><b style="color:'+(b?'var(--green)':s?'var(--red)':'var(--muted)')+'">'+(b?'BUY ✓':s?'SELL ✓':'Netral')+'</b></div>'}).join("");
- $("reason").textContent=dir==="WAIT"?"Belum ada 4 konfirmasi searah. Tunggu candle berikutnya; jangan memaksakan transaksi.":dir+" terdeteksi dari "+score+" konfirmasi searah. Pastikan candle sudah tutup dan cek kondisi chart di Stockity.";
- if(dir!=="WAIT"){let item={dir,score,time:new Date().toLocaleTimeString("id-ID"),price:last.c};signalLog.unshift(item);signalLog=signalLog.slice(0,20);renderHistory()}
+const audio=$('audio');let ctx,source,inputGain,dryGain,wetGain,delay,feedbackGain,lowpass,highpass,splitter,merger,leftDelay,rightDelay,master,analyser,raf,bypassed=false,loaded=false;
+function initAudio(){
+ if(ctx)return;
+ ctx=new (window.AudioContext||window.webkitAudioContext)();
+ source=ctx.createMediaElementSource(audio);
+ inputGain=ctx.createGain();dryGain=ctx.createGain();wetGain=ctx.createGain();
+ delay=ctx.createDelay(1.5);feedbackGain=ctx.createGain();
+ lowpass=ctx.createBiquadFilter();lowpass.type='lowpass';lowpass.frequency.value=8000;
+ highpass=ctx.createBiquadFilter();highpass.type='highpass';highpass.frequency.value=120;
+ splitter=ctx.createChannelSplitter(2);merger=ctx.createChannelMerger(2);
+ leftDelay=ctx.createDelay(1.5);rightDelay=ctx.createDelay(1.5);
+ master=ctx.createGain();analyser=ctx.createAnalyser();analyser.fftSize=256;
+ source.connect(inputGain);
+ inputGain.connect(dryGain);dryGain.connect(master);
+ inputGain.connect(splitter);
+ splitter.connect(leftDelay,0);splitter.connect(rightDelay,1);
+ leftDelay.connect(lowpass);rightDelay.connect(lowpass);
+ lowpass.connect(highpass);highpass.connect(wetGain);
+ wetGain.connect(merger,0,0);wetGain.connect(merger,0,1);
+ merger.connect(master);
+ // Feedback loop for repeated echoes
+ wetGain.connect(delay);delay.connect(feedbackGain);feedbackGain.connect(delay);
+ // A subtle feedback return mixed into the wet path
+ delay.connect(wetGain);
+ master.connect(analyser);analyser.connect(ctx.destination);
+ apply();
 }
-function renderHistory(){$("history").innerHTML=signalLog.length?signalLog.map(x=>'<div class="row"><span>'+x.time+' • '+fmt(x.price)+'</span><b style="color:'+(x.dir==="BUY"?"var(--green)":"var(--red)")+'">'+x.dir+' '+x.score+'/5</b></div>').join(""):"Belum ada sinyal."}
-$("add").onclick=()=>{let o=+$("o").value,h=+$("h").value,l=+$("l").value,c=+$("c").value;if(![$("o").value,$("h").value,$("l").value,$("c").value].every(v=>v.trim()!=="")||![o,h,l,c].every(Number.isFinite)||h<Math.max(o,c,l)||l>Math.min(o,c,h)){alert("Periksa OHLC: High harus paling tinggi dan Low paling rendah.");return}candles.push({o,h,l,c});["o","h","l","c"].forEach(id=>$(id).value="");analyze()};
-$("undo").onclick=()=>{candles.pop();analyze()};
-$("clear").onclick=()=>{if(confirm("Hapus semua candle dan riwayat sinyal?")){candles=[];signalLog=[];renderHistory();analyze()}};
-$("demo").onclick=()=>{candles=[];let p=100;for(let i=0;i<40;i++){let o=p,delta=(Math.random()-.47)*1.5,c=o+delta,h=Math.max(o,c)+Math.random()*.45,l=Math.min(o,c)-Math.random()*.45;candles.push({o,h,l,c});p=c}analyze();alert("Data acak demo dimuat untuk mengetes aplikasi. Ini bukan harga pasar Stockity.")};
-analyze();
+function apply(){
+ if(!ctx)return;
+ const t=+$('delayTime').value/1000,fb=+$('feedback').value/100,w=+$('wet').value/100,d=+$('dry').value/100;
+ leftDelay.delayTime.setTargetAtTime(t,ctx.currentTime,.02);
+ rightDelay.delayTime.setTargetAtTime(t*(1+(+$('width').value/100)*.18),ctx.currentTime,.02);
+ delay.delayTime.setTargetAtTime(t,ctx.currentTime,.02);
+ feedbackGain.gain.setTargetAtTime(fb,ctx.currentTime,.02);
+ wetGain.gain.setTargetAtTime(bypassed?0:w*.65,ctx.currentTime,.02);
+ dryGain.gain.setTargetAtTime(bypassed?1:d,ctx.currentTime,.02);
+ lowpass.frequency.setTargetAtTime(+$('high').value,ctx.currentTime,.02);
+ highpass.frequency.setTargetAtTime(+$('low').value,ctx.currentTime,.02);
+ master.gain.setTargetAtTime(+$('out').value/100,ctx.currentTime,.02);
+}
+const ranges=['delayTime','feedback','wet','dry','low','high','width','out'];
+function updateLabels(){
+ $('timeVal').textContent=$('delayTime').value+' ms';$('feedbackVal').textContent=$('feedback').value+'%';
+ $('wetVal').textContent=$('wet').value+'%';$('dryVal').textContent=$('dry').value+'%';
+ $('lowVal').textContent=$('low').value+' Hz';$('highVal').textContent=(+$('high').value/1000).toFixed(1)+' kHz';
+ $('widthVal').textContent=$('width').value+'%';$('outVal').textContent=$('out').value+'%';apply();
+}
+ranges.forEach(id=>$(id).addEventListener('input',updateLabels));
+$('audioFile').addEventListener('change',e=>{
+ const f=e.target.files[0];if(!f)return;
+ audio.src=URL.createObjectURL(f);$('trackName').textContent=f.name;$('trackState').textContent='File musik siap diputar';
+ loaded=true;$('disc').classList.remove('playing');$('engineState').textContent='ENGINE READY';
+});
+$('playBtn').onclick=async()=>{
+ if(!loaded){$('audioFile').click();return}
+ initAudio();if(ctx.state==='suspended')await ctx.resume();
+ if(audio.paused){await audio.play();$('playBtn').textContent='Ⅱ';$('disc').classList.add('playing');$('trackState').textContent='Sedang diputar';}
+ else{audio.pause();$('playBtn').textContent='▶';$('disc').classList.remove('playing');$('trackState').textContent='Dijeda';}
+};
+$('stopBtn').onclick=()=>{audio.pause();audio.currentTime=0;$('playBtn').textContent='▶';$('disc').classList.remove('playing')};
+audio.addEventListener('timeupdate',()=>{
+ if(!audio.duration)return;$('seek').value=audio.currentTime/audio.duration*1000;
+ $('timeText').textContent=fmt(audio.currentTime)+' / '+fmt(audio.duration);
+});
+$('seek').oninput=()=>{if(audio.duration)audio.currentTime=$('seek').value/1000*audio.duration};
+audio.addEventListener('ended',()=>{$('playBtn').textContent='▶';$('disc').classList.remove('playing')});
+function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(Math.floor(s%60)).padStart(2,'0')}
+$('bypass').onclick=()=>{bypassed=!bypassed;$('bypass').textContent=bypassed?'FX OFF — BYPASSED':'BYPASS FX';$('engineState').textContent=bypassed?'FX BYPASSED':'FX ACTIVE';apply()};
+$('reset').onclick=()=>{const vals={delayTime:320,feedback:35,wet:30,dry:100,low:120,high:8000,width:70,out:80};Object.entries(vals).forEach(([k,v])=>$(k).value=v);bypassed=false;$('bypass').textContent='BYPASS FX';$('engineState').textContent='ENGINE READY';updateLabels()};
+const presets={
+ clean:{delayTime:320,feedback:0,wet:0,dry:100,low:120,high:12000,width:0,out:80},
+ slap:{delayTime:95,feedback:12,wet:24,dry:100,low:150,high:9000,width:25,out:80},
+ vocal:{delayTime:280,feedback:28,wet:25,dry:100,low:180,high:7500,width:55,out:80},
+ ping:{delayTime:420,feedback:42,wet:35,dry:100,low:140,high:8500,width:100,out:78},
+ deep:{delayTime:620,feedback:55,wet:40,dry:100,low:100,high:6500,width:85,out:75},
+ wide:{delayTime:360,feedback:32,wet:32,dry:100,low:180,high:11000,width:100,out:80},
+ dub:{delayTime:500,feedback:68,wet:42,dry:95,low:100,high:5000,width:90,out:72},
+ hall:{delayTime:850,feedback:48,wet:35,dry:100,low:120,high:7000,width:80,out:75}
+};
+document.querySelectorAll('.preset').forEach(b=>b.onclick=()=>{
+ document.querySelectorAll('.preset').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+ Object.entries(presets[b.dataset.preset]).forEach(([k,v])=>$(k).value=v);updateLabels();
+});
+$('localTab').onclick=()=>{ $('localTab').classList.add('active');$('youtubeTab').classList.remove('active');$('localPanel').hidden=false;$('youtubePanel').hidden=true;};
+$('youtubeTab').onclick=()=>{ $('youtubeTab').classList.add('active');$('localTab').classList.remove('active');$('youtubePanel').hidden=false;$('localPanel').hidden=true;};
+function videoId(url){try{const u=new URL(url);if(u.hostname.includes('youtu.be'))return u.pathname.slice(1);if(u.hostname.includes('youtube.com'))return u.searchParams.get('v')||u.pathname.split('/').filter(Boolean).pop();}catch(e){}return null}
+$('loadYt').onclick=()=>{const id=videoId($('ytUrl').value.trim());if(!id){alert('Masukkan link YouTube yang benar.');return}
+ $('ytHolder').innerHTML='';const f=document.createElement('iframe');f.id='ytFrame';f.src='https://www.youtube-nocookie.com/embed/'+encodeURIComponent(id);f.title='YouTube player';f.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';f.allowFullscreen=true;$('ytHolder').appendChild(f);
+};
+$('clearYt').onclick=()=>{$('ytHolder').innerHTML='';$('ytUrl').value=''};
+updateLabels();
 </script>
-</body>
-</html>
+</body></html>
