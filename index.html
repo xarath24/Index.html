@@ -1,105 +1,71 @@
 <!doctype html>
 <html lang="id">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#090d18"><title>Music Delay FX Studio</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#101014">
+<title>VIDA MUSIC — YouTube</title>
 <style>
-:root{--bg:#090d18;--panel:#141e31;--panel2:#0b1322;--line:#26354e;--cyan:#35e0d0;--blue:#6488ff;--muted:#91a0b9;--white:#f4f7ff}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -15%,#1b3151,var(--bg) 58%);color:var(--white);font:14px system-ui,Arial,sans-serif}.wrap{max-width:850px;margin:auto;padding:18px 14px 35px}
-.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.brand{display:flex;align-items:center;gap:11px}.logo{width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,var(--cyan),var(--blue));display:grid;place-items:center;color:#07121c;font-size:22px;font-weight:900}h1{font-size:17px;margin:0;letter-spacing:1px}.sub,.hint{color:var(--muted);font-size:10px;letter-spacing:.5px}.pill{border:1px solid #23655f;color:var(--cyan);padding:7px 10px;border-radius:30px;font-size:10px}
-.hero,.card{background:linear-gradient(145deg,#152137,#101726);border:1px solid var(--line);border-radius:19px;padding:16px;margin:12px 0}.hero{padding:20px}.hero h2{margin:0 0 5px;font-size:20px}.hero p{margin:0;color:var(--muted);font-size:12px}
-.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:15px 0}.tab{background:#0e1524;border:1px solid var(--line);color:var(--muted);padding:13px;border-radius:12px;font-weight:800}.tab.active{color:var(--cyan);border-color:#287b78;background:#102b31}
-.cardhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px}.cardhead h3{font-size:13px;letter-spacing:1px;margin:0}
-.btn{background:linear-gradient(120deg,var(--cyan),#6b9dff);color:#06121c;font-weight:850;padding:12px 14px;border-radius:11px;border:0}.btn.secondary{background:#202d45;color:#dce6ff;border:1px solid #34435f}.btn.danger{background:#45232c;color:#ffdce2;border:1px solid #81404e}.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.btnrow .btn{flex:1}
-input[type=text]{width:100%;background:#090f1d;border:1px solid var(--line);border-radius:11px;padding:13px;color:white}
-.modebox{background:#0b1424;border:1px solid #2c3d58;border-radius:14px;padding:14px}.modebox strong{display:block;margin-bottom:5px}.modebox p{font-size:11px;color:var(--muted);line-height:1.5;margin:0 0 12px}
-.notice{background:#302718;border:1px solid #725a2d;color:#f2d99c;padding:11px;border-radius:11px;font-size:11px;line-height:1.55;margin-top:10px}.status{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:11px;margin-top:10px}.dot{width:8px;height:8px;border-radius:50%;background:#69758b}.dot.on{background:#35e0a0;box-shadow:0 0 10px #35e0a0}
-.meter{height:9px;background:#080e19;border-radius:10px;overflow:hidden;margin-top:10px}.meter span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--blue));transition:width .08s}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.control{background:#0b1322;border:1px solid #26354e;border-radius:13px;padding:12px}.control label{display:flex;justify-content:space-between;gap:6px;color:#cbd6eb;font-size:10px;margin-bottom:10px}.val{color:var(--cyan);font-weight:800;white-space:nowrap}input[type=range]{width:100%;accent-color:var(--cyan)}
-.presets{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.preset{padding:12px 8px;background:#0b1424;border:1px solid #2b3a55;color:#d9e5ff;border-radius:11px;font-size:11px;font-weight:800}.preset.active{border-color:var(--cyan);color:var(--cyan);background:#102a30}
-.footer{text-align:center;color:#65748e;font-size:10px;padding:18px 5px}
-@media(min-width:650px){.grid{grid-template-columns:repeat(4,1fr)}.presets{grid-template-columns:repeat(4,1fr)}}
-</style></head>
-<body><div class="wrap">
-<header class="top"><div class="brand"><div class="logo">♫</div><div><h1>MUSIC DELAY FX</h1><div class="sub">STUDIO • EXTERNAL AUDIO PROCESSOR</div></div></div><div class="pill">● FX STUDIO</div></header>
-<section class="hero"><h2>Make your sound deeper.</h2><p>External input • Echo • Delay • Ping Pong • Live controls</p></section>
-<div class="tabs"><button class="tab active" id="externalTab">🎙 EXTERNAL INPUT</button><button class="tab" id="fileTab">♫ FILE MUSIK HP</button></div>
-
-<section class="card" id="externalPanel">
- <div class="cardhead"><h3>EXTERNAL AUDIO INPUT</h3><span class="hint">MICROPHONE CAPTURE</span></div>
- <div class="modebox"><strong>🎙 Tangkap suara dari aplikasi lain</strong><p>Putar musik dari YMusic, YouTube, Spotify, atau aplikasi lain melalui speaker. Halaman ini menangkap suara memakai mikrofon HP.</p>
- <div class="btnrow"><button class="btn" id="startMic">AKTIFKAN INPUT MIC</button><button class="btn secondary" id="stopMic">MATIKAN</button></div>
- <div class="status"><span class="dot" id="micDot"></span><span id="micStatus">Mikrofon belum aktif</span></div><div class="meter"><span id="micMeter"></span></div></div>
- <div class="notice"><b>Batasan HTML:</b> browser tidak dapat menangkap audio digital internal dari aplikasi lain. Mode ini menangkap suara lewat mikrofon. Agar tidak terjadi feedback, gunakan volume speaker sedang dan letakkan HP dekat sumber suara. Untuk efek langsung pada audio internal tanpa mikrofon, perlu APK Android native dengan izin Audio Playback Capture dan dukungan dari aplikasi sumber.</div>
-</section>
-<section class="card" id="filePanel" hidden><div class="cardhead"><h3>LOCAL MUSIC PLAYER</h3><span class="hint">MP3 • WAV • M4A</span></div>
-<label style="display:block;border:1px dashed #48617f;border-radius:12px;padding:14px;text-align:center;color:#c9d8f5" for="audioFile">＋ PILIH FILE MUSIK DARI HP</label><input id="audioFile" type="file" accept="audio/*" style="display:none">
-<div style="margin-top:12px;font-size:12px" id="fileName">Belum ada file dipilih</div><audio id="audio" controls style="width:100%;margin-top:10px"></audio></section>
-
-<section class="card"><div class="cardhead"><h3>DELAY PRESETS</h3><span class="hint">QUICK SOUND</span></div><div class="presets">
-<button class="preset active" data-preset="clean">CLEAN</button><button class="preset" data-preset="slap">SLAPBACK</button><button class="preset" data-preset="vocal">VOCAL DELAY</button><button class="preset" data-preset="ping">PING PONG</button><button class="preset" data-preset="deep">DEEP ECHO</button><button class="preset" data-preset="wide">WIDE SPACE</button><button class="preset" data-preset="dub">DUB ECHO</button><button class="preset" data-preset="hall">LONG ECHO</button></div></section>
-<section class="card"><div class="cardhead"><h3>DELAY ENGINE</h3><span class="hint" id="engineState">ENGINE STANDBY</span></div>
-<div class="grid">
-<div class="control"><label>DELAY TIME <span class="val" id="timeVal">320 ms</span></label><input id="delayTime" type="range" min="20" max="1200" value="320"></div>
-<div class="control"><label>FEEDBACK <span class="val" id="feedbackVal">35%</span></label><input id="feedback" type="range" min="0" max="85" value="35"></div>
-<div class="control"><label>WET / EFFECT <span class="val" id="wetVal">30%</span></label><input id="wet" type="range" min="0" max="100" value="30"></div>
-<div class="control"><label>DRY / ORIGINAL <span class="val" id="dryVal">100%</span></label><input id="dry" type="range" min="0" max="100" value="100"></div>
-<div class="control"><label>LOW CUT <span class="val" id="lowVal">120 Hz</span></label><input id="low" type="range" min="20" max="500" value="120"></div>
-<div class="control"><label>HIGH CUT <span class="val" id="highVal">8.0 kHz</span></label><input id="high" type="range" min="1000" max="18000" value="8000"></div>
-<div class="control"><label>STEREO WIDTH <span class="val" id="widthVal">70%</span></label><input id="width" type="range" min="0" max="100" value="70"></div>
-<div class="control"><label>OUTPUT LEVEL <span class="val" id="outVal">80%</span></label><input id="out" type="range" min="0" max="100" value="80"></div>
-</div><div class="btnrow"><button class="btn secondary" id="bypass">BYPASS FX</button><button class="btn" id="reset">RESET SETTING</button></div></section>
-<div class="footer">MUSIC DELAY FX STUDIO • Hindari volume berlebihan dan feedback akustik.</div></div>
+:root{--bg:#101014;--panel:#202027;--muted:#aaa;--lime:#c5f36b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#fff;font:14px system-ui,Arial}
+header{position:sticky;top:0;background:#101014ed;backdrop-filter:blur(10px);z-index:5;padding:13px 15px;display:flex;align-items:center;gap:12px}
+.logo{font-weight:900;font-size:21px;white-space:nowrap}.logo span{color:var(--lime)}
+.search{display:flex;flex:1;gap:7px}.search input,.urlbox input{width:100%;min-width:0;background:#272730;border:1px solid #393943;border-radius:22px;padding:11px 14px;color:white;outline:none}.search button,.primary{border:0;background:var(--lime);color:#111;font-weight:800;border-radius:22px;padding:0 16px}
+main{max-width:1000px;margin:auto;padding:18px 15px 40px}h1{font-size:25px;margin:5px 0}.muted{color:var(--muted);line-height:1.5}
+.panel{background:var(--panel);border-radius:15px;padding:15px;margin:16px 0}.panel h2{font-size:17px;margin:0 0 12px}
+.urlbox{display:flex;gap:8px}.urlbox input{border-radius:10px}.urlbox button{border:0;border-radius:10px;padding:0 15px;background:var(--lime);font-weight:800}
+.player{width:100%;aspect-ratio:16/9;background:#000;border:0;border-radius:12px;display:block}.placeholder{aspect-ratio:16/9;background:#080808;border-radius:12px;display:grid;place-items:center;color:#888;text-align:center;padding:20px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.actions button{border:0;background:#35353e;color:#fff;border-radius:20px;padding:10px 14px}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}.tile{background:#202027;border-radius:11px;padding:12px;color:white;text-decoration:none;min-height:75px}.tile b{display:block;margin-bottom:5px}.tile small{color:#aaa}
+.note{font-size:12px;color:#aaa;line-height:1.5}
+@media(max-width:520px){header{padding:11px 10px}.logo{font-size:18px}.search input{font-size:13px}.search button{padding:0 12px}main{padding:14px 11px}}
+</style>
+</head>
+<body>
+<header>
+ <div class="logo">▶ <span>VIDA</span></div>
+ <div class="search"><input id="q" placeholder="Cari lagu atau video di YouTube"><button id="search">Cari</button></div>
+</header>
+<main>
+ <h1>VIDA MUSIC</h1>
+ <p class="muted">Cari musik di YouTube dan putar video berdurasi penuh melalui pemutar resmi YouTube.</p>
+ <section class="panel">
+  <h2>Putar video YouTube</h2>
+  <div class="urlbox"><input id="url" placeholder="Tempel link YouTube di sini"><button id="load">Putar</button></div>
+  <div id="screen" style="margin-top:13px"><div class="placeholder">▶<br>Masukkan link video YouTube untuk mulai memutar</div></div>
+  <div class="actions"><button id="openYT">Buka YouTube</button><button id="clear">Hapus pemutar</button></div>
+ </section>
+ <section class="panel">
+  <h2>Jelajahi musik</h2>
+  <div class="list">
+   <a class="tile" id="pop" href="https://www.youtube.com/results?search_query=lagu+pop+indonesia" target="_blank" rel="noopener"><b>🎵 Pop Indonesia</b><small>Cari di YouTube</small></a>
+   <a class="tile" href="https://www.youtube.com/results?search_query=dangdut+koplo+terbaru" target="_blank" rel="noopener"><b>🥁 Dangdut Koplo</b><small>Cari di YouTube</small></a>
+   <a class="tile" href="https://www.youtube.com/results?search_query=musik+remix+terbaru" target="_blank" rel="noopener"><b>🎧 Remix</b><small>Cari di YouTube</small></a>
+   <a class="tile" href="https://www.youtube.com/results?search_query=lagu+slow+rock+indonesia" target="_blank" rel="noopener"><b>🎸 Slow Rock</b><small>Cari di YouTube</small></a>
+  </div>
+ </section>
+ <p class="note">Catatan: pemutaran dilakukan melalui player resmi YouTube. Iklan, batasan wilayah, login, dan pemutaran latar belakang mengikuti aturan YouTube; halaman ini tidak menghapus atau melewati iklan. Untuk mencari dan memilih hasil, VIDA akan membuka hasil pencarian YouTube di tab baru. Salin link video yang dipilih lalu tempel di kolom pemutar.</p>
+</main>
 <script>
-const $=id=>document.getElementById(id);let ctx,stream,micSource,dryGain,wetGain,delay,feedbackGain,filterLow,filterHigh,master,analyser,splitter,leftDelay,rightDelay,merger,bypassed=false,raf;
-function buildEngine(){
- if(ctx)return;ctx=new (window.AudioContext||window.webkitAudioContext)();
- dryGain=ctx.createGain();wetGain=ctx.createGain();delay=ctx.createDelay(1.5);feedbackGain=ctx.createGain();
- filterLow=ctx.createBiquadFilter();filterLow.type='highpass';filterLow.frequency.value=120;
- filterHigh=ctx.createBiquadFilter();filterHigh.type='lowpass';filterHigh.frequency.value=8000;
- splitter=ctx.createChannelSplitter(2);leftDelay=ctx.createDelay(1.5);rightDelay=ctx.createDelay(1.5);merger=ctx.createChannelMerger(2);
- master=ctx.createGain();analyser=ctx.createAnalyser();analyser.fftSize=256;
- // Stereo dry path and filtered stereo delay path
- dryGain.connect(master);
- wetGain.connect(filterLow);filterLow.connect(filterHigh);
- filterHigh.connect(splitter);
- splitter.connect(leftDelay,0);splitter.connect(rightDelay,1);
- leftDelay.connect(merger,0,0);rightDelay.connect(merger,0,1);merger.connect(master);
- // Feedback echo loop (mono return to both channels)
- filterHigh.connect(delay);delay.connect(feedbackGain);feedbackGain.connect(delay);
- delay.connect(leftDelay);delay.connect(rightDelay);
- master.connect(analyser);analyser.connect(ctx.destination);
-}
-function attachInput(node){buildEngine();node.connect(dryGain);node.connect(wetGain);apply();startMeter()}
-async function startMic(){
- if(!navigator.mediaDevices?.getUserMedia){alert('Browser ini tidak mendukung akses mikrofon. Buka melalui Chrome dan pastikan memakai HTTPS.');return}
+const q=document.getElementById('q'),url=document.getElementById('url'),screen=document.getElementById('screen');
+function searchYT(){const term=q.value.trim();if(!term)return;window.open('https://www.youtube.com/results?search_query='+encodeURIComponent(term),'_blank','noopener');}
+function videoId(s){
  try{
-  buildEngine();if(ctx.state==='suspended')await ctx.resume();
-  if(stream)stream.getTracks().forEach(t=>t.stop());
-  stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false},video:false});
-  micSource=ctx.createMediaStreamSource(stream);attachInput(micSource);
-  $('micDot').classList.add('on');$('micStatus').textContent='Mikrofon aktif — putar musik dari aplikasi lain';$('engineState').textContent='EXTERNAL INPUT ACTIVE';
- }catch(e){alert('Akses mikrofon gagal: '+e.message+'. Izinkan mikrofon untuk halaman ini.')}
+  const u=new URL(s);
+  if(u.hostname==='youtu.be')return u.pathname.split('/').filter(Boolean)[0]||'';
+  if(u.hostname.endsWith('youtube.com')||u.hostname.endsWith('youtube-nocookie.com')){
+   if(u.pathname==='/watch')return u.searchParams.get('v')||'';
+   const m=u.pathname.match(/^\/(?:embed|shorts|live)\/([^/?]+)/);if(m)return m[1];
+  }
+ }catch(e){}
+ return '';
 }
-function stopMic(){if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;$('micDot').classList.remove('on');$('micStatus').textContent='Mikrofon dimatikan';$('engineState').textContent='ENGINE STANDBY';$('micMeter').style.width='0%'}
-$('startMic').onclick=startMic;$('stopMic').onclick=stopMic;
-function apply(){if(!ctx)return;let t=+$('delayTime').value/1000,fb=+$('feedback').value/100,w=+$('wet').value/100,d=+$('dry').value/100;
- leftDelay.delayTime.setTargetAtTime(t,ctx.currentTime,.03);rightDelay.delayTime.setTargetAtTime(t*(1+(+$('width').value/100)*.18),ctx.currentTime,.03);
- delay.delayTime.setTargetAtTime(t,ctx.currentTime,.03);feedbackGain.gain.setTargetAtTime(fb*.72,ctx.currentTime,.03);
- wetGain.gain.setTargetAtTime(bypassed?0:w*.55,ctx.currentTime,.03);dryGain.gain.setTargetAtTime(bypassed?1:d,ctx.currentTime,.03);
- filterLow.frequency.setTargetAtTime(+$('low').value,ctx.currentTime,.03);filterHigh.frequency.setTargetAtTime(+$('high').value,ctx.currentTime,.03);
- master.gain.setTargetAtTime(+$('out').value/100,ctx.currentTime,.03);
-}
-const ids=['delayTime','feedback','wet','dry','low','high','width','out'];
-function labels(){ $('timeVal').textContent=$('delayTime').value+' ms';$('feedbackVal').textContent=$('feedback').value+'%';$('wetVal').textContent=$('wet').value+'%';$('dryVal').textContent=$('dry').value+'%';$('lowVal').textContent=$('low').value+' Hz';$('highVal').textContent=(+$('high').value/1000).toFixed(1)+' kHz';$('widthVal').textContent=$('width').value+'%';$('outVal').textContent=$('out').value+'%';apply()}
-ids.forEach(id=>$(id).addEventListener('input',labels));
-function startMeter(){if(raf)cancelAnimationFrame(raf);const data=new Uint8Array(analyser.frequencyBinCount);function draw(){if(!ctx)return;analyser.getByteTimeDomainData(data);let sum=0;for(let v of data){let n=(v-128)/128;sum+=n*n}let rms=Math.sqrt(sum/data.length);$('micMeter').style.width=Math.min(100,rms*260)+'%';raf=requestAnimationFrame(draw)}draw()}
-$('audioFile').onchange=async e=>{let f=e.target.files[0];if(!f)return;$('fileName').textContent=f.name;let audio=$('audio');audio.src=URL.createObjectURL(f);buildEngine();if(!audio._connected){let s=ctx.createMediaElementSource(audio);attachInput(s);audio._connected=true}await ctx.resume();$('engineState').textContent='FILE INPUT ACTIVE'};
-const presets={clean:{delayTime:320,feedback:0,wet:0,dry:100,low:120,high:12000,width:0,out:80},slap:{delayTime:95,feedback:12,wet:24,dry:100,low:150,high:9000,width:25,out:80},vocal:{delayTime:280,feedback:28,wet:25,dry:100,low:180,high:7500,width:55,out:80},ping:{delayTime:420,feedback:42,wet:35,dry:100,low:140,high:8500,width:100,out:78},deep:{delayTime:620,feedback:55,wet:40,dry:100,low:100,high:6500,width:85,out:75},wide:{delayTime:360,feedback:32,wet:32,dry:100,low:180,high:11000,width:100,out:80},dub:{delayTime:500,feedback:68,wet:42,dry:95,low:100,high:5000,width:90,out:72},hall:{delayTime:850,feedback:48,wet:35,dry:100,low:120,high:7000,width:80,out:75}};
-document.querySelectorAll('.preset').forEach(b=>b.onclick=()=>{document.querySelectorAll('.preset').forEach(x=>x.classList.remove('active'));b.classList.add('active');Object.entries(presets[b.dataset.preset]).forEach(([k,v])=>$(k).value=v);labels()});
-$('bypass').onclick=()=>{bypassed=!bypassed;$('bypass').textContent=bypassed?'FX OFF — BYPASSED':'BYPASS FX';$('engineState').textContent=bypassed?'FX BYPASSED':'FX ACTIVE';apply()};
-$('reset').onclick=()=>{let v={delayTime:320,feedback:35,wet:30,dry:100,low:120,high:8000,width:70,out:80};Object.entries(v).forEach(([k,n])=>$(k).value=n);bypassed=false;$('bypass').textContent='BYPASS FX';labels()};
-$('externalTab').onclick=()=>{$('externalTab').classList.add('active');$('fileTab').classList.remove('active');$('externalPanel').hidden=false;$('filePanel').hidden=true};
-$('fileTab').onclick=()=>{$('fileTab').classList.add('active');$('externalTab').classList.remove('active');$('filePanel').hidden=false;$('externalPanel').hidden=true};
-labels();
-</script></body></html>
+function loadVideo(){const id=videoId(url.value.trim());if(!id){alert('Link YouTube tidak valid. Tempel link video seperti https://www.youtube.com/watch?v=...');return;}
+ const frame=document.createElement('iframe');frame.className='player';frame.src='https://www.youtube-nocookie.com/embed/'+encodeURIComponent(id)+'?autoplay=1&rel=0';frame.title='YouTube video player';frame.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';frame.allowFullscreen=true;frame.referrerPolicy='strict-origin-when-cross-origin';screen.replaceChildren(frame);}
+document.getElementById('search').onclick=searchYT;q.addEventListener('keydown',e=>{if(e.key==='Enter')searchYT()});
+document.getElementById('load').onclick=loadVideo;url.addEventListener('keydown',e=>{if(e.key==='Enter')loadVideo()});
+document.getElementById('openYT').onclick=()=>window.open('https://www.youtube.com','_blank','noopener');
+document.getElementById('clear').onclick=()=>{screen.innerHTML='<div class="placeholder">▶<br>Masukkan link video YouTube untuk mulai memutar</div>';url.value='';};
+</script>
+</body>
+</html>
