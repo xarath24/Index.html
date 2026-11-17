@@ -42,7 +42,7 @@ header{display:flex;justify-content:space-between;align-items:center;gap:12px;ma
 
 <section class="panel">
  <div class="head"><h3>01 · PILIH FILE AUDIO</h3><span class="step">UPLOAD</span></div>
- <div class="drop" id="drop"><div class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m-4 4 4-4 4 4"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg></div><strong>Masukkan lagu yang ingin dipisahkan</strong><p>MP3 · WAV · M4A · FLAC · AAC · OGG</p><button class="btn secondary" id="chooseBtn" type="button">＋ Pilih file audio</button><input id="fileInput" type="file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac" hidden></div>
+ <div class="drop" id="drop"><div class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m-4 4 4-4 4 4"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg></div><strong>Masukkan lagu yang ingin dipisahkan</strong><p>MP3 · WAV · M4A · FLAC · AAC · OGG</p><button class="btn secondary" id="chooseBtn" type="button">＋ Pilih file audio</button><input id="fileInput" type="file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac,.wma,.aiff,.aif,.opus" hidden></div>
  <div class="file-row" id="fileRow"><div class="file-icon">♫</div><div class="file-info"><strong id="fileName">—</strong><small id="fileMeta">—</small></div><button class="btn ghost" id="removeBtn" type="button">Hapus</button></div>
 </section>
 
@@ -80,7 +80,27 @@ const trackMeta={
 };
 function bytes(n){let u=["B","KB","MB","GB"],i=0;while(n>=1024&&i<3){n/=1024;i++}return n.toFixed(i?1:0)+" "+u[i]}
 function setProgress(msg,pct,label){$("progressWrap").style.display="block";$("status").textContent=msg;$("progressText").textContent=label||"Memproses audio";if(pct!==null){let p=Math.max(0,Math.min(100,Math.round(pct)));$("progressBar").style.width=p+"%";$("progressPct").textContent=p+"%"}}
-function setFile(f){if(!f)return;if(!f.type.startsWith("audio/")&&!/\.(mp3|wav|m4a|flac|ogg|aac)$/i.test(f.name)){alert("Pilih file audio yang didukung.");return}selectedFile=f;$("fileName").textContent=f.name;$("fileMeta").textContent=bytes(f.size)+" · "+(f.type||"audio");$("fileRow").style.display="flex";$("processBtn").disabled=false;$("results").style.display="none";$("progressWrap").style.display="none"}
+function setFile(f){
+ if(!f)return;
+ // Android file pickers may return an empty or generic MIME type for valid audio.
+ const name=String(f.name||"").toLowerCase();
+ const mime=String(f.type||"").toLowerCase();
+ const audioExt=/\.(mp3|wav|m4a|flac|ogg|aac|wma|aiff|aif|opus|m4p)$/i.test(name);
+ const audioMime=mime.startsWith("audio/");
+ const genericMime=!mime || mime==="application/octet-stream" || mime==="binary/octet-stream" || mime==="application/force-download";
+ if(!audioMime&&!audioExt&&!genericMime){
+   alert("File ini tidak dikenali sebagai audio. Pilih MP3, WAV, M4A, FLAC, AAC, atau OGG.");
+   return;
+ }
+ if(!f.size){alert("File kosong atau tidak bisa dibaca. Coba pilih file audio lain.");return;}
+ selectedFile=f;
+ $("fileName").textContent=f.name||"Audio dari perangkat";
+ $("fileMeta").textContent=bytes(f.size)+" · "+(mime||"tipe audio tidak dilaporkan");
+ $("fileRow").style.display="flex";
+ $("processBtn").disabled=false;
+ $("results").style.display="none";
+ $("progressWrap").style.display="none";
+}
 $("chooseBtn").onclick=()=>$("fileInput").click();
 $("fileInput").onchange=e=>setFile(e.target.files?.[0]);
 $("removeBtn").onclick=clearFile;
